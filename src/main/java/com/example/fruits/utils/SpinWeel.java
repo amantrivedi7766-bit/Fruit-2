@@ -107,7 +107,8 @@ public class SpinWheel {
                     double z = Math.sin(angle) * 3;
                     wheel.get(i).teleport(player.getLocation().add(0, 4, 0).clone().add(x, Math.sin(angle) * 0.5, z));
                     
-                    player.getWorld().spawnParticle(Particle.SPELL_MOB, wheel.get(i).getLocation(), 3, 0.2, 0.2, 0.2, 0.1);
+                    // FIXED: Use SPELL instead of SPELL_MOB
+                    player.getWorld().spawnParticle(Particle.SPELL, wheel.get(i).getLocation(), 3, 0.2, 0.2, 0.2, 0.1);
                 }
                 
                 if(spinCount % 10 == 0) {
