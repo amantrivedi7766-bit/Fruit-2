@@ -1,13 +1,24 @@
 # FruitsPlugin Configuration
 
+# Grace Period Settings
+grace_period:
+  enabled: true
+  duration: 60
+  bossbar_title: "&c⚠️ GRACE PERIOD &7| &e{time}s &7remaining"
+  message: "&c⚠️ &lGRACE PERIOD ACTIVE! &cDon't die or you'll lose your fruit!"
+
+# Death Settings
+death:
+  lose_power: true
+
+# Messages
 messages:
   prefix: "&8[&6⚡&8]&r "
-  fruit_eaten: "&a✅ You ate &6{fruit}&a! Abilities: &e1:{a1} &7| &e2:{a2} &7| &e3:{a3}"
+  fruit_eaten: "&a✅ You ate &6{fruit}&a! &7Abilities are now active!"
   ability_used: "&a⚡ Used &6{ability}&a! ({used}/3)"
-  fruit_returned: "&a🔄 Fruit returned! Eat again to reuse!"
-  no_fruit: "&c❌ Eat a fruit first!"
-  spin_result: "&6🎲 &l{player} &aspun &6{fruit}&a! &7New era of food begins!"
-  spin_announce: "&5✨ &lNEW ERA OF FOOD BEGINS! &5✨"
-  fruit_received: "&d✨ &lYou received {fruit}! &d✨"
-  one_shot_no_levels: "&c❌ Need 30 XP levels for ONE SHOT!"
-  one_shot_used: "&c💀 &lONE SHOT! &7Killed {target}"
+  fruit_returned: "&a🔄 Fruit returned to inventory! Eat again to reuse!"
+  no_fruit: "&c❌ You haven't eaten any fruit!"
+  power_lost: "&c💀 &lYou died and lost your fruit powers!"
+  power_kept: "&a✨ You kept your fruit powers after death!"
+  grace_start: "&c⚠️ &lGRACE PERIOD STARTED! &cYou have {time}s to prepare!"
+  grace_end: "&a✅ &lGRACE PERIOD ENDED! &aYour fruit is now safe!"
