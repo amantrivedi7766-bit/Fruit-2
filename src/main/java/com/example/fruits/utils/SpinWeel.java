@@ -6,50 +6,32 @@ import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.EulerAngle;
 import java.util.*;
 
 public class SpinWheel {
     
-    private static final List<Color> COLORS = Arrays.asList(
-        Color.RED, Color.YELLOW, Color.MAROON, Color.PURPLE, Color.ORANGE,
-        Color.GREEN, Color.RED, Color.LIME, Color.FUCHSIA, Color.NAVY
-    );
-    
     public static void spin(Player player) {
-        // Announce spin
-        Bukkit.broadcastMessage("§5✨ &lNEW ERA OF FOOD BEGINS! &5✨");
+        Bukkit.broadcastMessage("§5✨ &lNEW ERA OF FOOD BEGINS! §5✨");
         
-        // Get all 10 fruits
         Fruit[] fruits = FruitsPlugin.getInstance().getFruitRegistry().getAllFruits().toArray(new Fruit[0]);
         
-        // Create particle spiral
         createSpiral(player);
-        
-        // Create 3D wheel with all fruits
         List<ArmorStand> wheel = createWheel(player, fruits);
-        
-        // Animate the spin
         animateSpin(player, wheel, fruits);
         
-        // Select random fruit (can repeat)
         Random random = new Random();
         int selectedIndex = random.nextInt(fruits.length);
         Fruit selectedFruit = fruits[selectedIndex];
         
-        // Show result with epic effects
         showResult(player, selectedFruit, selectedIndex);
         
-        // Give the fruit
         player.getInventory().addItem(selectedFruit.createItem());
         
-        // Send result message
         player.sendMessage("§d✨ &lYou received " + selectedFruit.getDisplayName() + "! §d✨");
         player.sendMessage("§7Use §e/fruit use <1|2|3> §7to activate abilities!");
         
-        // Broadcast to server
         Bukkit.broadcastMessage("§6🎲 " + player.getName() + " §aspun §6" + selectedFruit.getDisplayName() + "§a!");
     }
     
@@ -95,8 +77,6 @@ public class SpinWheel {
             stand.setMarker(true);
             stand.setCustomName(fruits[i].getDisplayName());
             stand.setCustomNameVisible(true);
-            
-            // Set item in hand
             stand.setItemInHand(fruits[i].createItem());
             stand.setRightArmPose(new EulerAngle(Math.toRadians(90), 0, 0));
             
@@ -127,7 +107,7 @@ public class SpinWheel {
                     double z = Math.sin(angle) * 3;
                     wheel.get(i).teleport(player.getLocation().add(0, 4, 0).clone().add(x, Math.sin(angle) * 0.5, z));
                     
-                    player.getWorld().spawnParticle(Particle.SPELL_WITCH, wheel.get(i).getLocation(), 3, 0.2, 0.2, 0.2, 0.1);
+                    player.getWorld().spawnParticle(Particle.SPELL_MOB, wheel.get(i).getLocation(), 3, 0.2, 0.2, 0.2, 0.1);
                 }
                 
                 if(spinCount % 10 == 0) {
@@ -143,13 +123,11 @@ public class SpinWheel {
     private static void showResult(Player player, Fruit fruit, int index) {
         Location center = player.getLocation().add(0, 5, 0);
         
-        // Epic explosion
-        player.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, center, 1);
+        player.getWorld().spawnParticle(Particle.EXPLOSION, center, 1);
         player.getWorld().spawnParticle(Particle.FIREWORK, center, 100, 1, 1, 1, 0.5);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 2.0f, 1.5f);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 2.0f, 2.0f);
         
-        // Color beam
         new BukkitRunnable() {
             int height = 0;
             @Override
