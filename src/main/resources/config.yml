@@ -1,14 +1,13 @@
 # FruitsPlugin Configuration
-cooldowns:
-  default: 15
-  one_shot: 120
 
 messages:
-  no_fruit: "&c❌ You haven't eaten any fruit! Eat a fruit first."
+  prefix: "&8[&6⚡&8]&r "
   fruit_eaten: "&a✅ You ate &6{fruit}&a! Abilities: &e1:{a1} &7| &e2:{a2} &7| &e3:{a3}"
   ability_used: "&a⚡ Used &6{ability}&a! ({used}/3)"
-  fruit_returned: "&a🔄 Fruit returned to inventory! Eat again to reuse abilities!"
-  invalid_ability: "&c❌ Use /fruit use <1|2|3>"
+  fruit_returned: "&a🔄 Fruit returned! Eat again to reuse!"
+  no_fruit: "&c❌ Eat a fruit first!"
+  spin_result: "&6🎲 &l{player} &aspun &6{fruit}&a! &7New era of food begins!"
+  spin_announce: "&5✨ &lNEW ERA OF FOOD BEGINS! &5✨"
+  fruit_received: "&d✨ &lYou received {fruit}! &d✨"
   one_shot_no_levels: "&c❌ Need 30 XP levels for ONE SHOT!"
-  spin_result: "&6🎲 {player} &aspun &6{fruit}&a!"
-  spinall_result: "&6🎲 ALL PLAYERS spun! &e{fruit_count} &afruits distributed!"
+  one_shot_used: "&c💀 &lONE SHOT! &7Killed {target}"
