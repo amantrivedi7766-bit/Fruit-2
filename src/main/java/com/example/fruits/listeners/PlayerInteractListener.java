@@ -10,7 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.block.Action;
-import org.bukkit.inventory.EquipmentSlot;
 
 public class PlayerInteractListener implements Listener {
 
@@ -18,37 +17,27 @@ public class PlayerInteractListener implements Listener {
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         
-        // Check if player is holding a fruit
-        if(event.getItem() == null) return;
-        String fruitId = Fruit.getFruitId(event.getItem());
-        if(fruitId == null) return;
-        
-        // Check if player has eaten the fruit
+        // Check if player has eaten a fruit
         PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
-        
-        // If player hasn't eaten the fruit yet - EAT IT
         if(data == null || data.getFruit() == null) {
-            // This will be handled by PlayerEatListener
             return;
         }
-        
-        // Player has eaten the fruit - use abilities with hotkeys
         
         Fruit fruit = data.getFruit();
         Action action = event.getAction();
         
         // RIGHT CLICK = Ability 1
         if(action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
-            event.setCancelled(true);
-            useAbility(player, data, fruit, 0); // Index 0 = first ability
-            return;
+            if(!player.isSneaking()) {
+                event.setCancelled(true);
+                useAbility(player, data, fruit, 0);
+            }
         }
         
         // SHIFT + RIGHT CLICK = Ability 2
         if(player.isSneaking() && (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
-            useAbility(player, data, fruit, 1); // Index 1 = second ability
-            return;
+            useAbility(player, data, fruit, 1);
         }
     }
     
@@ -56,12 +45,7 @@ public class PlayerInteractListener implements Listener {
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
         
-        // Check if player is holding a fruit
-        if(player.getInventory().getItemInMainHand() == null) return;
-        String fruitId = Fruit.getFruitId(player.getInventory().getItemInMainHand());
-        if(fruitId == null) return;
-        
-        // Check if player has eaten the fruit
+        // Check if player has eaten a fruit
         PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
         if(data == null || data.getFruit() == null) return;
         
@@ -70,7 +54,7 @@ public class PlayerInteractListener implements Listener {
         // SHIFT + LEFT CLICK = Ability 3
         if(player.isSneaking()) {
             event.setCancelled(true);
-            useAbility(player, data, fruit, 2); // Index 2 = third ability
+            useAbility(player, data, fruit, 2);
         }
     }
     
@@ -96,10 +80,6 @@ public class PlayerInteractListener implements Listener {
         
         // Send message
         player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a! (" + data.getUsedAbilities() + "/3)");
-        
-        // Show remaining uses in action bar
-        int remaining = 3 - data.getUsedAbilities();
-        player.sendMessage("§7Remaining uses: §e" + remaining);
         
         // Check if fruit returned
         if(data.getFruit() == null) {
