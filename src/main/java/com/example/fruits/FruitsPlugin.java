@@ -26,17 +26,22 @@ public class FruitsPlugin extends JavaPlugin {
         saveDefaultConfig();
         fruitRegistry = new FruitRegistry();
         cooldownManager = new CooldownManager();
+        
         getCommand("fruit").setExecutor(new FruitCommand());
         getCommand("fruitadmin").setExecutor(new FruitAdminCommand());
+        
         getServer().getPluginManager().registerEvents(new PlayerEatListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
         getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);
-        getLogger().info("✅ FruitsPlugin enabled!");
+        
+        getLogger().info("✅ FruitsPlugin enabled with 10 magical fruits!");
     }
+
     @Override
     public void onDisable() {
         getLogger().info("❌ FruitsPlugin disabled.");
     }
+
     public static FruitsPlugin getInstance() { return instance; }
     public FruitRegistry getFruitRegistry() { return fruitRegistry; }
     public CooldownManager getCooldownManager() { return cooldownManager; }
