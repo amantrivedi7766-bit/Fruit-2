@@ -1,4 +1,4 @@
-package com.example.fruits.gui;
+package com.example.fruits.gui;  // ✅ SAME PACKAGE
 
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
@@ -15,53 +15,28 @@ import java.util.Arrays;
 public class AdminGUI {
     
     public static void open(Player player) {
-        // Create inventory with 18 slots (9x2)
-        Inventory inv = Bukkit.createInventory(new GUIHolder(), 18, "§8⚡ Fruits Admin Panel");
+        Inventory inv = Bukkit.createInventory(new GUIHolder(), 18, "§8⚡ Fruits Admin");
         
         int slot = 0;
-        // Add all fruits to GUI
         for (Fruit fruit : FruitsPlugin.getInstance().getFruitRegistry().getAllFruits()) {
             ItemStack item = fruit.createItem();
             ItemMeta meta = item.getItemMeta();
-            meta.setLore(Arrays.asList(
-                "§7§m-------------------",
-                "§a✅ Click to give this fruit",
-                "§7§m-------------------"
-            ));
+            meta.setLore(Arrays.asList("§7Click to give this fruit"));
             item.setItemMeta(meta);
             inv.setItem(slot++, item);
         }
         
-        // Fill empty slots with glass panes
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.setDisplayName("§7");
-        filler.setItemMeta(fillerMeta);
-        
-        for (int i = slot; i < 17; i++) {
-            inv.setItem(i, filler);
-        }
-        
-        // Spin button (slot 17)
+        // Spin button
         ItemStack spin = new ItemStack(Material.COMPASS);
         ItemMeta spinMeta = spin.getItemMeta();
-        spinMeta.setDisplayName("§a§l🎲 RANDOM FRUIT");
-        spinMeta.setLore(Arrays.asList(
-            "§7§m-------------------",
-            "§7Click to get a random fruit!",
-            "§7§m-------------------"
-        ));
+        spinMeta.setDisplayName("§a§l🎲 Random Fruit");
         spin.setItemMeta(spinMeta);
         inv.setItem(17, spin);
         
         player.openInventory(inv);
     }
 
-    // Public Holder class - important for event checking
     public static class GUIHolder implements InventoryHolder {
-        @Override
-        public Inventory getInventory() {
-            return null;
-        }
+        @Override public Inventory getInventory() { return null; }
     }
 }
