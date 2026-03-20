@@ -19,13 +19,13 @@ public class SpinWheel {
         
         createSpiral(player);
         List<ArmorStand> wheel = createWheel(player, fruits);
-        animateSpin(player, wheel, fruits);
+        animateSpin(player, wheel);
         
         Random random = new Random();
         int selectedIndex = random.nextInt(fruits.length);
         Fruit selectedFruit = fruits[selectedIndex];
         
-        showResult(player, selectedFruit, selectedIndex);
+        showResult(player, selectedFruit);
         
         player.getInventory().addItem(selectedFruit.createItem());
         
@@ -86,7 +86,7 @@ public class SpinWheel {
         return wheel;
     }
     
-    private static void animateSpin(Player player, List<ArmorStand> wheel, Fruit[] fruits) {
+    private static void animateSpin(Player player, List<ArmorStand> wheel) {
         new BukkitRunnable() {
             int rotation = 0;
             int spinCount = 0;
@@ -107,8 +107,9 @@ public class SpinWheel {
                     double z = Math.sin(angle) * 3;
                     wheel.get(i).teleport(player.getLocation().add(0, 4, 0).clone().add(x, Math.sin(angle) * 0.5, z));
                     
-                    // FIXED: Use SPELL instead of SPELL_MOB
-                    player.getWorld().spawnParticle(Particle.SPELL, wheel.get(i).getLocation(), 3, 0.2, 0.2, 0.2, 0.1);
+                    // ✅ WORKING PARTICLES IN PAPER 1.21.4
+                    player.getWorld().spawnParticle(Particle.END_ROD, wheel.get(i).getLocation(), 2, 0.1, 0.1, 0.1, 0.05);
+                    player.getWorld().spawnParticle(Particle.FIREWORK, wheel.get(i).getLocation(), 1, 0.2, 0.2, 0.2, 0.02);
                 }
                 
                 if(spinCount % 10 == 0) {
@@ -121,11 +122,13 @@ public class SpinWheel {
         }.runTaskTimer(FruitsPlugin.getInstance(), 0L, 1L);
     }
     
-    private static void showResult(Player player, Fruit fruit, int index) {
+    private static void showResult(Player player, Fruit fruit) {
         Location center = player.getLocation().add(0, 5, 0);
         
+        // ✅ ALL WORKING PARTICLES
         player.getWorld().spawnParticle(Particle.EXPLOSION, center, 1);
         player.getWorld().spawnParticle(Particle.FIREWORK, center, 100, 1, 1, 1, 0.5);
+        player.getWorld().spawnParticle(Particle.FLAME, center, 50, 1, 1, 1, 0.1);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 2.0f, 1.5f);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 2.0f, 2.0f);
         
@@ -139,6 +142,7 @@ public class SpinWheel {
                 }
                 Location beamLoc = player.getLocation().add(0, height, 0);
                 player.getWorld().spawnParticle(Particle.FIREWORK, beamLoc, 15, 0.5, 0, 0.5, 0.1);
+                player.getWorld().spawnParticle(Particle.END_ROD, beamLoc, 5, 0.3, 0, 0.3, 0.05);
                 height++;
             }
         }.runTaskTimer(FruitsPlugin.getInstance(), 0L, 1L);
