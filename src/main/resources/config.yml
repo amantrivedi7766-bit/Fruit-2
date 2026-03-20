@@ -1,19 +1,41 @@
-# FruitsPlugin Configuration
+# 🍎 FruitsPlugin Configuration
+# Version: 1.0.0
 
-# Cooldown settings (in seconds)
-cooldowns:
+# Cooldown settings (seconds)
+cooldown:
   default: 15
   one_shot: 120
   gods_wrath: 60
   divine_shield: 90
+  vine_grab: 20
+  lunar_slip: 15
+
+# XP requirements
+xp_requirements:
+  one_shot: 30
 
 # Messages
 messages:
-  no_fruit: "&c❌ You haven't eaten any fruit! Eat a fruit first."
-  on_cooldown: "&c⏳ Ability on cooldown: &e{seconds}s &cremaining"
-  fruit_eaten: "&a✅ You ate the {fruit}! Use &e/fruit use <1|2|3>"
-  ability_used: "&a⚡ Used {ability}! ({used}/3)"
-  fruit_returned: "&a🔄 Fruit returned to inventory! Use all abilities again!"
-  invalid_ability: "&c❌ Invalid ability number. Use 1, 2, or 3."
-  one_shot_no_levels: "&c❌ You need 30 XP levels to use One Shot!"
-  one_shot_used: "&c💀 ONE SHOT! Used 30 XP levels"
+  prefix: "&8[&6Fruits&8] "
+  no_fruit: "&c❌ You haven't eaten any fruit!"
+  on_cooldown: "&c⏳ Cooldown: &e{seconds}s"
+  fruit_eaten: "&a✅ You ate &6{fruit}&a! Use &e/fruit use <1|2|3>"
+  ability_used: "&a⚡ Used &6{ability}&a! (&e{used}&7/&e3&a)"
+  fruit_returned: "&a🔄 Fruit returned to inventory!"
+  one_shot_no_levels: "&c❌ Need {levels} XP levels!"
+  one_shot_no_diamond: "&c❌ Target not wearing diamond armor!"
+  invalid_ability: "&c❌ Use 1, 2, or 3"
+  no_permission: "&c❌ No permission!"
+
+# Sounds
+sounds:
+  eat: "ENTITY_PLAYER_BURP"
+  ability_use: "ENTITY_PLAYER_LEVELUP"
+  cooldown_finish: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  one_shot: "ENTITY_LIGHTNING_BOLT_IMPACT"
+
+# Particles
+particles:
+  enabled: true
+  ability_use: "FIREWORKS_SPARK"
+  one_shot: "EXPLOSION"
