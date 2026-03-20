@@ -25,11 +25,14 @@ public class PlayerEatListener implements Listener {
         
         if(fruit == null) return;
 
+        // Remove one fruit from hand
         item.setAmount(item.getAmount() - 1);
         
+        // Store player's active fruit
         PlayerFruitData data = new PlayerFruitData(player, fruit);
         FruitsPlugin.getInstance().getActivePlayers().put(player.getUniqueId(), data);
 
+        // Show abilities in action bar
         String abilities = fruit.getAbilities().get(0).getName() + " §7| §e" + 
                           fruit.getAbilities().get(1).getName() + " §7| §e" + 
                           fruit.getAbilities().get(2).getName();
@@ -38,6 +41,10 @@ public class PlayerEatListener implements Listener {
             TextComponent.fromLegacyText("§a🍎 " + fruit.getDisplayName() + " §7| §e" + abilities));
         
         player.sendMessage("§a✅ You ate " + fruit.getDisplayName() + "!");
-        player.sendMessage("§e⚡ Use §6/fruit use <1|2|3> §eto use abilities!");
+        player.sendMessage("§e⚡ Hotkeys:");
+        player.sendMessage("§7  • §eRight Click §7→ §f" + fruit.getAbilities().get(0).getName());
+        player.sendMessage("§7  • §eShift + Right Click §7→ §f" + fruit.getAbilities().get(1).getName());
+        player.sendMessage("§7  • §eShift + Left Click §7→ §f" + fruit.getAbilities().get(2).getName());
+        player.sendMessage("§7  • §e/fruit use <1|2|3> §7→ Alternative command");
     }
 }
