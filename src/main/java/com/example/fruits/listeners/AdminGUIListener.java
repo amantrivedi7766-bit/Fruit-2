@@ -3,6 +3,8 @@ package com.example.fruits.listeners;
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.gui.AdminGUI;
 import com.example.fruits.models.Fruit;
+import com.example.fruits.models.PlayerFruitData;
+import com.example.fruits.utils.SpinWheel;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -10,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+
 import java.util.*;
 
 public class AdminGUIListener implements Listener {
@@ -24,6 +27,7 @@ public class AdminGUIListener implements Listener {
         Player p = (Player) e.getWhoClicked();
         int slot = e.getSlot();
         
+        // Fruits Section (0-9)
         if(slot >= 0 && slot <= 9) {
             String fruitId = Fruit.getFruitId(e.getCurrentItem());
             if(fruitId != null) {
@@ -32,6 +36,7 @@ public class AdminGUIListener implements Listener {
                 p.performCommand("fruitadmin give " + p.getName() + " " + fruitId);
             }
         }
+        // Admin Controls
         else if(slot == 10) {
             p.performCommand("fruitadmin reload");
             p.sendMessage("§aConfig reloaded!");
@@ -40,7 +45,9 @@ public class AdminGUIListener implements Listener {
             p.closeInventory();
             p.sendMessage("§eOnline players: §b" + Bukkit.getOnlinePlayers().size());
             for(Player player : Bukkit.getOnlinePlayers()) {
-                p.sendMessage(" §7- §f" + player.getName());
+                PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
+                String status = (data != null && data.getFruit() != null) ? "§a✓ Has Power" : "§c✗ No Power";
+                p.sendMessage(" §7- §f" + player.getName() + " §7" + status);
             }
         }
         else if(slot == 12) {
@@ -50,10 +57,58 @@ public class AdminGUIListener implements Listener {
             for(Player player : Bukkit.getOnlinePlayers()) {
                 Fruit randomFruit = fruits[random.nextInt(fruits.length)];
                 player.getInventory().addItem(randomFruit.createItem());
-                player.sendMessage("§aYou received a random fruit from admin!");
+                player.sendMessage("§a🎁 You received a random fruit from admin!");
             }
             p.sendMessage("§aGave random fruits to all players!");
         }
+        else if(slot == 13) {
+            p.closeInventory();
+            FruitsPlugin.getInstance().getActivePlayers().clear();
+            Bukkit.broadcastMessage("§c§l🗑️ All fruit powers have been removed by admin!");
+        }
+        // Player Management (18-35)
+        else if(slot >= 18 && slot <= 35) {
+            int playerIndex = slot - 18;
+            List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
+            if(playerIndex < players.size()) {
+                Player target = players.get(playerIndex);
+                if(e.isLeftClick()) {
+                    p.closeInventory();
+                    PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(target.getUniqueId());
+                    if(data != null && data.getFruit() != null) {
+                        p.sendMessage("§6=== " + target.getName() + "'s Power ===");
+                        p.sendMessage("§7Fruit: " + data.getFruit().getDisplayName());
+                        p.sendMessage("§7Uses remaining: §e" + (3 - data.getUsedAbilities()));
+                    } else {
+                        p.sendMessage("§c" + target.getName() + " has no fruit power!");
+                    }
+                } else if(e.isRightClick()) {
+                    p.closeInventory();
+                    FruitsPlugin.getInstance().getActivePlayers().remove(target.getUniqueId());
+                    p.sendMessage("§c🗑️ Removed " + target.getName() + "'s fruit power!");
+                    target.sendMessage("§c🗑️ Your fruit power was removed by admin!");
+                }
+            }
+        }
+        // Grace Period Controls
+        else if(slot == 36) {
+            p.closeInventory();
+            FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(60);
+            p.sendMessage("§a✅ Started 60 second global grace period!");
+        }
+        else if(slot == 37) {
+            p.closeInventory();
+            // End grace period logic
+            p.sendMessage("§cGrace period ended!");
+        }
+        else if(slot == 38) {
+            p.closeInventory();
+            boolean current = FruitsPlugin.getInstance().getConfig().getBoolean("death.lose_power", true);
+            FruitsPlugin.getInstance().getConfig().set("death.lose_power", !current);
+            FruitsPlugin.getInstance().saveConfig();
+            p.sendMessage("§aDeath power loss set to: " + (!current ? "§cLOSE POWER" : "§aKEEP POWER"));
+        }
+        // Spin Controls
         else if(slot == 45) {
             p.closeInventory();
             p.performCommand("fruitadmin spin " + p.getName());
