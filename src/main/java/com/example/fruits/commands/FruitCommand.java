@@ -10,70 +10,36 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class FruitCommand implements CommandExecutor {
-
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if(!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+        if(!(sender instanceof Player)) return true;
+        Player p = (Player) sender;
+        if(args.length != 2 || !args[0].equals("use")) {
+            p.sendMessage("§c/fruit use <1|2|3>");
             return true;
         }
-        
-        Player player = (Player) sender;
-        
-        if(args.length != 2 || !args[0].equalsIgnoreCase("use")) {
-            player.sendMessage("§cUsage: /fruit use <1|2|3>");
-            return true;
-        }
-
-        PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
+        PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(p.getUniqueId());
         if(data == null || data.getFruit() == null) {
-            player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("messages.no_fruit").replace('&', '§'));
+            p.sendMessage("§cEat a fruit first!");
             return true;
         }
-
         int index;
-        try {
-            index = Integer.parseInt(args[1]) - 1;
-        } catch(NumberFormatException e) {
-            player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("messages.invalid_ability").replace('&', '§'));
+        try { index = Integer.parseInt(args[1]) - 1; } catch(Exception e) {
+            p.sendMessage("§cUse 1, 2, or 3");
             return true;
         }
-
         Fruit fruit = data.getFruit();
         if(index < 0 || index >= fruit.getAbilities().size()) {
-            player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("messages.invalid_ability").replace('&', '§'));
+            p.sendMessage("§cInvalid ability");
             return true;
         }
-
         Ability ability = fruit.getAbilities().get(index);
-        String cooldownKey = fruit.getId() + "_" + index;
-
-        if(!FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
-            return true;
-        }
-
-        ability.getExecutor().execute(player);
-        
-        // ✅ FIXED: 4 parameters
-        FruitsPlugin.getInstance().getCooldownManager().setCooldown(
-            player, 
-            cooldownKey, 
-            ability.getCooldown(),
-            ability.getName()
-        );
-
+        if(!FruitsPlugin.getInstance().getCooldownManager().checkCooldown(p, fruit.getId()+"_"+index)) return true;
+        ability.getExecutor().execute(p);
+        FruitsPlugin.getInstance().getCooldownManager().setCooldown(p, fruit.getId()+"_"+index, ability.getCooldown(), ability.getName());
         data.incrementUsed();
-        
-        String msg = FruitsPlugin.getInstance().getConfig().getString("messages.ability_used")
-            .replace("{ability}", ability.getName())
-            .replace("{used}", String.valueOf(data.getUsedAbilities()))
-            .replace('&', '§');
-        player.sendMessage(msg);
-
-        if(data.getFruit() == null) {
-            player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("messages.fruit_returned").replace('&', '§'));
-        }
-
+        p.sendMessage("§aUsed " + ability.getName());
+        if(data.getFruit() == null) p.sendMessage("§aFruit returned!");
         return true;
     }
 }
