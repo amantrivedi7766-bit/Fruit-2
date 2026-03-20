@@ -34,7 +34,7 @@ public class FruitsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
         getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);
         
-        getLogger().info("✅ FruitsPlugin enabled with 10 magical fruits!");
+        getLogger().info("✅ FruitsPlugin enabled with 10 unique fruits!");
     }
 
     @Override
