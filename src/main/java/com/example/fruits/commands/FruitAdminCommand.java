@@ -9,7 +9,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import java.util.Random;
 
 public class FruitAdminCommand implements CommandExecutor {
 
@@ -38,7 +37,7 @@ public class FruitAdminCommand implements CommandExecutor {
                 }
                 Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(args[2]);
                 if(fruit == null) {
-                    sender.sendMessage("§cFruit not found! Available: crimson_star, moon_crescent, blood_gem, void_cluster, solar_orb, thorned_crown, ruby_heart, jade_melon, drakes_tear, primordial_essence");
+                    sender.sendMessage("§cFruit not found!");
                     return true;
                 }
                 target.getInventory().addItem(fruit.createItem());
@@ -59,10 +58,8 @@ public class FruitAdminCommand implements CommandExecutor {
                 break;
                 
             case "spinall":
-                for(Player p : Bukkit.getOnlinePlayers()) {
-                    SpinWheel.spin(p);
-                }
-                sender.sendMessage("§a🎲 Spun random fruits for all " + Bukkit.getOnlinePlayers().size() + " players!");
+                SpinWheel.spinAll();
+                sender.sendMessage("§a🎲 All players received random fruits!");
                 break;
                 
             case "gui":
