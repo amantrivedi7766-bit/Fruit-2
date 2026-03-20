@@ -1,1 +1,19 @@
-# config.yml
+# FruitsPlugin Configuration
+
+# Cooldown settings (in seconds)
+cooldowns:
+  default: 15
+  one_shot: 120
+  gods_wrath: 60
+  divine_shield: 90
+
+# Messages
+messages:
+  no_fruit: "&c❌ You haven't eaten any fruit! Eat a fruit first."
+  on_cooldown: "&c⏳ Ability on cooldown: &e{seconds}s &cremaining"
+  fruit_eaten: "&a✅ You ate the {fruit}! Use &e/fruit use <1|2|3>"
+  ability_used: "&a⚡ Used {ability}! ({used}/3)"
+  fruit_returned: "&a🔄 Fruit returned to inventory! Use all abilities again!"
+  invalid_ability: "&c❌ Invalid ability number. Use 1, 2, or 3."
+  one_shot_no_levels: "&c❌ You need 30 XP levels to use One Shot!"
+  one_shot_used: "&c💀 ONE SHOT! Used 30 XP levels"
