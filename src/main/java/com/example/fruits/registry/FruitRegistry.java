@@ -2,9 +2,8 @@ package com.example.fruits.registry;
 
 import com.example.fruits.models.Ability;
 import com.example.fruits.models.Fruit;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import java.util.*;
@@ -17,7 +16,7 @@ public class FruitRegistry {
     }
 
     private void registerFruits() {
-        // 1. CRIMSON STAR - Lightning & Fire
+        // 1. CRIMSON STAR
         fruits.put("crimson_star", new Fruit("crimson_star", "§c§l⚡ Crimson Star", Material.APPLE, 1001,
             Arrays.asList(
                 new Ability("§cThunder Strike", 20, p -> {
@@ -36,7 +35,7 @@ public class FruitRegistry {
                 })
             )));
 
-        // 2. MOON CRESCENT - Gravity & Pull
+        // 2. MOON CRESCENT
         fruits.put("moon_crescent", new Fruit("moon_crescent", "§e§l🌙 Moon Crescent", Material.GOLDEN_CARROT, 1002,
             Arrays.asList(
                 new Ability("§eGravity Pull", 20, p -> {
@@ -56,7 +55,7 @@ public class FruitRegistry {
                 })
             )));
 
-        // 3. VOID CLUSTER - Teleport & Push
+        // 3. VOID CLUSTER
         fruits.put("void_cluster", new Fruit("void_cluster", "§5§l🌀 Void Cluster", Material.GLOW_BERRIES, 1003,
             Arrays.asList(
                 new Ability("§5Void Rift", 20, p -> {
@@ -76,7 +75,7 @@ public class FruitRegistry {
                 })
             )));
 
-        // 4. SOLAR ORB - Explosions & Fire
+        // 4. SOLAR ORB
         fruits.put("solar_orb", new Fruit("solar_orb", "§6§l☀️ Solar Orb", Material.ORANGE_DYE, 1004,
             Arrays.asList(
                 new Ability("§6Solar Flare", 20, p -> {
@@ -93,7 +92,7 @@ public class FruitRegistry {
                 })
             )));
 
-        // 5. THORNED CROWN - Nature & Vines
+        // 5. THORNED CROWN
         fruits.put("thorned_crown", new Fruit("thorned_crown", "§a§l🌿 Thorned Crown", Material.PUMPKIN_PIE, 1005,
             Arrays.asList(
                 new Ability("§aVine Trap", 20, p -> {
@@ -112,69 +111,12 @@ public class FruitRegistry {
                 })
             )));
 
-        // 6. CRYSTAL HEART - Healing & Light
-        fruits.put("crystal_heart", new Fruit("crystal_heart", "§b§l💎 Crystal Heart", Material.SWEET_BERRIES, 1006,
-            Arrays.asList(
-                new Ability("§bHealing Pulse", 20, p -> {
-                    p.setHealth(Math.min(p.getHealth() + 8, p.getMaxHealth()));
-                    p.getWorld().spawnParticle(Particle.HEART, p.getLocation(), 50, 2, 1, 2);
-                    p.getWorld().playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.8f);
-                }),
-                new Ability("§bCrystal Wall", 25, p -> {
-                    p.getNearbyEntities(5, 3, 5).forEach(e -> e.setVelocity(e.getVelocity().multiply(-1)));
-                    p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation(), 60, 3, 2, 3);
-                }),
-                new Ability("§bLight Beam", 30, p -> {
-                    Player target = getTarget(p, 20);
-                    if(target != null) {
-                        target.damage(12, p);
-                        target.getWorld().strikeLightningEffect(target.getLocation());
-                    }
-                })
-            )));
-
-        // 7. STORM EYE - Wind & Push
-        fruits.put("storm_eye", new Fruit("storm_eye", "§3§l🌪️ Storm Eye", Material.CHORUS_FRUIT, 1007,
-            Arrays.asList(
-                new Ability("§3Wind Push", 20, p -> {
-                    p.getNearbyEntities(7, 5, 7).forEach(e -> e.setVelocity(e.getLocation().toVector().subtract(p.getLocation().toVector()).normalize().multiply(3)));
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 0.8f);
-                }),
-                new Ability("§3Cyclone", 25, p -> {
-                    p.getNearbyEntities(6, 4, 6).forEach(e -> e.setVelocity(new Vector(Math.random()*2-1, 1, Math.random()*2-1)));
-                    p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 100, 3, 2, 3);
-                }),
-                new Ability("§3Thunderstorm", 30, p -> {
-                    for(int i=0; i<8; i++) {
-                        p.getWorld().strikeLightning(p.getLocation().add(Math.random()*12-6, 0, Math.random()*12-6));
-                    }
-                })
-            )));
-
-        // 8. INFERNO HEART - Fire & Explosions
-        fruits.put("inferno_heart", new Fruit("inferno_heart", "§c§l🔥 Inferno Heart", Material.GOLDEN_APPLE, 1008,
-            Arrays.asList(
-                new Ability("§cFlame Wave", 20, p -> {
-                    p.getNearbyEntities(8, 4, 8).forEach(e -> e.setFireTicks(120));
-                    p.getWorld().spawnParticle(Particle.FLAME, p.getLocation(), 100, 3, 2, 3);
-                }),
-                new Ability("§cFirestorm", 25, p -> {
-                    for(int i=0; i<15; i++) {
-                        p.getWorld().spawnParticle(Particle.FLAME, p.getLocation().add(Math.random()*10-5, Math.random()*3, Math.random()*10-5), 5);
-                    }
-                }),
-                new Ability("§cEruption", 30, p -> {
-                    p.getWorld().createExplosion(p.getLocation(), 5, true, true);
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.5f);
-                })
-            )));
-
-        // 9. ICE SHARD - Freeze & Knockback
-        fruits.put("ice_shard", new Fruit("ice_shard", "§b§l❄️ Ice Shard", Material.SNOWBALL, 1009,
+        // 6. ICE SHARD
+        fruits.put("ice_shard", new Fruit("ice_shard", "§b§l❄️ Ice Shard", Material.SNOWBALL, 1006,
             Arrays.asList(
                 new Ability("§bFreeze", 20, p -> {
                     p.getNearbyEntities(6, 4, 6).forEach(e -> e.setVelocity(new Vector(0, -1, 0)));
-                    p.getWorld().spawnParticle(Particle.SNOWBALL, p.getLocation(), 80, 2, 1, 2);
+                    p.getWorld().spawnParticle(Particle.SNOWFLAKE, p.getLocation(), 80, 2, 1, 2);
                 }),
                 new Ability("§bIce Spear", 25, p -> {
                     for(int i=0; i<5; i++) {
@@ -188,7 +130,7 @@ public class FruitRegistry {
                 })
             )));
 
-        // 10. PRIMORDIAL ESSENCE - GOD FRUIT (ONE SHOT)
+        // 7. PRIMORDIAL ESSENCE - GOD FRUIT
         fruits.put("primordial_essence", new Fruit("primordial_essence", "§5§l✨ Primordial Essence", 
             Material.ENCHANTED_GOLDEN_APPLE, 1010,
             Arrays.asList(
@@ -204,7 +146,7 @@ public class FruitRegistry {
                         p.getWorld().strikeLightningEffect(target.getLocation());
                         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0f, 0.5f);
                         p.sendMessage("§c§l💀 ONE SHOT! Killed " + target.getName());
-                        org.bukkit.Bukkit.broadcastMessage("§5✨ " + p.getName() + " §dused ONE SHOT!");
+                        Bukkit.broadcastMessage("§5✨ " + p.getName() + " §dused ONE SHOT!");
                     }
                 }),
                 new Ability("§5Apocalypse", 60, p -> {
@@ -232,4 +174,4 @@ public class FruitRegistry {
 
     public Fruit getFruit(String id) { return fruits.get(id); }
     public Collection<Fruit> getAllFruits() { return fruits.values(); }
-                        }
+}
