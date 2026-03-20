@@ -6,7 +6,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Fruit {
@@ -27,26 +26,8 @@ public class Fruit {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(displayName);
         
-        // Create lore
-        List<String> lore = new ArrayList<>();
-        lore.add("§7§m-------------------");
-        lore.add("§6✨ Magical Fruit");
-        lore.add("§7§m-------------------");
-        lore.add("§eAbilities:");
-        for(int i = 0; i < abilities.size(); i++) {
-            Ability a = abilities.get(i);
-            lore.add("§7 " + (i+1) + ". §f" + a.getName() + " §7(§b" + a.getCooldown() + "s§7)");
-        }
-        lore.add("§7§m-------------------");
-        lore.add("§aEat to unlock powers!");
-        lore.add("§7§m-------------------");
-        
-        meta.setLore(lore);
-        
-        // Store ID
         NamespacedKey key = new NamespacedKey(FruitsPlugin.getInstance(), "fruit_id");
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, id);
-        
         item.setItemMeta(meta);
         return item;
     }
