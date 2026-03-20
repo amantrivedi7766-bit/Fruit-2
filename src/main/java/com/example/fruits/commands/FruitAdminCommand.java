@@ -3,12 +3,12 @@ package com.example.fruits.commands;
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.gui.AdminGUI;
 import com.example.fruits.models.Fruit;
+import com.example.fruits.utils.SpinWheel;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import java.util.Random;
 
 public class FruitAdminCommand implements CommandExecutor {
@@ -19,12 +19,12 @@ public class FruitAdminCommand implements CommandExecutor {
             sender.sendMessage("§cNo permission!");
             return true;
         }
-
+        
         if(args.length < 1) {
-            sender.sendMessage("§cUsage: /fruitadmin <give|spin|reload|gui>");
+            sender.sendMessage("§cUsage: /fruitadmin <give|spin|spinall|gui|reload>");
             return true;
         }
-
+        
         switch(args[0].toLowerCase()) {
             case "give":
                 if(args.length < 3) {
@@ -38,13 +38,13 @@ public class FruitAdminCommand implements CommandExecutor {
                 }
                 Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(args[2]);
                 if(fruit == null) {
-                    sender.sendMessage("§cFruit not found!");
+                    sender.sendMessage("§cFruit not found! Available: crimson_star, moon_crescent, blood_gem, void_cluster, solar_orb, thorned_crown, ruby_heart, jade_melon, drakes_tear, primordial_essence");
                     return true;
                 }
                 target.getInventory().addItem(fruit.createItem());
                 sender.sendMessage("§aGave " + fruit.getDisplayName() + " to " + target.getName());
                 break;
-
+                
             case "spin":
                 if(args.length < 2) {
                     sender.sendMessage("§cUsage: /fruitadmin spin <player>");
@@ -55,17 +55,16 @@ public class FruitAdminCommand implements CommandExecutor {
                     sender.sendMessage("§cPlayer not found!");
                     return true;
                 }
-                Fruit[] fruits = FruitsPlugin.getInstance().getFruitRegistry().getAllFruits().toArray(new Fruit[0]);
-                Fruit random = fruits[new Random().nextInt(fruits.length)];
-                spinTarget.getInventory().addItem(random.createItem());
-                sender.sendMessage("§aGave random fruit to " + spinTarget.getName());
+                SpinWheel.spin(spinTarget);
                 break;
-
-            case "reload":
-                FruitsPlugin.getInstance().reloadConfig();
-                sender.sendMessage("§aConfig reloaded!");
+                
+            case "spinall":
+                for(Player p : Bukkit.getOnlinePlayers()) {
+                    SpinWheel.spin(p);
+                }
+                sender.sendMessage("§a🎲 Spun random fruits for all " + Bukkit.getOnlinePlayers().size() + " players!");
                 break;
-
+                
             case "gui":
                 if(!(sender instanceof Player)) {
                     sender.sendMessage("§cOnly players can use GUI!");
@@ -73,9 +72,14 @@ public class FruitAdminCommand implements CommandExecutor {
                 }
                 AdminGUI.open((Player) sender);
                 break;
-
+                
+            case "reload":
+                FruitsPlugin.getInstance().reloadConfig();
+                sender.sendMessage("§aConfig reloaded!");
+                break;
+                
             default:
-                sender.sendMessage("§cUnknown command!");
+                sender.sendMessage("§cUnknown command! Use: give, spin, spinall, gui, reload");
         }
         return true;
     }
