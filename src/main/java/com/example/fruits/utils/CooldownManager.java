@@ -17,7 +17,7 @@ public class CooldownManager {
     private final Map<String, Long> cooldowns = new HashMap<>();
     private final Map<UUID, BossBar> activeBars = new HashMap<>();
 
-    public void setCooldown(Player player, String abilityKey, int seconds, String abilityName) {  // ✅ 4 parameters
+    public void setCooldown(Player player, String abilityKey, int seconds, String abilityName) {
         String key = player.getUniqueId() + "_" + abilityKey;
         cooldowns.put(key, System.currentTimeMillis() + (seconds * 1000L));
         
@@ -48,7 +48,6 @@ public class CooldownManager {
                 bar.setTitle("§a✅ Ready!");
                 bar.setColor(BarColor.GREEN);
                 bar.setProgress(0);
-                
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
                     TextComponent.fromLegacyText("§a⚡ Ability ready!"));
                 
@@ -56,7 +55,6 @@ public class CooldownManager {
                     bar.removeAll();
                     activeBars.remove(player.getUniqueId());
                 }, 40L);
-                
                 task.cancel();
                 return;
             }
@@ -84,12 +82,7 @@ public class CooldownManager {
     private String createProgressBar(long remaining, int total) {
         int percent = (int) ((remaining * 100) / total);
         int bars = 20 - (percent / 5);
-        
-        StringBuilder bar = new StringBuilder();
-        bar.append("§a" + "█".repeat(Math.max(0, 20 - bars)));
-        bar.append("§7" + "█".repeat(Math.max(0, bars)));
-        
-        return bar.toString();
+        return "§a" + "█".repeat(Math.max(0, 20 - bars)) + "§7" + "█".repeat(Math.max(0, bars));
     }
 
     public boolean checkCooldown(Player player, String abilityKey) {
@@ -105,7 +98,6 @@ public class CooldownManager {
         int seconds = (int) (remaining / 1000);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
             TextComponent.fromLegacyText("§c⏳ Cooldown: §e" + seconds + "s"));
-        
         return false;
     }
 
@@ -115,4 +107,4 @@ public class CooldownManager {
         long remaining = cooldowns.get(key) - System.currentTimeMillis();
         return Math.max(0, remaining / 1000);
     }
-}
+           }
