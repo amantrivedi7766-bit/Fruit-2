@@ -18,7 +18,6 @@ public class PlayerInteractListener implements Listener {
         String fruitId = Fruit.getFruitId(event.getItem());
         if(fruitId == null) return;
         
-        // This cancels the interaction so the eat listener handles it
         event.setCancelled(true);
     }
 }
