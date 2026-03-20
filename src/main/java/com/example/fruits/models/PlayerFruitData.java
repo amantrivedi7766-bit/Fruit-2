@@ -16,6 +16,7 @@ public class PlayerFruitData {
     public void incrementUsed() {
         usedAbilities++;
         if(usedAbilities >= 3) {
+            // Give back ONE fruit after all abilities used
             player.getInventory().addItem(fruit.createItem());
             fruit = null;
             usedAbilities = 0;
