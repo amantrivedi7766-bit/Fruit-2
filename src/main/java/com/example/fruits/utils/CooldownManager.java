@@ -19,7 +19,7 @@ public class CooldownManager {
             return true;
         }
         long remaining = (cooldowns.get(k) - System.currentTimeMillis()) / 1000;
-        player.sendMessage("§cCooldown: " + remaining + "s");
+        player.sendMessage("§c⏳ Cooldown: §e" + remaining + "s");
         return false;
     }
     
