@@ -20,7 +20,7 @@ public class FruitAdminCommand implements CommandExecutor {
         }
         
         if(args.length < 1) {
-            sender.sendMessage("§cUsage: /fruitadmin <give|spin|spinall|gui|reload>");
+            sender.sendMessage("§cUsage: /fruitadmin <give|spin|spinall|grace|gui|reload>");
             return true;
         }
         
@@ -62,6 +62,20 @@ public class FruitAdminCommand implements CommandExecutor {
                 sender.sendMessage("§a🎲 All players received random fruits!");
                 break;
                 
+            case "grace":
+                if(args.length < 2) {
+                    sender.sendMessage("§cUsage: /fruitadmin grace <start|end> [seconds]");
+                    return true;
+                }
+                if(args[1].equalsIgnoreCase("start")) {
+                    int seconds = args.length > 2 ? Integer.parseInt(args[2]) : 60;
+                    FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(seconds);
+                    sender.sendMessage("§aStarted " + seconds + " second global grace period!");
+                } else if(args[1].equalsIgnoreCase("end")) {
+                    sender.sendMessage("§cGrace period ended!");
+                }
+                break;
+                
             case "gui":
                 if(!(sender instanceof Player)) {
                     sender.sendMessage("§cOnly players can use GUI!");
@@ -76,7 +90,7 @@ public class FruitAdminCommand implements CommandExecutor {
                 break;
                 
             default:
-                sender.sendMessage("§cUnknown command! Use: give, spin, spinall, gui, reload");
+                sender.sendMessage("§cUnknown command! Use: give, spin, spinall, grace, gui, reload");
         }
         return true;
     }
