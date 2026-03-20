@@ -2,7 +2,7 @@ package com.example.fruits;
 
 import com.example.fruits.commands.FruitAdminCommand;
 import com.example.fruits.commands.FruitCommand;
-import com.example.fruits.listeners.AdminGUIListener;  // ← YEH IMPORT CHECK KARO - listeners PACKAGE SE HAI?
+import com.example.fruits.listeners.AdminGUIListener;  // ✅ FIXED: listeners package se import
 import com.example.fruits.listeners.PlayerEatListener;
 import com.example.fruits.listeners.PlayerInteractListener;
 import com.example.fruits.models.PlayerFruitData;
@@ -29,13 +29,14 @@ public class FruitsPlugin extends JavaPlugin {
         fruitRegistry = new FruitRegistry();
         cooldownManager = new CooldownManager();
 
+        // Register commands
         getCommand("fruit").setExecutor(new FruitCommand());
         getCommand("fruitadmin").setExecutor(new FruitAdminCommand());
 
-        // ✅ LISTENERS REGISTER - SAB THEEK
+        // ✅ Register ALL listeners
         getServer().getPluginManager().registerEvents(new PlayerEatListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
-        getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);
+        getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);  // ✅ listeners package
 
         getLogger().info("✅ FruitsPlugin enabled!");
     }
