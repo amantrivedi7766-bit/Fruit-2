@@ -19,13 +19,22 @@ public class PlayerEatListener implements Listener {
         String fruitId = Fruit.getFruitId(item);
         if(fruitId == null) return;
 
+        // Cancel the default consume event
         event.setCancelled(true);
+        
         Player player = event.getPlayer();
         Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
         
         if(fruit == null) return;
 
-        // Remove one fruit from hand
+        // Check if player already has an active fruit
+        PlayerFruitData existingData = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
+        if(existingData != null && existingData.getFruit() != null) {
+            player.sendMessage("§c❌ You already have an active fruit! Use all abilities first!");
+            return;
+        }
+
+        // Remove ONE fruit from hand - FIXED: No duplicate
         item.setAmount(item.getAmount() - 1);
         
         // Store player's active fruit
@@ -45,6 +54,5 @@ public class PlayerEatListener implements Listener {
         player.sendMessage("§7  • §eRight Click §7→ §f" + fruit.getAbilities().get(0).getName());
         player.sendMessage("§7  • §eShift + Right Click §7→ §f" + fruit.getAbilities().get(1).getName());
         player.sendMessage("§7  • §eShift + Left Click §7→ §f" + fruit.getAbilities().get(2).getName());
-        player.sendMessage("§7  • §e/fruit use <1|2|3> §7→ Alternative command");
     }
 }
