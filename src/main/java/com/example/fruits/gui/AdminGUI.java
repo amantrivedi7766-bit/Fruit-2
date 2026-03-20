@@ -162,4 +162,29 @@ public class AdminGUI {
         ItemStack allSpin = new ItemStack(Material.NETHER_STAR);
         ItemMeta allMeta = allSpin.getItemMeta();
         allMeta.setDisplayName("§6§l🌟 ALL PLAYERS SPIN");
-        all
+        allMeta.setLore(Arrays.asList("§7Spin for ALL online players", "§eClick to mega spin!"));
+        allSpin.setItemMeta(allMeta);
+        inv.setItem(46, allSpin);
+        
+        // Random Player Spin
+        ItemStack randomSpin = new ItemStack(Material.ENDER_PEARL);
+        ItemMeta randomMeta = randomSpin.getItemMeta();
+        randomMeta.setDisplayName("§5§l🌀 Random Spin");
+        randomMeta.setLore(Arrays.asList("§7Spin for random player", "§eClick to spin random!"));
+        randomSpin.setItemMeta(randomMeta);
+        inv.setItem(47, randomSpin);
+        
+        // Filler Glass
+        ItemStack glass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = glass.getItemMeta();
+        glassMeta.setDisplayName("§7");
+        glass.setItemMeta(glassMeta);
+        for(int i = 48; i <= 53; i++) {
+            inv.setItem(i, glass);
+        }
+    }
+    
+    public static class GUIHolder implements InventoryHolder {
+        @Override public Inventory getInventory() { return null; }
+    }
+}
