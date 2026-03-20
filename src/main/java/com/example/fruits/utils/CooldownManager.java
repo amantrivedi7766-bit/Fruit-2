@@ -17,11 +17,10 @@ public class CooldownManager {
     private final Map<String, Long> cooldowns = new HashMap<>();
     private final Map<UUID, BossBar> activeBars = new HashMap<>();
 
-    public void setCooldown(Player player, String abilityKey, int seconds, String abilityName) {
+    public void setCooldown(Player player, String abilityKey, int seconds, String abilityName) {  // ✅ 4 parameters
         String key = player.getUniqueId() + "_" + abilityKey;
         cooldowns.put(key, System.currentTimeMillis() + (seconds * 1000L));
         
-        // Create boss bar
         BossBar bar = Bukkit.createBossBar(
             "§6⏳ " + abilityName + " §c" + seconds + "s",
             BarColor.RED,
@@ -31,7 +30,6 @@ public class CooldownManager {
         bar.setProgress(1.0);
         activeBars.put(player.getUniqueId(), bar);
         
-        // Start cooldown timer
         startCooldownTimer(player, abilityKey, seconds, bar);
     }
 
@@ -47,15 +45,13 @@ public class CooldownManager {
             long remaining = getRemaining(player, abilityKey);
             
             if(remaining <= 0) {
-                // Cooldown finished
-                bar.setTitle("§a✅ " + abilityKey + " Ready!");
+                bar.setTitle("§a✅ Ready!");
                 bar.setColor(BarColor.GREEN);
                 bar.setProgress(0);
                 
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
-                    TextComponent.fromLegacyText("§a⚡ Ability ready to use!"));
+                    TextComponent.fromLegacyText("§a⚡ Ability ready!"));
                 
-                // Remove after 2 seconds
                 Bukkit.getScheduler().runTaskLater(FruitsPlugin.getInstance(), () -> {
                     bar.removeAll();
                     activeBars.remove(player.getUniqueId());
@@ -65,15 +61,12 @@ public class CooldownManager {
                 return;
             }
             
-            // Update boss bar
             double progress = remaining / (double) totalSeconds;
             bar.setProgress(progress);
             
-            // Create progress bar text
             String barText = createProgressBar(remaining, totalSeconds);
             bar.setTitle("§6⏳ " + barText + " §c" + remaining + "s");
             
-            // Update color based on time
             if(remaining > totalSeconds * 0.66) {
                 bar.setColor(BarColor.RED);
             } else if(remaining > totalSeconds * 0.33) {
@@ -82,11 +75,10 @@ public class CooldownManager {
                 bar.setColor(BarColor.GREEN);
             }
             
-            // Action bar progress
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
                 TextComponent.fromLegacyText("§c⏳ " + barText + " §e" + remaining + "s"));
                 
-        }, 0L, 10L); // Update every 0.5 seconds
+        }, 0L, 10L);
     }
 
     private String createProgressBar(long remaining, int total) {
@@ -110,10 +102,9 @@ public class CooldownManager {
             return true;
         }
         
-        // Show remaining time on action bar
         int seconds = (int) (remaining / 1000);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
-            TextComponent.fromLegacyText("§c⏳ Cooldown: §e" + seconds + "s §7remaining"));
+            TextComponent.fromLegacyText("§c⏳ Cooldown: §e" + seconds + "s"));
         
         return false;
     }
