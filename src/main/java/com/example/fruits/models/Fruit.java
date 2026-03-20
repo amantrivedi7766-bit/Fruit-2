@@ -12,12 +12,14 @@ public class Fruit {
     private final String id;
     private final String displayName;
     private final Material material;
+    private final int customModelData;
     private final List<Ability> abilities;
 
-    public Fruit(String id, String displayName, Material material, List<Ability> abilities) {
+    public Fruit(String id, String displayName, Material material, int customModelData, List<Ability> abilities) {
         this.id = id;
         this.displayName = displayName;
         this.material = material;
+        this.customModelData = customModelData;
         this.abilities = abilities;
     }
 
@@ -25,6 +27,21 @@ public class Fruit {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(displayName);
+        meta.setCustomModelData(customModelData);
+        
+        List<String> lore = new java.util.ArrayList<>();
+        lore.add("§7§m-------------------");
+        lore.add("§6✨ Magical Fruit");
+        lore.add("§7§m-------------------");
+        lore.add("§eAbilities:");
+        for(int i = 0; i < abilities.size(); i++) {
+            Ability a = abilities.get(i);
+            lore.add("§7 " + (i+1) + ". §f" + a.getName() + " §7(§b" + a.getCooldown() + "s§7)");
+        }
+        lore.add("§7§m-------------------");
+        lore.add("§a🍎 Eat to unlock powers!");
+        lore.add("§7Use §e/fruit use <1|2|3>");
+        meta.setLore(lore);
         
         NamespacedKey key = new NamespacedKey(FruitsPlugin.getInstance(), "fruit_id");
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, id);
