@@ -54,12 +54,12 @@ public class FruitCommand implements CommandExecutor {
 
         ability.getExecutor().execute(player);
         
-        // ✅ FIXED: Set cooldown with 4 parameters
+        // ✅ FIXED: 4 parameters
         FruitsPlugin.getInstance().getCooldownManager().setCooldown(
             player, 
             cooldownKey, 
             ability.getCooldown(),
-            ability.getName()  // ✅ 4th parameter ADDED
+            ability.getName()
         );
 
         data.incrementUsed();
