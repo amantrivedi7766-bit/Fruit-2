@@ -35,16 +35,9 @@ public class AdminGUI {
             inv.setItem(slot++, item);
         }
         
-        // Admin Controls
         addAdminControls(inv);
-        
-        // Player Management
         addPlayerManagement(inv);
-        
-        // Server Controls
         addServerControls(inv);
-        
-        // Spin Controls
         addSpinControls(inv);
         
         player.openInventory(inv);
@@ -52,6 +45,7 @@ public class AdminGUI {
     }
     
     private static void addAdminControls(Inventory inv) {
+        // Reload Config
         ItemStack reload = new ItemStack(Material.COMMAND_BLOCK);
         ItemMeta reloadMeta = reload.getItemMeta();
         reloadMeta.setDisplayName("§a§l🔄 Reload Config");
@@ -59,6 +53,7 @@ public class AdminGUI {
         reload.setItemMeta(reloadMeta);
         inv.setItem(10, reload);
         
+        // All Players List
         ItemStack players = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta playerMeta = (SkullMeta) players.getItemMeta();
         playerMeta.setDisplayName("§b§l👥 All Players");
@@ -66,6 +61,7 @@ public class AdminGUI {
         players.setItemMeta(playerMeta);
         inv.setItem(11, players);
         
+        // Give All Fruits
         ItemStack giveAll = new ItemStack(Material.CHEST);
         ItemMeta giveAllMeta = giveAll.getItemMeta();
         giveAllMeta.setDisplayName("§6§l🎁 Give All Fruits");
@@ -93,20 +89,25 @@ public class AdminGUI {
     }
     
     private static void addServerControls(Inventory inv) {
+        // Set Day
         ItemStack day = new ItemStack(Material.SUNFLOWER);
         ItemMeta dayMeta = day.getItemMeta();
         dayMeta.setDisplayName("§e§l☀️ Set Day");
+        dayMeta.setLore(Arrays.asList("§7Set time to day", "§eClick to set!"));
         day.setItemMeta(dayMeta);
         inv.setItem(38, day);
         
+        // Set Night
         ItemStack night = new ItemStack(Material.CLOCK);
         ItemMeta nightMeta = night.getItemMeta();
         nightMeta.setDisplayName("§8§l🌙 Set Night");
+        nightMeta.setLore(Arrays.asList("§7Set time to night", "§eClick to set!"));
         night.setItemMeta(nightMeta);
         inv.setItem(39, night);
     }
     
     private static void addSpinControls(Inventory inv) {
+        // Single Spin
         ItemStack singleSpin = new ItemStack(Material.COMPASS);
         ItemMeta singleMeta = singleSpin.getItemMeta();
         singleMeta.setDisplayName("§a§l🎲 Single Spin");
@@ -114,6 +115,7 @@ public class AdminGUI {
         singleSpin.setItemMeta(singleMeta);
         inv.setItem(45, singleSpin);
         
+        // All Players Spin
         ItemStack allSpin = new ItemStack(Material.NETHER_STAR);
         ItemMeta allMeta = allSpin.getItemMeta();
         allMeta.setDisplayName("§6§l🌟 ALL PLAYERS SPIN");
@@ -121,6 +123,7 @@ public class AdminGUI {
         allSpin.setItemMeta(allMeta);
         inv.setItem(46, allSpin);
         
+        // Random Player Spin
         ItemStack randomSpin = new ItemStack(Material.ENDER_PEARL);
         ItemMeta randomMeta = randomSpin.getItemMeta();
         randomMeta.setDisplayName("§5§l🌀 Random Spin");
@@ -128,6 +131,7 @@ public class AdminGUI {
         randomSpin.setItemMeta(randomMeta);
         inv.setItem(47, randomSpin);
         
+        // Filler Glass
         ItemStack glass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta glassMeta = glass.getItemMeta();
         glassMeta.setDisplayName("§7");
@@ -138,8 +142,9 @@ public class AdminGUI {
     }
     
     public static class GUIHolder implements InventoryHolder {
-        @Override public Inventory getInventory() { return null; }
-    }
-}tory() { return null; }
+        @Override 
+        public Inventory getInventory() { 
+            return null; 
+        }
     }
 }
