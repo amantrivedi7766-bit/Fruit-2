@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import java.util.*;
 
 public class AdminGUIListener implements Listener {
 
@@ -23,7 +24,6 @@ public class AdminGUIListener implements Listener {
         Player p = (Player) e.getWhoClicked();
         int slot = e.getSlot();
         
-        // Fruits Section (0-9)
         if(slot >= 0 && slot <= 9) {
             String fruitId = Fruit.getFruitId(e.getCurrentItem());
             if(fruitId != null) {
@@ -32,7 +32,6 @@ public class AdminGUIListener implements Listener {
                 p.performCommand("fruitadmin give " + p.getName() + " " + fruitId);
             }
         }
-        // Admin Controls
         else if(slot == 10) {
             p.performCommand("fruitadmin reload");
             p.sendMessage("§aConfig reloaded!");
@@ -46,39 +45,15 @@ public class AdminGUIListener implements Listener {
         }
         else if(slot == 12) {
             p.closeInventory();
+            Fruit[] fruits = FruitsPlugin.getInstance().getFruitRegistry().getAllFruits().toArray(new Fruit[0]);
+            Random random = new Random();
             for(Player player : Bukkit.getOnlinePlayers()) {
-                Fruit[] fruits = FruitsPlugin.getInstance().getFruitRegistry().getAllFruits().toArray(new Fruit[0]);
-                Fruit random = fruits[new Random().nextInt(fruits.length)];
-                player.getInventory().addItem(random.createItem());
+                Fruit randomFruit = fruits[random.nextInt(fruits.length)];
+                player.getInventory().addItem(randomFruit.createItem());
                 player.sendMessage("§aYou received a random fruit from admin!");
             }
             p.sendMessage("§aGave random fruits to all players!");
         }
-        // Server Controls
-        else if(slot == 36) {
-            p.closeInventory();
-            p.sendMessage("§aType your broadcast message in chat:");
-        }
-        else if(slot == 37) {
-            for(int i = 0; i < 100; i++) {
-                Bukkit.broadcastMessage("");
-            }
-            Bukkit.broadcastMessage("§c§lChat cleared by admin!");
-        }
-        else if(slot == 38) {
-            Bukkit.getWorlds().forEach(w -> w.setTime(1000));
-            Bukkit.broadcastMessage("§e☀️ Time set to day!");
-        }
-        else if(slot == 39) {
-            Bukkit.getWorlds().forEach(w -> w.setTime(13000));
-            Bukkit.broadcastMessage("§8🌙 Time set to night!");
-        }
-        else if(slot == 44) {
-            p.closeInventory();
-            Bukkit.broadcastMessage("§c§lServer shutting down...");
-            Bukkit.getServer().shutdown();
-        }
-        // Spin Controls
         else if(slot == 45) {
             p.closeInventory();
             p.performCommand("fruitadmin spin " + p.getName());
@@ -91,9 +66,10 @@ public class AdminGUIListener implements Listener {
             p.closeInventory();
             List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
             if(!players.isEmpty()) {
-                Player random = players.get(new Random().nextInt(players.size()));
-                p.performCommand("fruitadmin spin " + random.getName());
-                p.sendMessage("§aSpun for random player: §e" + random.getName());
+                Random random = new Random();
+                Player randomPlayer = players.get(random.nextInt(players.size()));
+                p.performCommand("fruitadmin spin " + randomPlayer.getName());
+                p.sendMessage("§aSpun for random player: §e" + randomPlayer.getName());
             }
         }
     }
