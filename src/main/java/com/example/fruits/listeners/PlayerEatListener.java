@@ -25,22 +25,19 @@ public class PlayerEatListener implements Listener {
         
         if(fruit == null) return;
 
-        // Remove one fruit from hand
         item.setAmount(item.getAmount() - 1);
         
-        // Store player's active fruit
         PlayerFruitData data = new PlayerFruitData(player, fruit);
         FruitsPlugin.getInstance().getActivePlayers().put(player.getUniqueId(), data);
 
-        // Show abilities in action bar
-        String abilities = fruit.getAbilities().get(0).getName() + " | " + 
-                          fruit.getAbilities().get(1).getName() + " | " + 
+        String abilities = fruit.getAbilities().get(0).getName() + " §7| §e" + 
+                          fruit.getAbilities().get(1).getName() + " §7| §e" + 
                           fruit.getAbilities().get(2).getName();
         
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
-            TextComponent.fromLegacyText("§a🍎 " + fruit.getDisplayName() + " §7| Abilities: §e" + abilities));
+            TextComponent.fromLegacyText("§a🍎 " + fruit.getDisplayName() + " §7| §e" + abilities));
         
         player.sendMessage("§a✅ You ate " + fruit.getDisplayName() + "!");
-        player.sendMessage("§eAbilities: /fruit use 1 | 2 | 3");
+        player.sendMessage("§e⚡ Use §6/fruit use <1|2|3> §eto use abilities!");
     }
 }
