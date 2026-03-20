@@ -19,9 +19,7 @@ public class PlayerEatListener implements Listener {
         String fruitId = Fruit.getFruitId(item);
         if(fruitId == null) return;
 
-        // Cancel the default consume event
         event.setCancelled(true);
-        
         Player player = event.getPlayer();
         Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
         
@@ -34,12 +32,18 @@ public class PlayerEatListener implements Listener {
             return;
         }
 
-        // Remove ONE fruit from hand - FIXED: No duplicate
+        // Remove ONE fruit from hand - NO DUPLICATE
         item.setAmount(item.getAmount() - 1);
         
         // Store player's active fruit
         PlayerFruitData data = new PlayerFruitData(player, fruit);
         FruitsPlugin.getInstance().getActivePlayers().put(player.getUniqueId(), data);
+        
+        // Start grace period if enabled
+        if(FruitsPlugin.getInstance().getConfig().getBoolean("grace_period.enabled", true)) {
+            int duration = FruitsPlugin.getInstance().getConfig().getInt("grace_period.duration", 60);
+            FruitsPlugin.getInstance().getGracePeriodManager().startGracePeriod(player, duration);
+        }
 
         // Show abilities in action bar
         String abilities = fruit.getAbilities().get(0).getName() + " §7| §e" + 
@@ -49,7 +53,10 @@ public class PlayerEatListener implements Listener {
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
             TextComponent.fromLegacyText("§a🍎 " + fruit.getDisplayName() + " §7| §e" + abilities));
         
-        player.sendMessage("§a✅ You ate " + fruit.getDisplayName() + "!");
+        player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("messages.fruit_eaten")
+            .replace("{fruit}", fruit.getDisplayName())
+            .replace('&', '§'));
+        
         player.sendMessage("§e⚡ Hotkeys:");
         player.sendMessage("§7  • §eRight Click §7→ §f" + fruit.getAbilities().get(0).getName());
         player.sendMessage("§7  • §eShift + Right Click §7→ §f" + fruit.getAbilities().get(1).getName());
