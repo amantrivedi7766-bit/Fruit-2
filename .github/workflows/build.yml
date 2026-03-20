@@ -1,55 +1,16 @@
-name: Build FruitsPlugin
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-    inputs:
-      clear_cache:
-        description: 'Clear all caches'
-        type: boolean
-        default: true
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
+name: Build
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
-
-      - name: 🗑️ COMPLETELY CLEAR MAVEN CACHE
-        if: ${{ github.event.inputs.clear_cache == 'true' }}
-        run: |
-          rm -rf ~/.m2/repository
-          mkdir -p ~/.m2/repository
-          echo "✅ Cache cleared!"
-
-      - name: ☕ Set up JDK 21
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-
-      - name: 🔍 CHECK FILES BEFORE COMPILE
-        run: |
-          echo "=== CHECKING AdminGUIListener LOCATION ==="
-          find src/main/java -name "AdminGUIListener.java" -type f
-          
-          echo "=== CHECKING AdminGUIListener PACKAGE ==="
-          grep -n "package" $(find src/main/java -name "AdminGUIListener.java") || echo "File not found!"
-          
-          echo "=== CHECKING IMPORT IN FruitsPlugin.java ==="
-          grep -n "AdminGUIListener" src/main/java/com/example/fruits/FruitsPlugin.java
-
-      - name: 📦 Build with Maven
-        run: mvn -B clean package --file pom.xml
-
-      - name: 📤 Upload artifact
-        uses: actions/upload-artifact@v4
+      - run: mvn clean package
+      - uses: actions/upload-artifact@v4
         with:
           name: FruitsPlugin
           path: target/*.jar
