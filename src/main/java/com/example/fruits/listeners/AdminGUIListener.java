@@ -1,4 +1,4 @@
-package com.example.fruits.listeners;  // ← YAHI SAHI PACKAGE HAI
+package com.example.fruits.listeners;
 
 import com.example.fruits.gui.AdminGUI;
 import com.example.fruits.models.Fruit;
@@ -10,38 +10,25 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 public class AdminGUIListener implements Listener {
-
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getInventory().getHolder() instanceof AdminGUI.GUIHolder)) {
+    public void onClick(InventoryClickEvent e) {
+        if(!(e.getInventory().getHolder() instanceof AdminGUI.GUIHolder)) return;
+        e.setCancelled(true);
+        if(e.getCurrentItem() == null) return;
+        Player p = (Player) e.getWhoClicked();
+        if(e.getSlot() == 17) {
+            p.performCommand("fruitadmin spin " + p.getName());
+            p.closeInventory();
             return;
         }
-        
-        event.setCancelled(true);
-        
-        if (event.getCurrentItem() == null) return;
-        
-        Player player = (Player) event.getWhoClicked();
-        
-        if (event.getSlot() == 17) {
-            player.closeInventory();
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-            player.performCommand("fruitadmin spin " + player.getName());
-            return;
-        }
-        
-        String fruitId = Fruit.getFruitId(event.getCurrentItem());
-        if (fruitId != null) {
-            player.closeInventory();
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1, 1);
-            player.performCommand("fruitadmin give " + player.getName() + " " + fruitId);
+        String fruitId = Fruit.getFruitId(e.getCurrentItem());
+        if(fruitId != null) {
+            p.performCommand("fruitadmin give " + p.getName() + " " + fruitId);
+            p.closeInventory();
         }
     }
-    
     @EventHandler
-    public void onInventoryDrag(InventoryDragEvent event) {
-        if (event.getInventory().getHolder() instanceof AdminGUI.GUIHolder) {
-            event.setCancelled(true);
-        }
+    public void onDrag(InventoryDragEvent e) {
+        if(e.getInventory().getHolder() instanceof AdminGUI.GUIHolder) e.setCancelled(true);
     }
 }
