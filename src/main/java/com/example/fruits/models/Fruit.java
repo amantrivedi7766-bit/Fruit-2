@@ -1,6 +1,5 @@
 package com.example.fruits.models;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -26,6 +25,7 @@ public class Fruit {
 
     public String getId() { return id; }
     public String getName() { return name; }
+    public String getDisplayName() { return name; }  // ✅ For compatibility
     public Material getMaterial() { return material; }
     public int getCustomModelData() { return customModelData; }
     public List<String> getLore() { return lore; }
