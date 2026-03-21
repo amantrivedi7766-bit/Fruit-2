@@ -102,6 +102,20 @@ public class PlayerManager {
         return playerData.containsKey(uuid);
     }
     
+    // ==================== FOR COMPATIBILITY ====================
+    
+    public Map<UUID, Map<String, Object>> getPlayerDataMap() {
+        Map<UUID, Map<String, Object>> result = new HashMap<>();
+        for(Map.Entry<UUID, PlayerFruitData> entry : playerData.entrySet()) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("fruit", entry.getValue().getCurrentFruit());
+            data.put("usedAbilities", entry.getValue().getUsedCount());
+            data.put("abilityUsage", entry.getValue().getAbilityUsage());
+            result.put(entry.getKey(), data);
+        }
+        return result;
+    }
+    
     public void clear() {
         activePlayers.clear();
         playerData.clear();
