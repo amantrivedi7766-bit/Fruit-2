@@ -1,5 +1,6 @@
 package com.example.fruits.models;
 
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 public class Ability {
@@ -19,6 +20,6 @@ public class Ability {
 
     @FunctionalInterface
     public interface AbilityExecutor {
-        void execute(Player player);
+        void execute(Player player, Entity target);
     }
 }
