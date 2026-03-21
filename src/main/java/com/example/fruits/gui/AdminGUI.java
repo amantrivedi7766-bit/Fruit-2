@@ -191,8 +191,7 @@ public class AdminGUI {
         ItemStack back = createItem(Material.ARROW, "§7§l« Back", "§7Return to player management");
         inv.setItem(26, back);
         
-        // Store target in inventory title for later reference
-        player.openInventory(inv);
+        admin.openInventory(inv);
     }
     
     private ItemStack createItem(Material material, String name, String... lore) {
@@ -205,7 +204,6 @@ public class AdminGUI {
     }
     
     private int getTotalFruitsGiven() {
-        // Calculate total fruits given
         int total = 0;
         for(Player p : FruitsPlugin.getInstance().getActivePlayers()) {
             if(FruitsPlugin.getInstance().getPlayerManager().hasFruit(p)) {
