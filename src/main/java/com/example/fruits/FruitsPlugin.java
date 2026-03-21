@@ -2,7 +2,6 @@ package com.example.fruits;
 
 import com.example.fruits.listeners.PlayerInteractListener;
 import com.example.fruits.listeners.JoinListener;
-import com.example.fruits.listeners.AdminGUIListener;
 import com.example.fruits.registry.FruitRegistry;
 import com.example.fruits.manager.CooldownManager;
 import com.example.fruits.manager.SpinManager;
@@ -10,7 +9,6 @@ import com.example.fruits.manager.ConfigManager;
 import com.example.fruits.manager.PlayerManager;
 import com.example.fruits.manager.GracePeriodManager;
 import com.example.fruits.commands.RewardCommand;
-import com.example.fruits.commands.AdminCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
@@ -37,23 +35,16 @@ public class FruitsPlugin extends JavaPlugin {
         playerManager = new PlayerManager();
         gracePeriodManager = new GracePeriodManager();
         
-        // Register listeners
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
         getServer().getPluginManager().registerEvents(new JoinListener(), this);
-        getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);
         
-        // Register commands
         if(getCommand("freward") != null) {
             getCommand("freward").setExecutor(new RewardCommand());
-        }
-        if(getCommand("fruitadmin") != null) {
-            getCommand("fruitadmin").setExecutor(new AdminCommand());
         }
         
         getLogger().info("=========================================");
         getLogger().info("§a✓ Fruits Plugin Enabled!");
         getLogger().info("§e✓ 10 Magical Fruits Loaded");
-        getLogger().info("§e✓ Admin GUI Ready!");
         getLogger().info("§e✓ Join Reward: " + (configManager.isRewardEnabled() ? "ENABLED" : "DISABLED"));
         getLogger().info("=========================================");
     }
