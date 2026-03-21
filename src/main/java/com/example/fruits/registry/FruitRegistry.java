@@ -3,7 +3,8 @@ package com.example.fruits.registry;
 import com.example.fruits.models.Ability;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.abilities.NatureAbilities;
-import com.example.fruits.abilities.ThiefAbilities;  // ✅ ADD THIS IMPORT
+import com.example.fruits.abilities.ThiefAbilities;
+import com.example.fruits.abilities.ThroneAbilities;
 import org.bukkit.Material;
 import java.util.*;
 
@@ -15,7 +16,7 @@ public class FruitRegistry {
     }
 
     private void registerFruits() {
-        // ==================== 1. VINE WEAVER ====================
+        // ==================== 1. VINE WEAVER (Nature) ====================
         List<Ability> vineWeaverAbilities = Arrays.asList(
             new Ability("§a🌿 Vine Attach", 25, NatureAbilities::vineAttach),
             new Ability("§a🔨 Oak Hammer", 35, NatureAbilities::oakHammer)
@@ -32,12 +33,12 @@ public class FruitRegistry {
             "§7  Summon a massive oak hammer!",
             "§7  Smashes enemies with epic force!",
             "§7=================================",
-            "§d§l✦ Vine Weaver ✦"
+            "§a§l✦ Vine Weaver ✦"
         );
         
         fruits.put("vine_weaver", new Fruit("vine_weaver", "§a§l🌿 Vine Weaver", Material.GREEN_DYE, 1001, vineWeaverLore, vineWeaverAbilities));
         
-        // ==================== 2. SHADOWWEAVER ====================
+        // ==================== 2. SHADOWWEAVER (Thief) ====================
         List<Ability> shadowweaverAbilities = Arrays.asList(
             new Ability("§8§l🌑 Shadow Steal", 120, (p, target) -> {
                 ThiefAbilities.shadowSteal(p);
@@ -60,7 +61,38 @@ public class FruitRegistry {
         
         fruits.put("shadowweaver", new Fruit("shadowweaver", "§8§l🌑 Shadowweaver", Material.BLACK_DYE, 1012, shadowweaverLore, shadowweaverAbilities));
         
-        // ==================== OTHER FRUITS (Placeholder) ====================
+        // ==================== 3. GOLDEN AEGIS (Throne) ====================
+        List<Ability> goldenAegisAbilities = Arrays.asList(
+            new Ability("§6🛡️ Royal Aegis", 20, (p, target) -> {
+                ThroneAbilities.royalAegis(p);
+            }),
+            new Ability("§6🏰 Golden Wall", 25, (p, target) -> {
+                ThroneAbilities.goldenWall(p);
+            })
+        );
+        
+        List<String> goldenAegisLore = Arrays.asList(
+            "§7=================================",
+            "§e§l🔮 MYSTICAL FRUIT",
+            "§7=================================",
+            "§f⚡ Right Click:",
+            "§7  Summon Royal Aegis shield",
+            "§7  Reflect 75% damage back to attacker",
+            "§7  Take 50% less damage",
+            "§7  Lasts 15 seconds",
+            "§f🔧 Right + Crouch:",
+            "§7  Summon Golden Wall",
+            "§7  Creates a 3x3 wall of gold",
+            "§7  Enemies take damage + knockback",
+            "§7  Wall lasts 15 seconds",
+            "§f⏰ Cooldowns: §e20s (Shield), 25s (Wall)",
+            "§7=================================",
+            "§6§l✦ Golden Aegis ✦"
+        );
+        
+        fruits.put("golden_aegis", new Fruit("golden_aegis", "§6§l🛡️ Golden Aegis", Material.GOLD_INGOT, 1013, goldenAegisLore, goldenAegisAbilities));
+        
+        // ==================== 4. OTHER MAGICAL FRUITS (Placeholder) ====================
         List<String> defaultLore = Arrays.asList(
             "§7=================================",
             "§e§l🔮 MAGICAL FRUIT",
