@@ -9,7 +9,9 @@ import com.example.fruits.manager.ConfigManager;
 import com.example.fruits.manager.PlayerManager;
 import com.example.fruits.manager.GracePeriodManager;
 import com.example.fruits.commands.RewardCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import java.util.List;
 
 public class FruitsPlugin extends JavaPlugin {
     private static FruitsPlugin instance;
@@ -57,4 +59,22 @@ public class FruitsPlugin extends JavaPlugin {
     public ConfigManager getConfigManager() { return configManager; }
     public PlayerManager getPlayerManager() { return playerManager; }
     public GracePeriodManager getGracePeriodManager() { return gracePeriodManager; }
+    
+    // ==================== DIRECT METHODS FOR COMPATIBILITY ====================
+    
+    public List<Player> getActivePlayers() {
+        return playerManager.getActivePlayers();
+    }
+    
+    public void addActivePlayer(Player player) {
+        playerManager.addActivePlayer(player);
+    }
+    
+    public void removeActivePlayer(Player player) {
+        playerManager.removeActivePlayer(player);
+    }
+    
+    public boolean isActivePlayer(Player player) {
+        return playerManager.isActivePlayer(player);
+    }
 }
