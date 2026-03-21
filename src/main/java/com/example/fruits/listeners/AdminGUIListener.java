@@ -72,7 +72,6 @@ public class AdminGUIListener implements Listener {
         else if(name.contains("Statistics")) {
             player.sendMessage("§e§l📊 STATISTICS");
             player.sendMessage("§7Active Players: §e" + FruitsPlugin.getInstance().getActivePlayers().size());
-            player.sendMessage("§7Total Fruits Given: §e" + getTotalFruitsGiven());
             player.sendMessage("§7Join Reward: " + (FruitsPlugin.getInstance().getConfigManager().isRewardEnabled() ? "§aENABLED" : "§cDISABLED"));
         }
         else if(name.contains("Close")) {
@@ -165,20 +164,11 @@ public class AdminGUIListener implements Listener {
             if(fruit != null) {
                 ItemStack fruitItem = fruit.createItem();
                 target.getInventory().addItem(fruitItem);
+                FruitsPlugin.getInstance().getPlayerManager().setPlayerFruit(target, fruitId);
                 admin.sendMessage("§a✅ Gave " + fruit.getName() + " §ato " + target.getName());
                 target.sendMessage("§a🎁 You received " + fruit.getName() + " §afrom admin!");
                 adminGUI.openPlayerManagement(admin);
             }
         }
-    }
-    
-    private int getTotalFruitsGiven() {
-        int total = 0;
-        for(Player p : FruitsPlugin.getInstance().getActivePlayers()) {
-            if(FruitsPlugin.getInstance().getPlayerManager().hasFruit(p)) {
-                total++;
-            }
-        }
-        return total;
     }
 }
