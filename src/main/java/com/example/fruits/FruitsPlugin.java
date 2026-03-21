@@ -1,116 +1,251 @@
 package com.example.fruits;
 
-import com.example.fruits.listeners.PlayerInteractListener;
-import com.example.fruits.listeners.JoinListener;
-import com.example.fruits.listeners.ThiefGUIListener;
-import com.example.fruits.listeners.PlayerDamageListener;
-import com.example.fruits.listeners.PortalListener;
-import com.example.fruits.listeners.VampireListener;
-import com.example.fruits.registry.FruitRegistry;
-import com.example.fruits.manager.CooldownManager;
-import com.example.fruits.manager.SpinManager;
-import com.example.fruits.manager.ConfigManager;
-import com.example.fruits.manager.PlayerManager;
-import com.example.fruits.manager.GracePeriodManager;
-import com.example.fruits.commands.RewardCommand;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
-public class FruitsPlugin extends JavaPlugin {
+public class FruitsPlugin extends JavaPlugin implements Listener {
+    
     private static FruitsPlugin instance;
     private FruitRegistry fruitRegistry;
     private CooldownManager cooldownManager;
-    private SpinManager spinManager;
-    private ConfigManager configManager;
-    private PlayerManager playerManager;
-    private GracePeriodManager gracePeriodManager;
-
+    
+    // First join tracking
+    private File firstJoinFile;
+    private FileConfiguration firstJoinConfig;
+    private Set<UUID> firstJoinPlayers = new HashSet<>();
+    
+    // Auto give settings
+    private boolean autoGiveEnabled = false;
+    private String autoGiveFruitId = "nature_dye";
+    private int autoGiveAmount = 1;
+    
+    // Join fruit settings
+    private boolean joinFruitEnabled = true;
+    private String joinFruitId = "nature_dye";
+    private int joinFruitAmount = 1;
+    
     @Override
     public void onEnable() {
         instance = this;
         
-        // Initialize all managers
+        // Initialize registries
         fruitRegistry = new FruitRegistry();
         cooldownManager = new CooldownManager();
-        configManager = new ConfigManager(this);
-        spinManager = new SpinManager();
-        playerManager = new PlayerManager();
-        gracePeriodManager = new GracePeriodManager();
         
-        // ==================== REGISTER ALL LISTENERS ====================
-        // Main listeners
-        getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
-        getServer().getPluginManager().registerEvents(new JoinListener(), this);
+        // Load first join data
+        loadFirstJoinData();
         
-        // Thief ability GUI listener
-        getServer().getPluginManager().registerEvents(new ThiefGUIListener(), this);
+        // Register events
+        getServer().getPluginManager().registerEvents(this, this);
         
-        // Damage listener for Golden Aegis shield
-        getServer().getPluginManager().registerEvents(new PlayerDamageListener(), this);
+        // Load config
+        loadConfig();
         
-        // Portal listener for Voidweaver
-        getServer().getPluginManager().registerEvents(new PortalListener(), this);
-        
-        // Vampire listener for Dracula Bites
-        getServer().getPluginManager().registerEvents(new VampireListener(), this);
-        
-        // ==================== REGISTER COMMANDS ====================
-        if(getCommand("freward") != null) {
-            getCommand("freward").setExecutor(new RewardCommand());
-        }
-        
-        // ==================== PLUGIN STARTUP MESSAGE ====================
-        getLogger().info("=========================================");
-        getLogger().info("§a✓ Fruits Plugin Enabled!");
-        getLogger().info("§e✓ Magical Fruits Loaded:");
-        getLogger().info("§e  - Vine Weaver (Nature)");
-        getLogger().info("§e  - Shadowweaver (Thief)");
-        getLogger().info("§e  - Golden Aegis (Throne)");
-        getLogger().info("§e  - Voidweaver (Portal)");
-        getLogger().info("§e  - Dracula Bites (Vampire)");
-        getLogger().info("§e  - 6+ More Fruits Coming Soon!");
-        getLogger().info("§e✓ Join Reward: " + (configManager.isRewardEnabled() ? "ENABLED" : "DISABLED"));
-        getLogger().info("=========================================");
+        getLogger().info("FruitsPlugin enabled!");
     }
-
+    
     @Override
     public void onDisable() {
-        // Cleanup any running tasks
-        getLogger().info("§c✗ Fruits Plugin Disabled");
+        saveFirstJoinData();
+        getLogger().info("FruitsPlugin disabled!");
     }
-
-    // ==================== GETTERS ====================
+    
+    private void loadFirstJoinData() {
+        firstJoinFile = new File(getDataFolder(), "firstjoin.yml");
+        if(!firstJoinFile.exists()) {
+            saveResource("firstjoin.yml", false);
+        }
+        firstJoinConfig = YamlConfiguration.loadConfiguration(firstJoinFile);
+        
+        // Load all players who have joined before
+        if(firstJoinConfig.contains("players")) {
+            List<String> uuids = firstJoinConfig.getStringList("players");
+            for(String uuid : uuids) {
+                try {
+                    firstJoinPlayers.add(UUID.fromString(uuid));
+                } catch(Exception e) {
+                    getLogger().warning("Invalid UUID in firstjoin.yml: " + uuid);
+                }
+            }
+        }
+        
+        getLogger().info("Loaded " + firstJoinPlayers.size() + " players who have joined before");
+    }
+    
+    private void saveFirstJoinData() {
+        List<String> uuids = new ArrayList<>();
+        for(UUID uuid : firstJoinPlayers) {
+            uuids.add(uuid.toString());
+        }
+        firstJoinConfig.set("players", uuids);
+        try {
+            firstJoinConfig.save(firstJoinFile);
+        } catch(IOException e) {
+            getLogger().severe("Could not save firstjoin.yml: " + e.getMessage());
+        }
+    }
+    
+    private void loadConfig() {
+        saveDefaultConfig();
+        FileConfiguration config = getConfig();
+        
+        autoGiveEnabled = config.getBoolean("auto-give.enabled", false);
+        autoGiveFruitId = config.getString("auto-give.fruit-id", "nature_dye");
+        autoGiveAmount = config.getInt("auto-give.amount", 1);
+        
+        joinFruitEnabled = config.getBoolean("join-fruit.enabled", true);
+        joinFruitId = config.getString("join-fruit.id", "nature_dye");
+        joinFruitAmount = config.getInt("join-fruit.amount", 1);
+    }
+    
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+        
+        // Check if first join
+        boolean isFirstJoin = !firstJoinPlayers.contains(uuid);
+        
+        if(isFirstJoin) {
+            // Mark as joined
+            firstJoinPlayers.add(uuid);
+            saveFirstJoinData();
+            
+            // Give join fruit if enabled
+            if(joinFruitEnabled) {
+                Fruit fruit = fruitRegistry.getFruit(joinFruitId);
+                if(fruit != null) {
+                    player.getInventory().addItem(fruit.createItemStack(joinFruitAmount));
+                    player.sendMessage("§a🎁 Welcome! You received §6" + joinFruitAmount + "x " + fruit.getName() + "§a as a first-join gift!");
+                } else {
+                    getLogger().warning("Join fruit not found: " + joinFruitId);
+                }
+            }
+        }
+        
+        // Auto give for all joins
+        if(autoGiveEnabled) {
+            Fruit fruit = fruitRegistry.getFruit(autoGiveFruitId);
+            if(fruit != null) {
+                player.getInventory().addItem(fruit.createItemStack(autoGiveAmount));
+                player.sendMessage("§a🎁 Auto-gift: You received §6" + autoGiveAmount + "x " + fruit.getName() + "§a!");
+            }
+        }
+    }
+    
+    // ==================== RESET METHODS ====================
+    
+    /**
+     * Reset first join data for a specific player
+     */
+    public boolean resetPlayerFirstJoin(UUID uuid) {
+        if(firstJoinPlayers.contains(uuid)) {
+            firstJoinPlayers.remove(uuid);
+            saveFirstJoinData();
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Reset first join data for a specific player by name
+     */
+    public boolean resetPlayerFirstJoin(String playerName) {
+        Player player = getServer().getPlayer(playerName);
+        if(player != null) {
+            return resetPlayerFirstJoin(player.getUniqueId());
+        }
+        
+        // Try to find by offline player
+        @SuppressWarnings("deprecation")
+        org.bukkit.OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(playerName);
+        if(offlinePlayer != null && offlinePlayer.hasPlayedBefore()) {
+            return resetPlayerFirstJoin(offlinePlayer.getUniqueId());
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Reset first join data for ALL players
+     */
+    public int resetAllFirstJoin() {
+        int count = firstJoinPlayers.size();
+        firstJoinPlayers.clear();
+        saveFirstJoinData();
+        return count;
+    }
+    
+    /**
+     * Check if a player has joined before
+     */
+    public boolean hasJoinedBefore(UUID uuid) {
+        return firstJoinPlayers.contains(uuid);
+    }
+    
+    /**
+     * Get all players who have joined before
+     */
+    public Set<UUID> getFirstJoinPlayers() {
+        return Collections.unmodifiableSet(firstJoinPlayers);
+    }
+    
+    // ==================== GETTERS & SETTERS ====================
     
     public static FruitsPlugin getInstance() { return instance; }
     public FruitRegistry getFruitRegistry() { return fruitRegistry; }
     public CooldownManager getCooldownManager() { return cooldownManager; }
-    public SpinManager getSpinManager() { return spinManager; }
-    public ConfigManager getConfigManager() { return configManager; }
-    public PlayerManager getPlayerManager() { return playerManager; }
-    public GracePeriodManager getGracePeriodManager() { return gracePeriodManager; }
     
-    // ==================== PLAYER MANAGEMENT METHODS ====================
+    public boolean isAutoGiveEnabled() { return autoGiveEnabled; }
+    public String getAutoGiveFruit() { return autoGiveFruitId; }
+    public int getAutoGiveAmount() { return autoGiveAmount; }
     
-    public List<Player> getActivePlayers() {
-        return playerManager.getActivePlayers();
+    public void setAutoGive(boolean enabled, String fruitId, int amount) {
+        this.autoGiveEnabled = enabled;
+        if(fruitId != null) {
+            this.autoGiveFruitId = fruitId;
+            this.autoGiveAmount = amount;
+        }
+        getConfig().set("auto-give.enabled", enabled);
+        getConfig().set("auto-give.fruit-id", autoGiveFruitId);
+        getConfig().set("auto-give.amount", autoGiveAmount);
+        saveConfig();
     }
     
-    public void addActivePlayer(Player player) {
-        playerManager.addActivePlayer(player);
+    public boolean isJoinFruitEnabled() { return joinFruitEnabled; }
+    public String getJoinFruit() { return joinFruitId; }
+    public int getJoinFruitAmount() { return joinFruitAmount; }
+    public String getJoinFruitName() {
+        Fruit fruit = fruitRegistry.getFruit(joinFruitId);
+        return fruit != null ? fruit.getName() : joinFruitId;
     }
     
-    public void removeActivePlayer(Player player) {
-        playerManager.removeActivePlayer(player);
+    public void setJoinFruit(String fruitId, int amount) {
+        this.joinFruitId = fruitId;
+        this.joinFruitAmount = amount;
+        getConfig().set("join-fruit.id", fruitId);
+        getConfig().set("join-fruit.amount", amount);
+        saveConfig();
     }
     
-    public boolean isActivePlayer(Player player) {
-        return playerManager.isActivePlayer(player);
+    public boolean toggleJoinFruit() {
+        joinFruitEnabled = !joinFruitEnabled;
+        getConfig().set("join-fruit.enabled", joinFruitEnabled);
+        saveConfig();
+        return joinFruitEnabled;
     }
     
-    public Map<UUID, Map<String, Object>> getActivePlayersMap() {
-        return playerManager.getPlayerDataMap();
+    @Override
+    public void reloadConfig() {
+        super.reloadConfig();
+        loadConfig();
     }
 }
