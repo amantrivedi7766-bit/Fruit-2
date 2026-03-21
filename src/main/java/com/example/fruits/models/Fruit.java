@@ -7,6 +7,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Fruit {
     private final String id;
@@ -29,7 +30,7 @@ public class Fruit {
         meta.setDisplayName(displayName);
         meta.setCustomModelData(customModelData);
         
-        List<String> lore = new java.util.ArrayList<>();
+        List<String> lore = new ArrayList<>();
         lore.add("§7§m-------------------");
         lore.add("§6✨ Magical Fruit");
         lore.add("§7§m-------------------");
@@ -39,8 +40,8 @@ public class Fruit {
             lore.add("§7 " + (i+1) + ". §f" + a.getName() + " §7(§b" + a.getCooldown() + "s§7)");
         }
         lore.add("§7§m-------------------");
-        lore.add("§a🍎 Eat to unlock powers!");
-        lore.add("§7Use §e/fruit use <1|2|3>");
+        lore.add("§a🍎 Right-click to eat!");
+        lore.add("§7Use §e/fruit withdraw §7to cancel power");
         meta.setLore(lore);
         
         NamespacedKey key = new NamespacedKey(FruitsPlugin.getInstance(), "fruit_id");
