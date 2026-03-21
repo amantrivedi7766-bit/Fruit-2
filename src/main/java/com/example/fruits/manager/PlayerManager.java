@@ -102,8 +102,6 @@ public class PlayerManager {
         return playerData.containsKey(uuid);
     }
     
-    // ==================== FOR COMPATIBILITY ====================
-    
     public Map<UUID, Map<String, Object>> getPlayerDataMap() {
         Map<UUID, Map<String, Object>> result = new HashMap<>();
         for(Map.Entry<UUID, PlayerFruitData> entry : playerData.entrySet()) {
