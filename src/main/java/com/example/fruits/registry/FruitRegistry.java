@@ -3,6 +3,7 @@ package com.example.fruits.registry;
 import com.example.fruits.models.Ability;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.abilities.NatureAbilities;
+import com.example.fruits.abilities.ThiefAbilities;  // ✅ ADD THIS IMPORT
 import org.bukkit.Material;
 import java.util.*;
 
@@ -14,7 +15,7 @@ public class FruitRegistry {
     }
 
     private void registerFruits() {
-        // ==================== 1. VINE WEAVER (MAGICAL FRUIT) ====================
+        // ==================== 1. VINE WEAVER ====================
         List<Ability> vineWeaverAbilities = Arrays.asList(
             new Ability("§a🌿 Vine Attach", 25, NatureAbilities::vineAttach),
             new Ability("§a🔨 Oak Hammer", 35, NatureAbilities::oakHammer)
@@ -36,7 +37,30 @@ public class FruitRegistry {
         
         fruits.put("vine_weaver", new Fruit("vine_weaver", "§a§l🌿 Vine Weaver", Material.GREEN_DYE, 1001, vineWeaverLore, vineWeaverAbilities));
         
-        // ==================== OTHER MAGICAL FRUITS ====================
+        // ==================== 2. SHADOWWEAVER ====================
+        List<Ability> shadowweaverAbilities = Arrays.asList(
+            new Ability("§8§l🌑 Shadow Steal", 120, (p, target) -> {
+                ThiefAbilities.shadowSteal(p);
+            })
+        );
+        
+        List<String> shadowweaverLore = Arrays.asList(
+            "§7=================================",
+            "§e§l🔮 MYSTICAL FRUIT",
+            "§7=================================",
+            "§f⚡ Right Click:",
+            "§7  Open the Shadow Steal GUI",
+            "§7  Choose a player to steal from!",
+            "§7  All nearby players freeze for 20s!",
+            "§7  Stolen ability lasts 20 seconds!",
+            "§f⏰ Cooldown: §e2 minutes",
+            "§7=================================",
+            "§8§l✦ Shadowweaver ✦"
+        );
+        
+        fruits.put("shadowweaver", new Fruit("shadowweaver", "§8§l🌑 Shadowweaver", Material.BLACK_DYE, 1012, shadowweaverLore, shadowweaverAbilities));
+        
+        // ==================== OTHER FRUITS (Placeholder) ====================
         List<String> defaultLore = Arrays.asList(
             "§7=================================",
             "§e§l🔮 MAGICAL FRUIT",
@@ -48,30 +72,7 @@ public class FruitRegistry {
             "§7=================================",
             "§d§l✦ Magical Fruit ✦"
         );
-        // Add to registerFruits() method:
-
-// ==================== SHADOWWEAVER (THIEF FRUIT) ====================
-List<Ability> shadowweaverAbilities = Arrays.asList(
-    new Ability("§8§l🌑 Shadow Steal", 120, (p, target) -> {
-        ThiefAbilities.shadowSteal(p);
-    })
-);
-
-List<String> shadowweaverLore = Arrays.asList(
-    "§7=================================",
-    "§e§l🔮 MYSTICAL FRUIT",
-    "§7=================================",
-    "§f⚡ Right Click:",
-    "§7  Open the Shadow Steal GUI",
-    "§7  Choose a player to steal from!",
-    "§7  All nearby players freeze for 20s!",
-    "§7  Stolen ability lasts 20 seconds!",
-    "§f⏰ Cooldown: §e2 minutes",
-    "§7=================================",
-    "§8§l✦ Shadowweaver ✦"
-);
-
-fruits.put("shadowweaver", new Fruit("shadowweaver", "§8§l🌑 Shadowweaver", Material.BLACK_DYE, 1012, shadowweaverLore, shadowweaverAbilities));
+        
         fruits.put("dragonfruit", new Fruit("dragonfruit", "§c§l🐉 Dragonfruit", Material.RED_DYE, 1002, defaultLore, new ArrayList<>()));
         fruits.put("starfruit", new Fruit("starfruit", "§e§l⭐ Starfruit", Material.YELLOW_DYE, 1003, defaultLore, new ArrayList<>()));
         fruits.put("moonberry", new Fruit("moonberry", "§b§l🌙 Moonberry", Material.LIGHT_BLUE_DYE, 1004, defaultLore, new ArrayList<>()));
