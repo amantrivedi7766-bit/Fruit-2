@@ -7,6 +7,7 @@ import com.example.fruits.abilities.ThiefAbilities;
 import com.example.fruits.abilities.ThroneAbilities;
 import com.example.fruits.abilities.PortalAbilities;
 import com.example.fruits.abilities.VampireAbilities;
+import com.example.fruits.abilities.CycloneAbilities;
 import org.bukkit.Material;
 import java.util.*;
 
@@ -155,7 +156,39 @@ public class FruitRegistry {
         
         fruits.put("dracula_bites", new Fruit("dracula_bites", "§c§l🦇 Dracula Bites", Material.RED_DYE, 1015, draculaLore, draculaAbilities));
         
-        // ==================== 6. OTHER MAGICAL FRUITS (Placeholder) ====================
+        // ==================== 6. CYCLONE FURY (Storm) ====================
+        List<Ability> cycloneAbilities = Arrays.asList(
+            new Ability("§3🌀 Speed Tornado", 30, (p, target) -> {
+                CycloneAbilities.speedTornado(p);
+            }),
+            new Ability("§3🌪️ Block Tornado", 40, (p, target) -> {
+                CycloneAbilities.blockTornado(p);
+            })
+        );
+        
+        List<String> cycloneLore = Arrays.asList(
+            "§7=================================",
+            "§e§l🔮 MYSTICAL FRUIT",
+            "§7=================================",
+            "§f⚡ Right Click:",
+            "§7  Summon a deadly speed tornado",
+            "§7  You gain 10x speed!",
+            "§7  Enemies launched 25 blocks up!",
+            "§7  Rotating vortex pulls enemies!",
+            "§f🔧 Right + Crouch:",
+            "§7  Summon a block tornado",
+            "§7  Blocks rise and rotate around you",
+            "§7  Left-click to launch all blocks!",
+            "§7  Blocks crush enemies on impact",
+            "§7  Lasts 10 seconds",
+            "§f⏰ Cooldowns: §e30s (Speed), 40s (Block)",
+            "§7=================================",
+            "§3§l✦ Cyclone Fury ✦"
+        );
+        
+        fruits.put("cyclone_fury", new Fruit("cyclone_fury", "§3§l🌀 Cyclone Fury", Material.CYAN_DYE, 1016, cycloneLore, cycloneAbilities));
+        
+        // ==================== 7. OTHER MAGICAL FRUITS (Placeholder) ====================
         List<String> defaultLore = Arrays.asList(
             "§7=================================",
             "§e§l🔮 MAGICAL FRUIT",
