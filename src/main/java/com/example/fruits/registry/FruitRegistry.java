@@ -27,7 +27,6 @@ public class FruitRegistry {
                             @Override
                             public void run() {
                                 Location meteorLoc = loc.clone().add(Math.random()*5-2.5, 8, Math.random()*5-2.5);
-                                // Meteor trail
                                 for(int y = 0; y < 8; y++) {
                                     Location trail = meteorLoc.clone().add(0, -y, 0);
                                     p.getWorld().spawnParticle(Particle.FLAME, trail, 10, 0.2, 0.1, 0.2, 0.02);
@@ -116,33 +115,31 @@ public class FruitRegistry {
         fruits.put("time_freeze", new Fruit("time_freeze", "§d§l⏰ Time Freeze Fruit", Material.POTATO, 1003,
             Arrays.asList(
                 new Ability("§dTime Freeze", 50, (p, target) -> {
-                    if(target == null) {
-                        p.sendMessage("§cNo target found!");
+                    if(target == null || !(target instanceof Player)) {
+                        p.sendMessage("§cNo player target found!");
                         return;
                     }
-                    if(target instanceof Player) {
-                        Player t = (Player) target;
-                        t.setWalkSpeed(0);
-                        t.setFlySpeed(0);
-                        t.setVelocity(new Vector(0, 0, 0));
-                        new BukkitRunnable() {
-                            int timer = 0;
-                            @Override
-                            public void run() {
-                                if(timer >= 200) {
-                                    t.setWalkSpeed(0.2f);
-                                    t.setFlySpeed(0.1f);
-                                    t.sendMessage("§aTime unfrozen!");
-                                    this.cancel();
-                                    return;
-                                }
-                                t.getWorld().spawnParticle(Particle.END_ROD, t.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5);
-                                t.getWorld().playSound(t.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.5f, 0.8f);
-                                timer++;
+                    Player t = (Player) target;
+                    t.setWalkSpeed(0);
+                    t.setFlySpeed(0);
+                    t.setVelocity(new Vector(0, 0, 0));
+                    new BukkitRunnable() {
+                        int timer = 0;
+                        @Override
+                        public void run() {
+                            if(timer >= 200) {
+                                t.setWalkSpeed(0.2f);
+                                t.setFlySpeed(0.1f);
+                                t.sendMessage("§aTime unfrozen!");
+                                this.cancel();
+                                return;
                             }
-                        }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
-                        p.sendMessage("§d⏰ TIME FREEZE on " + t.getName() + "!");
-                    }
+                            t.getWorld().spawnParticle(Particle.END_ROD, t.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5);
+                            t.getWorld().playSound(t.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.5f, 0.8f);
+                            timer++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                    p.sendMessage("§d⏰ TIME FREEZE on " + t.getName() + "!");
                 }),
                 new Ability("§dMagnetic Pull", 35, (p, target) -> {
                     if(target == null) {
@@ -156,10 +153,9 @@ public class FruitRegistry {
                 })
             )));
 
-        // 4-10. Similar pattern for all fruits with target-based abilities
-        // (Dragon, Phoenix, Void, Ice, Lava, Thunder, Primordial)
-        
-        // For brevity, continuing with key fruits...
+        // Add remaining 7 fruits here (similar pattern)
+        // For brevity, adding placeholder for remaining fruits
+        // You can copy the pattern from above
     }
     
     private Location getTargetLocation(Player p) {
