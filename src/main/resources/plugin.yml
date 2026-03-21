@@ -1,26 +1,122 @@
 name: FruitsPlugin
-version: 1.0
+version: 3.0
 main: com.example.fruits.FruitsPlugin
 api-version: 1.21
-description: Magical Fruits Plugin with Epic Abilities
+author: YourName
+description: Ultimate Fruit Abilities Plugin with GUI, Spin, Trade & More!
 
 commands:
   fruit:
-    description: Main fruit command
-    usage: /<command>
-  fruitadmin:
-    description: Admin command for fruit plugin
-    usage: /<command> [toggle|status]
-    aliases: [fa]
-  freward:
-    description: Admin command for fruit reward system
-    usage: /<command> <toggle|status|reload|test>
-    permission: fruits.admin
+    description: Main command for Fruit Plugin
+    usage: /fruit <subcommand> [args]
+    aliases: [fruits, f]
+    permission: fruit.use
 
 permissions:
-  fruits.admin:
-    description: Admin permission for fruit plugin
-    default: op
-  fruits.user:
-    description: User permission for fruit plugin
+  # ========== PLAYER PERMISSIONS ==========
+  fruit.use:
+    description: Use fruit commands
     default: true
+  
+  fruit.gui:
+    description: Open fruit GUI
+    default: true
+  
+  fruit.spin:
+    description: Use spin wheel
+    default: true
+  
+  fruit.trade:
+    description: Trade fruits with players
+    default: true
+  
+  fruit.steal:
+    description: Steal fruits from players
+    default: true
+  
+  fruit.list:
+    description: List all fruits
+    default: true
+  
+  fruit.info:
+    description: View fruit information
+    default: true
+  
+  fruit.cooldown:
+    description: View your cooldowns
+    default: true
+  
+  fruit.stats:
+    description: View your fruit statistics
+    default: true
+  
+  fruit.top:
+    description: View top fruit collectors
+    default: true
+  
+  # ========== ADMIN PERMISSIONS ==========
+  fruit.give:
+    description: Give fruits to players
+    default: op
+  
+  fruit.remove:
+    description: Remove fruits from players
+    default: op
+  
+  fruit.giveall:
+    description: Give fruits to all online players
+    default: op
+  
+  fruit.spin.others:
+    description: Start spin for other players
+    default: op
+  
+  fruit.spin.all:
+    description: Start spin for all online players
+    default: op
+  
+  fruit.spin.stop:
+    description: Stop active spins
+    default: op
+  
+  fruit.autogive:
+    description: Configure auto-give settings
+    default: op
+  
+  fruit.joingive:
+    description: Configure join fruit settings
+    default: op
+  
+  fruit.cooldown.others:
+    description: View other players' cooldowns
+    default: op
+  
+  fruit.reset:
+    description: Reset first join data for a player
+    default: op
+  
+  fruit.reset.all:
+    description: Reset first join data for all players
+    default: op
+  
+  fruit.reload:
+    description: Reload plugin configuration
+    default: op
+  
+  # ========== ADMIN MASTER PERMISSION ==========
+  fruit.admin:
+    description: All admin permissions
+    default: op
+    children:
+      fruit.give: true
+      fruit.remove: true
+      fruit.giveall: true
+      fruit.spin.others: true
+      fruit.spin.all: true
+      fruit.spin.stop: true
+      fruit.autogive: true
+      fruit.joingive: true
+      fruit.cooldown.others: true
+      fruit.reset: true
+      fruit.reset.all: true
+      fruit.reload: true
