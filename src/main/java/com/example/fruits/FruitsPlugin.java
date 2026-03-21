@@ -1,7 +1,6 @@
 package com.example.fruits;
 
-import com.example.fruits.commands.FruitAdminCommand;
-import com.example.fruits.commands.FruitCommand;
+import com.example.fruits.commands.*;
 import com.example.fruits.listeners.*;
 import com.example.fruits.models.PlayerFruitData;
 import com.example.fruits.registry.FruitRegistry;
@@ -31,13 +30,14 @@ public class FruitsPlugin extends JavaPlugin {
         
         getCommand("fruit").setExecutor(new FruitCommand());
         getCommand("fruitadmin").setExecutor(new FruitAdminCommand());
+        getCommand("graceperiod").setExecutor(new GracePeriodCommand());
         
         getServer().getPluginManager().registerEvents(new PlayerEatListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
         getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(), this);
         
-        getLogger().info("✅ FruitsPlugin enabled with 10 powerful fruits!");
+        getLogger().info("✅ FruitsPlugin enabled with epic casino spin wheel!");
     }
 
     @Override
