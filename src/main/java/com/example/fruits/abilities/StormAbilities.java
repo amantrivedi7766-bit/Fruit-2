@@ -28,18 +28,14 @@ public class StormAbilities {
         player.sendMessage("§7You rise into the air with the power of wind!");
         player.playSound(player.getLocation(), Sound.ENTITY_BREEZE_WIND_BURST, 1.0f, 0.8f);
         
-        // Store storm data
         StormData storm = new StormData(player.getUniqueId(), System.currentTimeMillis() + 10000, "wind");
         activeStorms.put(uuid, storm);
         
-        // Rise 6 blocks up
         Location targetLoc = player.getLocation().clone().add(0, 6, 0);
         animateRise(player, targetLoc);
         
-        // Start wind monster effects
         startWindMonsterEffects(player, storm);
         
-        // Auto-end after 10 seconds
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -69,7 +65,6 @@ public class StormAbilities {
                 
                 tick++;
                 
-                // Keep player at height
                 Location loc = player.getLocation();
                 if(loc.getY() < player.getWorld().getHighestBlockYAt(loc) + 5) {
                     player.setVelocity(new Vector(0, 0.3, 0));
@@ -81,11 +76,8 @@ public class StormAbilities {
                     double x = Math.cos(rad) * 1.2;
                     double z = Math.sin(rad) * 1.2;
                     
-                    // Hand particles
                     player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(x, 1.2, z), 2, 0.1, 0.1, 0.1);
                     player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(x, 0.8, z), 2, 0.1, 0.1, 0.1);
-                    
-                    // Back particles
                     player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(-x, 1, -z), 2, 0.1, 0.1, 0.1);
                 }
                 
@@ -97,7 +89,6 @@ public class StormAbilities {
                     player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(x, 1, z), 1, 0, 0, 0);
                 }
                 
-                // Attack every 1.5 seconds (30 ticks)
                 attackCooldown++;
                 if(attackCooldown >= 30) {
                     performWindSlam(player);
@@ -110,10 +101,8 @@ public class StormAbilities {
     private static void performWindSlam(Player player) {
         Location center = player.getLocation();
         
-        // Create giant wind fist
         createGiantFist(player, center, Color.fromRGB(200, 230, 255), "wind");
         
-        // Damage all entities in 5x5 area below
         for(int x = -2; x <= 2; x++) {
             for(int z = -2; z <= 2; z++) {
                 Location checkLoc = center.clone().add(x, -3, z);
@@ -124,21 +113,19 @@ public class StormAbilities {
                         living.damage(6, player);
                         living.setVelocity(new Vector(0, -0.5, 0));
                         
-                        // Impact particles
                         living.getWorld().spawnParticle(Particle.CLOUD, living.getLocation(), 30, 0.5, 0.5, 0.5);
                         living.getWorld().playSound(living.getLocation(), Sound.ENTITY_PLAYER_ATTACK_STRONG, 1.0f, 0.8f);
                     }
                 });
                 
-                // Ground crack effect
+                // FIXED: BLOCK_CRACK -> BLOCK with block data
                 if(checkLoc.getBlock().getType() != Material.AIR) {
-                    checkLoc.getWorld().spawnParticle(Particle.BLOCK_CRACK, checkLoc, 20, 0.3, 0.1, 0.3, 
+                    checkLoc.getWorld().spawnParticle(Particle.BLOCK, checkLoc, 20, 0.3, 0.1, 0.3, 
                         checkLoc.getBlock().getBlockData());
                 }
             }
         }
         
-        // Shockwave effect
         for(int i = 0; i < 360; i += 10) {
             double rad = Math.toRadians(i);
             double x = Math.cos(rad) * 3;
@@ -149,7 +136,7 @@ public class StormAbilities {
         player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.6f);
     }
     
-    // ==================== ABILITY 2: STORM MONSTER (Crouch + Right Click) ====================
+    // ==================== ABILITY 2: STORM MONSTER ====================
     
     public static void stormMonster(Player player) {
         UUID uuid = player.getUniqueId();
@@ -163,18 +150,14 @@ public class StormAbilities {
         player.sendMessage("§7You harness the power of lightning and storms!");
         player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0f, 0.5f);
         
-        // Store storm data
         StormData storm = new StormData(player.getUniqueId(), System.currentTimeMillis() + 10000, "storm");
         activeStorms.put(uuid, storm);
         
-        // Rise 6 blocks up
         Location targetLoc = player.getLocation().clone().add(0, 6, 0);
         animateRise(player, targetLoc);
         
-        // Start storm monster effects
         startStormMonsterEffects(player, storm);
         
-        // Auto-end after 10 seconds
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -204,7 +187,6 @@ public class StormAbilities {
                 
                 tick++;
                 
-                // Keep player at height
                 Location loc = player.getLocation();
                 if(loc.getY() < player.getWorld().getHighestBlockYAt(loc) + 5) {
                     player.setVelocity(new Vector(0, 0.3, 0));
@@ -216,11 +198,8 @@ public class StormAbilities {
                     double x = Math.cos(rad) * 1.5;
                     double z = Math.sin(rad) * 1.5;
                     
-                    // Electric sparks
                     player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(x, 1.2, z), 2, 0.1, 0.1, 0.1);
                     player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(x, 0.6, z), 2, 0.1, 0.1, 0.1);
-                    
-                    // Blue flame particles
                     player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().add(x, 1, z), 1, 0, 0, 0);
                 }
                 
@@ -232,15 +211,14 @@ public class StormAbilities {
                     player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(x, 0.8, z), 3, 0, 0.2, 0);
                 }
                 
-                // Dark villain aura
+                // FIXED: SPELL_WITCH -> ENCHANT (magical particles)
                 for(int i = 0; i < 360; i += 30) {
                     double rad = Math.toRadians(i);
                     double x = Math.cos(rad) * 1.8;
                     double z = Math.sin(rad) * 1.8;
-                    player.getWorld().spawnParticle(Particle.SPELL_WITCH, player.getLocation().add(x, 0.5, z), 1, 0.1, 0.1, 0.1);
+                    player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation().add(x, 0.5, z), 1, 0.1, 0.1, 0.1);
                 }
                 
-                // Attack every 1.5 seconds
                 attackCooldown++;
                 if(attackCooldown >= 30) {
                     performStormSlam(player);
@@ -253,15 +231,12 @@ public class StormAbilities {
     private static void performStormSlam(Player player) {
         Location center = player.getLocation();
         
-        // Create giant electric fist
         createGiantFist(player, center, Color.fromRGB(0, 100, 255), "storm");
         
-        // Lightning strike on each hit area
         for(int x = -2; x <= 2; x++) {
             for(int z = -2; z <= 2; z++) {
                 Location checkLoc = center.clone().add(x, -3, z);
                 
-                // Strike lightning randomly
                 if(Math.random() < 0.3) {
                     checkLoc.getWorld().strikeLightningEffect(checkLoc);
                 }
@@ -269,26 +244,21 @@ public class StormAbilities {
                 checkLoc.getWorld().getNearbyEntities(checkLoc, 1.5, 2, 1.5).forEach(e -> {
                     if(e != player && e instanceof LivingEntity) {
                         LivingEntity living = (LivingEntity) e;
-                        living.damage(8, player); // More damage for storm
+                        living.damage(8, player);
                         living.setVelocity(new Vector(0, -0.8, 0));
                         
-                        // Electric damage effect
                         living.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, living.getLocation(), 40, 0.5, 0.5, 0.5);
                         living.getWorld().playSound(living.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 0.8f);
-                        
-                        // Apply slowness from electricity
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
                     }
                 });
                 
-                // Ground burn effect
                 if(checkLoc.getBlock().getType() != Material.AIR) {
                     checkLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, checkLoc, 10, 0.2, 0.1, 0.2);
                 }
             }
         }
         
-        // Electric shockwave
         for(int i = 0; i < 360; i += 10) {
             double rad = Math.toRadians(i);
             double x = Math.cos(rad) * 3.5;
@@ -303,7 +273,6 @@ public class StormAbilities {
     // ==================== HELPER METHODS ====================
     
     private static void createGiantFist(Player player, Location center, Color color, String type) {
-        // Create giant fist using particles
         new BukkitRunnable() {
             int frame = 0;
             List<Location> fistLocations = new ArrayList<>();
@@ -311,7 +280,6 @@ public class StormAbilities {
             @Override
             public void run() {
                 if(frame >= 15) {
-                    // Fist disappears
                     for(Location loc : fistLocations) {
                         loc.getWorld().spawnParticle(Particle.CLOUD, loc, 5, 0.1, 0.1, 0.1);
                     }
@@ -320,12 +288,9 @@ public class StormAbilities {
                 }
                 
                 fistLocations.clear();
-                
-                // Calculate fist position (coming from above to below)
                 double progress = frame / 15.0;
-                double yOffset = 3 - (progress * 5); // Starts above, ends below
+                double yOffset = 3 - (progress * 5);
                 
-                // Create giant fist shape (3x3x3)
                 for(int x = -1; x <= 1; x++) {
                     for(int z = -1; z <= 1; z++) {
                         for(int y = -1; y <= 1; y++) {
@@ -345,7 +310,6 @@ public class StormAbilities {
                     }
                 }
                 
-                // Shockwave on impact frame
                 if(frame == 10) {
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 0.8f);
                     for(int i = 0; i < 360; i += 15) {
@@ -379,8 +343,6 @@ public class StormAbilities {
                 double z = startLoc.getZ() + (targetLoc.getZ() - startLoc.getZ()) * progress;
                 
                 player.teleport(new Location(player.getWorld(), x, y, z));
-                
-                // Rise particles
                 player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 20, 0.5, 0.1, 0.5);
                 
                 riseTicks++;
@@ -396,7 +358,6 @@ public class StormAbilities {
             player.sendMessage("§b🌬️ Monster form has ended!");
             player.playSound(player.getLocation(), Sound.ENTITY_BREEZE_DEATH, 1.0f, 0.8f);
             
-            // Descent effect
             new BukkitRunnable() {
                 int descendTicks = 0;
                 Location startLoc = player.getLocation();
@@ -430,8 +391,6 @@ public class StormAbilities {
     public static void cleanup() {
         activeStorms.clear();
     }
-    
-    // ==================== HELPER CLASS ====================
     
     private static class StormData {
         final UUID playerId;
