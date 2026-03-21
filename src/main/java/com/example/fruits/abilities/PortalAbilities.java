@@ -4,6 +4,10 @@ import com.example.fruits.FruitsPlugin;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import java.util.*;
@@ -15,11 +19,20 @@ public class PortalAbilities {
     private static final Map<UUID, PortalPair> activePortals = new HashMap<>();
     private static final Map<UUID, Long> portalCooldowns = new HashMap<>();
     private static final Map<UUID, Long> summonCooldowns = new HashMap<>();
+    private static final Map<UUID, Portal> pendingSummonPortals = new HashMap<>();
+    private static final Map<UUID, Portal> summonGUIPortals = new HashMap<>();
     
     // ==================== ABILITY 1: PORTAL LINK (Right Click) ====================
     
     public static void portalLink(Player player) {
         UUID uuid = player.getUniqueId();
+        
+        // Check cooldown
+        if(portalCooldowns.containsKey(uuid) && System.currentTimeMillis() < portalCooldowns.get(uuid)) {
+            long remaining = (portalCooldowns.get(uuid) - System.currentTimeMillis()) / 1000;
+            player.sendMessage("§c⏰ Portal Link on cooldown for " + remaining + " seconds!");
+            return;
+        }
         
         // Check if player already has pending portal
         if(pendingPortals.containsKey(uuid)) {
@@ -33,7 +46,12 @@ public class PortalAbilities {
             }
             
             // Create second portal and link them
-            Location secondLoc = player.getTargetBlock(null, 30).getLocation();
+            Block targetBlock = player.getTargetBlock(null, 30);
+            if(targetBlock == null || targetBlock.getType() == Material.AIR) {
+                player.sendMessage("§c❌ You must aim at a solid block!");
+                return;
+            }
+            Location secondLoc = targetBlock.getLocation();
             Location firstLoc = pending.location;
             
             createPortalPair(player, firstLoc, secondLoc);
@@ -46,11 +64,12 @@ public class PortalAbilities {
             
         } else {
             // Create first portal
-            Location firstLoc = player.getTargetBlock(null, 30).getLocation();
-            if(firstLoc == null || firstLoc.getBlock().getType() == Material.AIR) {
+            Block targetBlock = player.getTargetBlock(null, 30);
+            if(targetBlock == null || targetBlock.getType() == Material.AIR) {
                 player.sendMessage("§c❌ You must aim at a solid block!");
                 return;
             }
+            Location firstLoc = targetBlock.getLocation();
             
             pendingPortals.put(uuid, new PortalData(firstLoc, System.currentTimeMillis() + 20000));
             player.sendMessage("§5✨ First portal placed! You have §e20 seconds §5to place the second!");
@@ -83,7 +102,9 @@ public class PortalAbilities {
                     removePortal(p.portal1);
                     removePortal(p.portal2);
                     activePortals.remove(player.getUniqueId());
-                    player.sendMessage("§5🌌 Portals have faded away!");
+                    if(player.isOnline()) {
+                        player.sendMessage("§5🌌 Portals have faded away!");
+                    }
                 }
             }
         }.runTaskLater(FruitsPlugin.getInstance(), 1200L); // 60 seconds
@@ -144,7 +165,7 @@ public class PortalAbilities {
                 
                 // Vertical beam
                 for(int y = 0; y <= 2; y++) {
-                    center.getWorld().spawnParticle(Particle.SPELL_MOB, center.clone().add(0, y, 0), 3, 0.1, 0.1, 0.1);
+                    center.getWorld().spawnParticle(Particle.ENCHANT, center.clone().add(0, y, 0), 3, 0.1, 0.1, 0.1);
                 }
                 
                 angle += 5;
@@ -256,11 +277,12 @@ public class PortalAbilities {
         }
         
         // Get cursor location
-        Location cursorLoc = player.getTargetBlock(null, 50).getLocation();
-        if(cursorLoc == null) {
+        Block targetBlock = player.getTargetBlock(null, 50);
+        if(targetBlock == null || targetBlock.getType() == Material.AIR) {
             player.sendMessage("§c❌ You must aim at a valid location!");
             return;
         }
+        Location cursorLoc = targetBlock.getLocation();
         
         // Create summon portal
         Portal summonPortal = createPortalBlock(cursorLoc);
@@ -277,13 +299,13 @@ public class PortalAbilities {
                 if(pendingSummonPortals.containsKey(uuid)) {
                     Portal p = pendingSummonPortals.remove(uuid);
                     removePortal(p);
-                    player.sendMessage("§5🌌 Summon portal faded away!");
+                    if(player.isOnline()) {
+                        player.sendMessage("§5🌌 Summon portal faded away!");
+                    }
                 }
             }
         }.runTaskLater(FruitsPlugin.getInstance(), 600L);
     }
-    
-    private static final Map<UUID, Portal> pendingSummonPortals = new HashMap<>();
     
     public static void handleSummonPortalClick(Player player, Location clickedLoc) {
         UUID uuid = player.getUniqueId();
@@ -345,8 +367,6 @@ public class PortalAbilities {
             }
         }.runTaskLater(FruitsPlugin.getInstance(), 600L);
     }
-    
-    private static final Map<UUID, Portal> summonGUIPortals = new HashMap<>();
     
     public static void handleSummonSelection(Player summoner, Player target) {
         Portal portal = summonGUIPortals.remove(summoner.getUniqueId());
