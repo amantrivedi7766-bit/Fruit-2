@@ -1,18 +1,21 @@
 package com.example.fruits.manager;
 
-import com.example.fruits.models.PlayerFruitData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import java.util.*;
 
 public class PlayerManager {
     private final Set<UUID> activePlayers = new HashSet<>();
-    private final Map<UUID, PlayerFruitData> playerData = new HashMap<>();
+    private final Map<UUID, Map<String, Object>> playerData = new HashMap<>();
     
     public void addActivePlayer(Player player) {
         activePlayers.add(player.getUniqueId());
         if(!playerData.containsKey(player.getUniqueId())) {
-            playerData.put(player.getUniqueId(), new PlayerFruitData(player.getUniqueId(), null));
+            Map<String, Object> data = new HashMap<>();
+            data.put("fruit", null);
+            data.put("usedAbilities", 0);
+            data.put("abilityUsage", new HashMap<String, Integer>());
+            playerData.put(player.getUniqueId(), data);
         }
     }
     
@@ -40,14 +43,13 @@ public class PlayerManager {
         if(!playerData.containsKey(uuid)) {
             addActivePlayer(player);
         }
-        playerData.get(uuid).setCurrentFruit(fruitId);
-        playerData.get(uuid).updateLastUsed();
+        playerData.get(uuid).put("fruit", fruitId);
     }
     
     public String getPlayerFruit(Player player) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) return null;
-        return playerData.get(uuid).getCurrentFruit();
+        return (String) playerData.get(uuid).get("fruit");
     }
     
     public String getFruit(Player player) {
@@ -58,10 +60,11 @@ public class PlayerManager {
         return getPlayerFruit(player) != null;
     }
     
+    @SuppressWarnings("unchecked")
     public int getUsedAbilities(Player player) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) return 0;
-        return playerData.get(uuid).getUsedCount();
+        return (int) playerData.get(uuid).getOrDefault("usedAbilities", 0);
     }
     
     public void incrementUsed(Player player) {
@@ -69,32 +72,41 @@ public class PlayerManager {
         if(!playerData.containsKey(uuid)) {
             addActivePlayer(player);
         }
-        playerData.get(uuid).incrementUsed();
+        int current = getUsedAbilities(player);
+        playerData.get(uuid).put("usedAbilities", current + 1);
     }
     
     public void incrementUsedAbilities(Player player) {
         incrementUsed(player);
     }
     
+    @SuppressWarnings("unchecked")
     public Map<String, Integer> getAbilityUsage(Player player) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) return new HashMap<>();
-        return playerData.get(uuid).getAbilityUsage();
+        return (Map<String, Integer>) playerData.get(uuid).getOrDefault("abilityUsage", new HashMap<>());
     }
     
+    @SuppressWarnings("unchecked")
     public void recordAbilityUse(Player player, String abilityId) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) {
             addActivePlayer(player);
         }
-        playerData.get(uuid).recordAbilityUse(abilityId);
+        Map<String, Integer> usage = (Map<String, Integer>) playerData.get(uuid).get("abilityUsage");
+        if(usage == null) {
+            usage = new HashMap<>();
+            playerData.get(uuid).put("abilityUsage", usage);
+        }
+        usage.put(abilityId, usage.getOrDefault(abilityId, 0) + 1);
+        incrementUsed(player);
     }
     
-    public PlayerFruitData getPlayerData(Player player) {
+    public Map<String, Object> getPlayerData(Player player) {
         return playerData.get(player.getUniqueId());
     }
     
-    public PlayerFruitData get(UUID uuid) {
+    public Map<String, Object> get(UUID uuid) {
         return playerData.get(uuid);
     }
     
@@ -103,15 +115,7 @@ public class PlayerManager {
     }
     
     public Map<UUID, Map<String, Object>> getPlayerDataMap() {
-        Map<UUID, Map<String, Object>> result = new HashMap<>();
-        for(Map.Entry<UUID, PlayerFruitData> entry : playerData.entrySet()) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("fruit", entry.getValue().getCurrentFruit());
-            data.put("usedAbilities", entry.getValue().getUsedCount());
-            data.put("abilityUsage", entry.getValue().getAbilityUsage());
-            result.put(entry.getKey(), data);
-        }
-        return result;
+        return playerData;
     }
     
     public void clear() {
