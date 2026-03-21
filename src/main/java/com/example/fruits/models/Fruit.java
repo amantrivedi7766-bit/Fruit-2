@@ -32,7 +32,7 @@ public class Fruit {
         
         List<String> lore = new ArrayList<>();
         lore.add("§7§m-------------------");
-        lore.add("§6✨ Magical Fruit");
+        lore.add("§6✨ Magical Dye");
         lore.add("§7§m-------------------");
         lore.add("§eAbilities:");
         for(int i = 0; i < abilities.size(); i++) {
@@ -40,7 +40,7 @@ public class Fruit {
             lore.add("§7 " + (i+1) + ". §f" + a.getName() + " §7(§b" + a.getCooldown() + "s§7)");
         }
         lore.add("§7§m-------------------");
-        lore.add("§a🍎 Right-click to eat!");
+        lore.add("§a🔮 Hold and right-click to use!");
         lore.add("§7Use §e/fruit withdraw §7to cancel power");
         meta.setLore(lore);
         
