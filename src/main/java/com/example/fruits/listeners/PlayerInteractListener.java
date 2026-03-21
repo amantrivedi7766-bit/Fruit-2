@@ -34,6 +34,51 @@ public class PlayerInteractListener implements Listener {
         if((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
             if(fruitId.equals("vine_weaver")) {
                 NatureAbilities.handleLaunch(player);
+package com.example.fruits.listeners;
+
+import com.example.fruits.FruitsPlugin;
+import com.example.fruits.models.Fruit;
+import com.example.fruits.models.Ability;
+import com.example.fruits.abilities.NatureAbilities;
+import com.example.fruits.abilities.ThiefAbilities;
+import com.example.fruits.abilities.VampireAbilities;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.block.Action;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
+
+public class PlayerInteractListener implements Listener {
+    
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        
+        if(event.getItem() == null) return;
+        String fruitId = Fruit.getFruitId(event.getItem());
+        if(fruitId == null) return;
+        
+        Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
+        if(fruit == null) return;
+        
+        Action action = event.getAction();
+        
+        // LEFT CLICK - Handle special left-click abilities
+        if((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
+            // Vine Weaver - Launch attached player
+            if(fruitId.equals("vine_weaver")) {
+                NatureAbilities.handleLaunch(player);
+                return;
+            }
+            
+            // Dracula Bites - Blood Bite while riding bat
+            if(fruitId.equals("dracula_bites") && VampireAbilities.isRidingBat(player)) {
+                VampireAbilities.bloodBite(player);
+                return;
             }
             return;
         }
@@ -42,17 +87,16 @@ public class PlayerInteractListener implements Listener {
         if((action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
             
+            // Check for stolen ability first (Shadowweaver)
+            if(ThiefAbilities.hasStolenAbility(player)) {
+                Entity target = getTargetEntity(player, 15);
+                if(ThiefAbilities.useStolenAbility(player, target)) {
+                    return;
+                }
+            }
+            
             // FIRST ABILITY - Normal Right Click
             if(!player.isSneaking()) {
-                // Check for stolen ability first
-                if(ThiefAbilities.hasStolenAbility(player)) {
-                    Entity target = getTargetEntity(player, 15);
-                    if(ThiefAbilities.useStolenAbility(player, target)) {
-                        return;
-                    }
-                }
-                
-                // Normal fruit ability
                 if(fruit.getAbilities().size() > 0) {
                     Entity target = getTargetEntity(player, 15);
                     Ability ability = fruit.getAbilities().get(0);
