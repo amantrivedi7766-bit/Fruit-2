@@ -25,7 +25,7 @@ public class Fruit {
 
     public String getId() { return id; }
     public String getName() { return name; }
-    public String getDisplayName() { return name; }  // ✅ For compatibility
+    public String getDisplayName() { return name; }
     public Material getMaterial() { return material; }
     public int getCustomModelData() { return customModelData; }
     public List<String> getLore() { return lore; }
@@ -48,23 +48,24 @@ public class Fruit {
     }
 
     public static String getFruitId(ItemStack item) {
-    if (item == null || !item.hasItemMeta()) return null;
-    ItemMeta meta = item.getItemMeta();
-    if (!meta.hasCustomModelData()) return null;
-    
-    int cmd = meta.getCustomModelData();
-    switch (cmd) {
-        case 1001: return "vine_weaver";
-        case 1002: return "dragonfruit";
-        case 1003: return "starfruit";
-        case 1004: return "moonberry";
-        case 1005: return "voidberry";
-        case 1006: return "stormberry";
-        case 1007: return "frostberry";
-        case 1008: return "flameberry";
-        case 1009: return "shadowberry";
-        case 1010: return "soulberry";
-        case 1011: return "mysticberry";
-        default: return null;
+        if (item == null || !item.hasItemMeta()) return null;
+        ItemMeta meta = item.getItemMeta();
+        if (!meta.hasCustomModelData()) return null;
+        
+        int cmd = meta.getCustomModelData();
+        switch (cmd) {
+            case 1001: return "vine_weaver";
+            case 1002: return "dragonfruit";
+            case 1003: return "starfruit";
+            case 1004: return "moonberry";
+            case 1005: return "voidberry";
+            case 1006: return "stormberry";
+            case 1007: return "frostberry";
+            case 1008: return "flameberry";
+            case 1009: return "shadowberry";
+            case 1010: return "soulberry";
+            case 1011: return "mysticberry";
+            default: return null;
+        }
     }
-    }
+}
