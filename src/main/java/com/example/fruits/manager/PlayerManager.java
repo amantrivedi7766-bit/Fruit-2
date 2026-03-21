@@ -59,6 +59,20 @@ public class PlayerManager {
         return playerFruits.get(player.getUniqueId());
     }
     
+    // For compatibility with code expecting direct Map access
+    public PlayerFruitData get(UUID uuid) {
+        return playerFruits.get(uuid);
+    }
+    
+    public void put(UUID uuid, PlayerFruitData data) {
+        playerFruits.put(uuid, data);
+        activePlayers.add(uuid);
+    }
+    
+    public boolean containsKey(UUID uuid) {
+        return playerFruits.containsKey(uuid);
+    }
+    
     public void clear() {
         activePlayers.clear();
         playerFruits.clear();
