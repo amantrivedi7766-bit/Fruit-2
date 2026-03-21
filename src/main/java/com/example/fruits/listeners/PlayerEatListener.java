@@ -32,7 +32,7 @@ public class PlayerEatListener implements Listener {
             return;
         }
 
-        // Remove ONE fruit from hand - NO DUPLICATE
+        // Remove ONE fruit from hand
         item.setAmount(item.getAmount() - 1);
         
         // Store player's active fruit
@@ -47,8 +47,7 @@ public class PlayerEatListener implements Listener {
 
         // Show abilities in action bar
         String abilities = fruit.getAbilities().get(0).getName() + " §7| §e" + 
-                          fruit.getAbilities().get(1).getName() + " §7| §e" + 
-                          fruit.getAbilities().get(2).getName();
+                          fruit.getAbilities().get(1).getName();
         
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
             TextComponent.fromLegacyText("§a🍎 " + fruit.getDisplayName() + " §7| §e" + abilities));
@@ -60,6 +59,6 @@ public class PlayerEatListener implements Listener {
         player.sendMessage("§e⚡ Hotkeys:");
         player.sendMessage("§7  • §eRight Click §7→ §f" + fruit.getAbilities().get(0).getName());
         player.sendMessage("§7  • §eShift + Right Click §7→ §f" + fruit.getAbilities().get(1).getName());
-        player.sendMessage("§7  • §eShift + Left Click §7→ §f" + fruit.getAbilities().get(2).getName());
+        // NO shift+left click guide!
     }
 }
