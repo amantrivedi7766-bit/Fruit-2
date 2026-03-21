@@ -105,7 +105,8 @@ public class FruitRegistry {
                                 return;
                             }
                             Location waveLoc = start.clone().add(direction.clone().multiply(distance));
-                            waveLoc.getWorld().spawnParticle(Particle.WATER_BUBBLE, waveLoc, 50, 1, 0.5, 1, 0.1);
+                            // FIXED: WATER_BUBBLE -> CLOUD (works in Paper 1.21.4)
+                            waveLoc.getWorld().spawnParticle(Particle.CLOUD, waveLoc, 50, 1, 0.5, 1, 0.1);
                             waveLoc.getWorld().playSound(waveLoc, Sound.ENTITY_GENERIC_SPLASH, 1.0f, 1.0f);
                             waveLoc.getWorld().getNearbyEntities(waveLoc, 3, 2, 3).forEach(e -> {
                                 if(e != p && e instanceof LivingEntity) {
@@ -337,8 +338,7 @@ public class FruitRegistry {
                     p.sendMessage("§8🎭 Decoy summoned!");
                 })
             )));
-
-        // ==================== 8. STAR DYE ====================
+// ==================== 8. STAR DYE ====================
         fruits.put("star_dye", new Fruit("star_dye", "§e§l⭐ Star Dye", Material.ORANGE_DYE, 1008,
             Arrays.asList(
                 new Ability("§eShooting Star", 25, (p, target) -> {
