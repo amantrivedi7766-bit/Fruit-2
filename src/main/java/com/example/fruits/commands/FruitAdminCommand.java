@@ -2,96 +2,42 @@ package com.example.fruits.commands;
 
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.gui.AdminGUI;
-import com.example.fruits.models.Fruit;
-import com.example.fruits.utils.SpinWheel;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class FruitAdminCommand implements CommandExecutor {
-
+    
+    private final AdminGUI adminGUI = new AdminGUI();
+    
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if(!sender.hasPermission("fruits.admin")) {
-            sender.sendMessage("§cNo permission!");
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if(!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players can use this command!");
             return true;
         }
         
-        if(args.length < 1) {
-            sender.sendMessage("§cUsage: /fruitadmin <give|spin|spinall|grace|gui|reload>");
+        Player player = (Player) sender;
+        
+        if(!player.hasPermission("fruits.admin")) {
+            player.sendMessage("§c❌ You don't have permission!");
             return true;
         }
         
-        switch(args[0].toLowerCase()) {
-            case "give":
-                if(args.length < 3) {
-                    sender.sendMessage("§cUsage: /fruitadmin give <player> <fruit>");
-                    return true;
-                }
-                Player target = Bukkit.getPlayer(args[1]);
-                if(target == null) {
-                    sender.sendMessage("§cPlayer not found!");
-                    return true;
-                }
-                Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(args[2]);
-                if(fruit == null) {
-                    sender.sendMessage("§cFruit not found!");
-                    return true;
-                }
-                target.getInventory().addItem(fruit.createItem());
-                sender.sendMessage("§aGave " + fruit.getDisplayName() + " to " + target.getName());
-                break;
-                
-            case "spin":
-                if(args.length < 2) {
-                    sender.sendMessage("§cUsage: /fruitadmin spin <player>");
-                    return true;
-                }
-                Player spinTarget = Bukkit.getPlayer(args[1]);
-                if(spinTarget == null) {
-                    sender.sendMessage("§cPlayer not found!");
-                    return true;
-                }
-                SpinWheel.spin(spinTarget);
-                break;
-                
-            case "spinall":
-                SpinWheel.spinAll();
-                sender.sendMessage("§a🎲 All players received random fruits!");
-                break;
-                
-            case "grace":
-                if(args.length < 2) {
-                    sender.sendMessage("§cUsage: /fruitadmin grace <start|end> [seconds]");
-                    return true;
-                }
-                if(args[1].equalsIgnoreCase("start")) {
-                    int seconds = args.length > 2 ? Integer.parseInt(args[2]) : 60;
-                    FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(seconds);
-                    sender.sendMessage("§aStarted " + seconds + " second global grace period!");
-                } else if(args[1].equalsIgnoreCase("end")) {
-                    sender.sendMessage("§cGrace period ended manually!");
-                }
-                break;
-                
-            case "gui":
-                if(!(sender instanceof Player)) {
-                    sender.sendMessage("§cOnly players can use GUI!");
-                    return true;
-                }
-                AdminGUI.open((Player) sender);
-                break;
-                
-            case "reload":
-                FruitsPlugin.getInstance().reloadConfig();
-                sender.sendMessage("§aConfig reloaded!");
-                break;
-                
-            default:
-                sender.sendMessage("§cUnknown command! Use: give, spin, spinall, grace, gui, reload");
+        if(args.length == 0) {
+            adminGUI.openMainMenu(player);
         }
+        else if(args[0].equalsIgnoreCase("toggle")) {
+            boolean enabled = FruitsPlugin.getInstance().getConfigManager().isRewardEnabled();
+            FruitsPlugin.getInstance().getConfigManager().setRewardEnabled(!enabled);
+            player.sendMessage("§a✅ Join reward " + (!enabled ? "enabled" : "disabled") + "!");
+        }
+        else if(args[0].equalsIgnoreCase("status")) {
+            player.sendMessage("§eJoin Reward: " + (FruitsPlugin.getInstance().getConfigManager().isRewardEnabled() ? "§aENABLED" : "§cDISABLED"));
+            player.sendMessage("§eActive Players: §a" + FruitsPlugin.getInstance().getActivePlayers().size());
+        }
+        
         return true;
     }
 }
