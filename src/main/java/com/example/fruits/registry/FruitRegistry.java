@@ -1,3 +1,5 @@
+uits() { return fruits.values(); }
+}
 package com.example.fruits.registry;
 
 import com.example.fruits.models.Ability;
@@ -176,8 +178,8 @@ public class FruitRegistry {
                                     this.cancel();
                                     return;
                                 }
-                                // FIXED: SPELL_WITCH -> SPELL_MOB
-                                target.getWorld().spawnParticle(Particle.SPELL_MOB, target.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5);
+                                // FIXED: Use END_ROD particle (works in all versions)
+                                target.getWorld().spawnParticle(Particle.END_ROD, target.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5);
                                 target.getWorld().playSound(target.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.5f, 0.5f);
                                 timer++;
                             }
@@ -364,3 +366,4 @@ public class FruitRegistry {
     public Fruit getFruit(String id) { return fruits.get(id); }
     public Collection<Fruit> getAllFruits() { return fruits.values(); }
 }
+          
