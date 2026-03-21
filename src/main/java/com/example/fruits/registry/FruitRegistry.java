@@ -13,35 +13,35 @@ public class FruitRegistry {
     }
 
     private void registerFruits() {
-        // ==================== 1. NATURE DYE ====================
-        fruits.put("nature_dye", new Fruit("nature_dye", "§a§l🌿 Nature Dye", Material.GREEN_DYE, 1001, new ArrayList<>()));
+        // ==================== 1. DRAGONFRUIT ====================
+        fruits.put("dragonfruit", new Fruit("dragonfruit", "§c§l🐉 Dragonfruit", Material.RED_DYE, 1001, new ArrayList<>()));
         
-        // ==================== 2. WATER DYE ====================
-        fruits.put("water_dye", new Fruit("water_dye", "§b§l💧 Water Dye", Material.LIGHT_BLUE_DYE, 1002, new ArrayList<>()));
+        // ==================== 2. STARFRUIT ====================
+        fruits.put("starfruit", new Fruit("starfruit", "§e§l⭐ Starfruit", Material.YELLOW_DYE, 1002, new ArrayList<>()));
         
-        // ==================== 3. CYCLONE DYE ====================
-        fruits.put("cyclone_dye", new Fruit("cyclone_dye", "§3§l🌀 Cyclone Dye", Material.CYAN_DYE, 1003, new ArrayList<>()));
+        // ==================== 3. MOONBERRY ====================
+        fruits.put("moonberry", new Fruit("moonberry", "§b§l🌙 Moonberry", Material.LIGHT_BLUE_DYE, 1003, new ArrayList<>()));
         
-        // ==================== 4. DRACULA DYE ====================
-        fruits.put("dracula_dye", new Fruit("dracula_dye", "§c§l🦇 Dracula Dye", Material.RED_DYE, 1004, new ArrayList<>()));
+        // ==================== 4. VOIDBERRY ====================
+        fruits.put("voidberry", new Fruit("voidberry", "§8§l🕳️ Voidberry", Material.BLACK_DYE, 1004, new ArrayList<>()));
         
-        // ==================== 5. PORTAL DYE ====================
-        fruits.put("portal_dye", new Fruit("portal_dye", "§5§l🌀 Portal Dye", Material.PURPLE_DYE, 1005, new ArrayList<>()));
+        // ==================== 5. STORMBERRY ====================
+        fruits.put("stormberry", new Fruit("stormberry", "§3§l⚡ Stormberry", Material.CYAN_DYE, 1005, new ArrayList<>()));
         
-        // ==================== 6. THRONE DYE ====================
-        fruits.put("throne_dye", new Fruit("throne_dye", "§6§l👑 Throne Dye", Material.YELLOW_DYE, 1006, new ArrayList<>()));
+        // ==================== 6. FROSTBERRY ====================
+        fruits.put("frostberry", new Fruit("frostberry", "§b§l❄️ Frostberry", Material.LIGHT_BLUE_DYE, 1006, new ArrayList<>()));
         
-        // ==================== 7. THIEF DYE ====================
-        fruits.put("thief_dye", new Fruit("thief_dye", "§8§l🗡️ Thief Dye", Material.BLACK_DYE, 1007, new ArrayList<>()));
+        // ==================== 7. FLAMEBERRY ====================
+        fruits.put("flameberry", new Fruit("flameberry", "§c§l🔥 Flameberry", Material.RED_DYE, 1007, new ArrayList<>()));
         
-        // ==================== 8. STAR DYE ====================
-        fruits.put("star_dye", new Fruit("star_dye", "§e§l⭐ Star Dye", Material.ORANGE_DYE, 1008, new ArrayList<>()));
+        // ==================== 8. SHADOWBERRY ====================
+        fruits.put("shadowberry", new Fruit("shadowberry", "§7§l🌑 Shadowberry", Material.GRAY_DYE, 1008, new ArrayList<>()));
         
-        // ==================== 9. SHADOW DYE ====================
-        fruits.put("shadow_dye", new Fruit("shadow_dye", "§7§l🌑 Shadow Dye", Material.GRAY_DYE, 1009, new ArrayList<>()));
+        // ==================== 9. SOULBERRY ====================
+        fruits.put("soulberry", new Fruit("soulberry", "§5§l👻 Soulberry", Material.PURPLE_DYE, 1009, new ArrayList<>()));
         
-        // ==================== 10. PRIMORDIAL DYE ====================
-        fruits.put("primordial_dye", new Fruit("primordial_dye", "§5§l✨ Primordial Dye", Material.MAGENTA_DYE, 1010, new ArrayList<>()));
+        // ==================== 10. MYSTICBERRY ====================
+        fruits.put("mysticberry", new Fruit("mysticberry", "§5§l🔮 Mysticberry", Material.PURPLE_DYE, 1010, new ArrayList<>()));
     }
 
     public Fruit getFruit(String id) { 
