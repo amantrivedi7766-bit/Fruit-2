@@ -9,6 +9,7 @@ import com.example.fruits.abilities.PortalAbilities;
 import com.example.fruits.abilities.VampireAbilities;
 import com.example.fruits.abilities.CycloneAbilities;
 import com.example.fruits.abilities.StormAbilities;
+import com.example.fruits.abilities.WaterAbilities;
 import org.bukkit.Material;
 import java.util.*;
 
@@ -222,7 +223,39 @@ public class FruitRegistry {
         
         fruits.put("storm_monster", new Fruit("storm_monster", "§9§l⚡ Storm Monster", Material.LIGHT_BLUE_DYE, 1017, stormLore, stormAbilities));
         
-        // ==================== 8. OTHER MAGICAL FRUITS (Placeholder) ====================
+        // ==================== 8. TIDAL WEAVER (Water) ====================
+        List<Ability> tidalAbilities = Arrays.asList(
+            new Ability("§b💧 Water Geyser", 25, (p, target) -> {
+                WaterAbilities.waterGeyser(p);
+            }),
+            new Ability("§b🌊 Tidal Wave", 35, (p, target) -> {
+                WaterAbilities.tidalWave(p);
+            })
+        );
+        
+        List<String> tidalLore = Arrays.asList(
+            "§7=================================",
+            "§e§l🔮 MYSTICAL FRUIT",
+            "§7=================================",
+            "§f⚡ Right Click:",
+            "§7  Summon water geysers under all nearby entities!",
+            "§7  Cartoon-style launch into the air!",
+            "§7  Water particles and bubble effects",
+            "§7  Spinning launch effect",
+            "§f🔧 Right + Crouch:",
+            "§7  Transform into a powerful tidal wave!",
+            "§7  Become invisible like water",
+            "§7  Crash forward pushing all enemies!",
+            "§7  Damage and knockback enemies",
+            "§7  Cinematic water wave particles",
+            "§f⏰ Cooldowns: §e25s (Geyser), 35s (Wave)",
+            "§7=================================",
+            "§b§l✦ Tidal Weaver ✦"
+        );
+        
+        fruits.put("tidal_weaver", new Fruit("tidal_weaver", "§b§l💧 Tidal Weaver", Material.LIGHT_BLUE_DYE, 1018, tidalLore, tidalAbilities));
+        
+        // ==================== 9. OTHER MAGICAL FRUITS (Placeholder) ====================
         List<String> defaultLore = Arrays.asList(
             "§7=================================",
             "§e§l🔮 MAGICAL FRUIT",
