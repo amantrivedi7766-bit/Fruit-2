@@ -1,43 +1,34 @@
-# FruitsPlugin Configuration
+# Fruit Plugin Configuration
 
-# Grace Period Settings
-grace_period:
+# ========== AUTO-GIVE SETTINGS ==========
+# Give fruit to players every time they join
+auto-give:
+  enabled: false
+  fruit-id: "nature_dye"
+  amount: 1
+
+# ========== FIRST JOIN GIFT SETTINGS ==========
+# Give fruit to players only on their first join
+join-fruit:
   enabled: true
-  duration: 60
-  bossbar_title: "&c⚠️ GRACE PERIOD &7| &e{time}s &7remaining"
-  start_message: "&c⚠️ &lGRACE PERIOD STARTED! &cPVP is disabled for {time} seconds!"
-  end_message: "&a✅ &lGRACE PERIOD ENDED! &aPVP is now enabled! &cFight wisely!"
+  id: "nature_dye"
+  amount: 1
 
-# Death Settings
-death:
-  lose_power: true
+# ========== SPIN WHEEL SETTINGS ==========
+spin-wheel:
+  enabled: true
+  max-spins: 10
+  cooldown: 60
+  animation-duration: 15
 
-# Cooldown Settings
-cooldowns:
-  default: 15
-  meteor_storm: 30
-  magma_shield: 45
-  wind_monster: 60
-  storm_monster: 60
-  time_freeze: 50
-  magnetic_pull: 35
+# ========== STEAL SETTINGS ==========
+steal:
+  enabled: true
+  cooldown: 60
+  max-steal-per-attempt: 3
 
-# Messages
-messages:
-  prefix: "&8[&6⚡&8]&r "
-  fruit_eaten: "&a✅ You ate &6{fruit}&a! &7Abilities are now active!"
-  ability_used: "&a⚡ Used &6{ability}&a! ({used}/3)"
-  fruit_returned: "&a🔄 Fruit returned to inventory! Eat again to reuse!"
-  no_fruit: "&c❌ You haven't eaten any fruit!"
-  grace_start: "&c⚠️ &lGRACE PERIOD STARTED! &cPVP disabled for {time}s!"
-  grace_end: "&a✅ &lGRACE PERIOD ENDED! &aPVP enabled now!"
-  
-# Fruits Plugin Configuration
-# =================================
-
-# Join Reward System
-# When enabled, new players get a random magical fruit on first join
-reward-on-join: true
-
-# =================================
-# Version: 1.0
+# ========== GENERAL SETTINGS ==========
+settings:
+  debug: false
+  language: "en"
+  prefix: "§6[Fruits] §7"
