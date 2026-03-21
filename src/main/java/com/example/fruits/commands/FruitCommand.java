@@ -2,113 +2,74 @@ package com.example.fruits.commands;
 
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
-import com.example.fruits.models.PlayerFruitData;
-import com.example.fruits.models.Ability;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 public class FruitCommand implements CommandExecutor {
-
+    
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if(!(sender instanceof Player)) return true;
-        Player p = (Player) sender;
-        
-        if(args.length < 1) {
-            p.sendMessage("§cUsage: /fruit <use|withdraw> [1|2|3]");
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if(!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players can use this command!");
             return true;
         }
         
-        // WITHDRAW COMMAND
-        if(args[0].equalsIgnoreCase("withdraw")) {
-            PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(p.getUniqueId());
-            if(data == null || data.getFruit() == null) {
-                p.sendMessage("§c❌ You don't have any active fruit power!");
-                return true;
-            }
-            
-            p.getInventory().addItem(data.getFruit().createItem());
-            FruitsPlugin.getInstance().getActivePlayers().remove(p.getUniqueId());
-            
-            p.sendMessage("§a🔄 You withdrew your fruit power! The fruit has been returned.");
-            p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+        Player player = (Player) sender;
+        
+        if(args.length == 0) {
+            showInfo(player);
             return true;
         }
         
-        // USE COMMAND
-        if(args.length != 2 || !args[0].equalsIgnoreCase("use")) {
-            p.sendMessage("§cUsage: /fruit use <1|2|3> or /fruit withdraw");
-            return true;
+        if(args[0].equalsIgnoreCase("info")) {
+            showInfo(player);
         }
-        
-        PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(p.getUniqueId());
-        if(data == null || data.getFruit() == null) {
-            p.sendMessage("§c❌ Eat a fruit first!");
-            return true;
+        else if(args[0].equalsIgnoreCase("stats")) {
+            showStats(player);
         }
-        
-        int index;
-        try {
-            index = Integer.parseInt(args[1]) - 1;
-        } catch(Exception e) {
-            p.sendMessage("§c❌ Use 1, 2, or 3");
-            return true;
-        }
-        
-        Fruit fruit = data.getFruit();
-        if(index < 0 || index >= fruit.getAbilities().size()) {
-            p.sendMessage("§c❌ Invalid ability number");
-            return true;
-        }
-        
-        Ability ability = fruit.getAbilities().get(index);
-        String cooldownKey = fruit.getId() + "_" + index;
-        
-        if(!FruitsPlugin.getInstance().getCooldownManager().checkCooldown(p, cooldownKey)) return true;
-        
-        // Get target entity
-        Entity target = getTargetEntity(p, 20);
-        
-        // Execute ability with target
-        ability.getExecutor().execute(p, target);
-        FruitsPlugin.getInstance().getCooldownManager().setCooldown(p, cooldownKey, ability.getCooldown(), ability.getName());
-        
-        data.incrementUsed();
-        
-        // Send message
-        if(target != null) {
-            String targetName = target instanceof Player ? ((Player) target).getName() : target.getType().name().toLowerCase().replace("_", " ");
-            p.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a! (" + data.getUsedAbilities() + "/3)");
-        } else {
-            p.sendMessage("§a⚡ Used §6" + ability.getName() + "§a! (" + data.getUsedAbilities() + "/3)");
-        }
-        
-        // Action bar
-        int remaining = 3 - data.getUsedAbilities();
-        p.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
-            TextComponent.fromLegacyText("§a✓ " + remaining + " §7uses remaining"));
-        
-        if(data.getFruit() == null) {
-            p.sendMessage("§a🔄 Fruit returned to inventory! Eat again to reuse!");
+        else {
+            player.sendMessage("§e§l🍎 Fruit Command");
+            player.sendMessage("§7/fruit info §8- §7Show your fruit info");
+            player.sendMessage("§7/fruit stats §8- §7Show your usage stats");
         }
         
         return true;
     }
     
-    private Entity getTargetEntity(Player player, int range) {
-        return player.getWorld().getNearbyEntities(player.getEyeLocation(), range, range, range)
-            .stream()
-            .filter(e -> e != player && e.getLocation().distance(player.getEyeLocation()) <= range)
-            .min((e1, e2) -> {
-                double d1 = e1.getLocation().distance(player.getEyeLocation());
-                double d2 = e2.getLocation().distance(player.getEyeLocation());
-                return Double.compare(d1, d2);
-            })
-            .orElse(null);
+    private void showInfo(Player player) {
+        String fruitId = FruitsPlugin.getInstance().getPlayerManager().getPlayerFruit(player);
+        
+        if(fruitId == null) {
+            player.sendMessage("§c❌ You don't have a magical fruit yet!");
+            player.sendMessage("§eJoin the server for a free fruit spin!");
+            return;
+        }
+        
+        Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
+        if(fruit != null) {
+            player.sendMessage("§6§l========== [YOUR FRUIT] ==========");
+            player.sendMessage(fruit.getName());
+            player.sendMessage("§7Right-click to use abilities!");
+            player.sendMessage("§7Sneak + Right-click for second ability!");
+            player.sendMessage("§6§l=================================");
+        }
+    }
+    
+    private void showStats(Player player) {
+        String fruitId = FruitsPlugin.getInstance().getPlayerManager().getPlayerFruit(player);
+        
+        if(fruitId == null) {
+            player.sendMessage("§c❌ You don't have a magical fruit yet!");
+            return;
+        }
+        
+        int used = FruitsPlugin.getInstance().getPlayerManager().getUsedAbilities(player);
+        
+        player.sendMessage("§6§l========== [FRUIT STATS] ==========");
+        player.sendMessage("§7Fruit: §e" + fruitId);
+        player.sendMessage("§7Abilities Used: §e" + used);
+        player.sendMessage("§6§l=================================");
     }
 }
