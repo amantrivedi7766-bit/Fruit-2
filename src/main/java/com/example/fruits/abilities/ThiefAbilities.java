@@ -183,7 +183,7 @@ public class ThiefAbilities {
                     return;
                 }
                 
-                // FIXED: SPELL_WITCH -> SPELL (or PORTAL)
+                // ICE particles - working in Paper 1.21.4
                 player.getWorld().spawnParticle(Particle.SNOWFLAKE, player.getLocation().add(0, 1, 0), 20, 0.5, 0.5, 0.5);
                 player.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, player.getLocation(), 10, 0.3, 0.3, 0.3);
                 
@@ -206,6 +206,7 @@ public class ThiefAbilities {
     }
     
     private static void performStealEffects(Player thief, Player target) {
+        // Portal effect around thief
         for(int i = 0; i < 360; i += 5) {
             double rad = Math.toRadians(i);
             double x = Math.cos(rad) * 2;
@@ -213,8 +214,10 @@ public class ThiefAbilities {
             thief.getWorld().spawnParticle(Particle.PORTAL, thief.getLocation().add(x, 0.5, z), 1, 0, 0, 0);
         }
         
+        // Lightning on target
         target.getWorld().strikeLightningEffect(target.getLocation());
         
+        // Dark beam effect - FIXED: SPELL -> END_ROD (working particle)
         new BukkitRunnable() {
             int t = 0;
             @Override
@@ -233,20 +236,22 @@ public class ThiefAbilities {
                 double z = start.getZ() + (end.getZ() - start.getZ()) * progress;
                 
                 Location beamLoc = new Location(thief.getWorld(), x, y, z);
-                // FIXED: SPELL_WITCH -> SPELL
-                thief.getWorld().spawnParticle(Particle.SPELL, beamLoc, 10, 0.1, 0.1, 0.1);
+                // FIXED: SPELL -> END_ROD + DRAGON_BREATH
+                thief.getWorld().spawnParticle(Particle.END_ROD, beamLoc, 10, 0.1, 0.1, 0.1);
                 thief.getWorld().spawnParticle(Particle.DRAGON_BREATH, beamLoc, 5, 0.2, 0.2, 0.2);
                 
                 t++;
             }
         }.runTaskTimer(FruitsPlugin.getInstance(), 0L, 1L);
         
+        // Sound effects
         thief.getWorld().playSound(thief.getLocation(), Sound.ENTITY_EVOKER_CAST_SPELL, 1.0f, 0.8f);
         thief.getWorld().playSound(target.getLocation(), Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1.0f, 0.5f);
         
+        // Explosion and magic particles - FIXED: SPELL -> ENCHANT + CLOUD
         target.getWorld().spawnParticle(Particle.EXPLOSION, target.getLocation(), 3);
-        // FIXED: SPELL_WITCH -> SPELL
-        target.getWorld().spawnParticle(Particle.SPELL, target.getLocation(), 50, 0.5, 0.5, 0.5);
+        target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation(), 50, 0.5, 0.5, 0.5);
+        target.getWorld().spawnParticle(Particle.CLOUD, target.getLocation(), 30, 0.5, 0.5, 0.5);
     }
     
     public static boolean useStolenAbility(Player player, Entity target) {
@@ -263,7 +268,8 @@ public class ThiefAbilities {
         
         stolen.ability.getExecutor().execute(player, target);
         
-        player.getWorld().spawnParticle(Particle.SPELL, player.getLocation(), 30, 0.5, 0.5, 0.5);
+        // FIXED: SPELL -> ENCHANT
+        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 30, 0.5, 0.5, 0.5);
         player.playSound(player.getLocation(), Sound.ENTITY_EVOKER_PREPARE_ATTACK, 1.0f, 1.2f);
         
         return true;
