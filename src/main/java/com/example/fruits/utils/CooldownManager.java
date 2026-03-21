@@ -8,35 +8,33 @@ import java.util.Map;
 
 public class CooldownManager {
     private final Map<String, Long> cooldowns = new HashMap<>();
-    private final Map<String, Integer> activeBars = new HashMap<>();
     
     public void setCooldown(Player player, String key, int seconds, String name) {
         String fullKey = player.getUniqueId() + "_" + key;
         cooldowns.put(fullKey, System.currentTimeMillis() + (seconds * 1000L));
         
-        // Show XP bar cooldown
-        showXPBarCooldown(player, name, seconds);
-    }
-    
-    private void showXPBarCooldown(Player player, String abilityName, int totalSeconds) {
+        // Show XP bar cooldown with timer
         player.setExp(1.0f);
-        player.setLevel(totalSeconds);
+        player.setLevel(seconds);
         
         new BukkitRunnable() {
-            int timeLeft = totalSeconds;
+            int timeLeft = seconds;
             @Override
             public void run() {
                 if(timeLeft <= 0) {
                     player.setExp(0);
                     player.setLevel(0);
-                    player.sendTitle("§a✅ " + abilityName + " Ready!", "", 5, 20, 5);
+                    player.sendTitle("§a✅ " + name + " Ready!", "", 5, 20, 5);
                     this.cancel();
                     return;
                 }
                 
-                float progress = (float) timeLeft / totalSeconds;
+                float progress = (float) timeLeft / seconds;
                 player.setExp(progress);
                 player.setLevel(timeLeft);
+                
+                // Send action bar with timer
+                player.sendActionBar("§c⏳ " + name + " §7| §e" + timeLeft + "s");
                 
                 timeLeft--;
             }
