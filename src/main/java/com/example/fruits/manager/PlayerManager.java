@@ -1,21 +1,18 @@
 package com.example.fruits.manager;
 
+import com.example.fruits.models.PlayerFruitData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import java.util.*;
 
 public class PlayerManager {
     private final Set<UUID> activePlayers = new HashSet<>();
-    private final Map<UUID, Map<String, Object>> playerData = new HashMap<>();
+    private final Map<UUID, PlayerFruitData> playerData = new HashMap<>();
     
     public void addActivePlayer(Player player) {
         activePlayers.add(player.getUniqueId());
         if(!playerData.containsKey(player.getUniqueId())) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("fruit", null);
-            data.put("usedAbilities", 0);
-            data.put("abilityUsage", new HashMap<String, Integer>());
-            playerData.put(player.getUniqueId(), data);
+            playerData.put(player.getUniqueId(), new PlayerFruitData(player.getUniqueId(), null));
         }
     }
     
@@ -38,20 +35,19 @@ public class PlayerManager {
         return players;
     }
     
-    // ==================== FRUIT METHODS ====================
-    
     public void setPlayerFruit(Player player, String fruitId) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) {
             addActivePlayer(player);
         }
-        playerData.get(uuid).put("fruit", fruitId);
+        playerData.get(uuid).setCurrentFruit(fruitId);
+        playerData.get(uuid).updateLastUsed();
     }
     
     public String getPlayerFruit(Player player) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) return null;
-        return (String) playerData.get(uuid).get("fruit");
+        return playerData.get(uuid).getCurrentFruit();
     }
     
     public String getFruit(Player player) {
@@ -62,12 +58,10 @@ public class PlayerManager {
         return getPlayerFruit(player) != null;
     }
     
-    // ==================== ABILITY USAGE METHODS ====================
-    
     public int getUsedAbilities(Player player) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) return 0;
-        return (int) playerData.get(uuid).getOrDefault("usedAbilities", 0);
+        return playerData.get(uuid).getUsedCount();
     }
     
     public void incrementUsed(Player player) {
@@ -75,8 +69,7 @@ public class PlayerManager {
         if(!playerData.containsKey(uuid)) {
             addActivePlayer(player);
         }
-        int current = getUsedAbilities(player);
-        playerData.get(uuid).put("usedAbilities", current + 1);
+        playerData.get(uuid).incrementUsed();
     }
     
     public void incrementUsedAbilities(Player player) {
@@ -86,7 +79,7 @@ public class PlayerManager {
     public Map<String, Integer> getAbilityUsage(Player player) {
         UUID uuid = player.getUniqueId();
         if(!playerData.containsKey(uuid)) return new HashMap<>();
-        return (Map<String, Integer>) playerData.get(uuid).getOrDefault("abilityUsage", new HashMap<>());
+        return playerData.get(uuid).getAbilityUsage();
     }
     
     public void recordAbilityUse(Player player, String abilityId) {
@@ -94,19 +87,14 @@ public class PlayerManager {
         if(!playerData.containsKey(uuid)) {
             addActivePlayer(player);
         }
-        Map<String, Integer> usage = getAbilityUsage(player);
-        usage.put(abilityId, usage.getOrDefault(abilityId, 0) + 1);
-        playerData.get(uuid).put("abilityUsage", usage);
-        incrementUsed(player);
+        playerData.get(uuid).recordAbilityUse(abilityId);
     }
     
-    // ==================== DIRECT MAP ACCESS FOR COMPATIBILITY ====================
-    
-    public Map<UUID, Map<String, Object>> getPlayerDataMap() {
-        return playerData;
+    public PlayerFruitData getPlayerData(Player player) {
+        return playerData.get(player.getUniqueId());
     }
     
-    public Map<String, Object> get(UUID uuid) {
+    public PlayerFruitData get(UUID uuid) {
         return playerData.get(uuid);
     }
     
