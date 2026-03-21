@@ -6,6 +6,7 @@ import com.example.fruits.abilities.NatureAbilities;
 import com.example.fruits.abilities.ThiefAbilities;
 import com.example.fruits.abilities.ThroneAbilities;
 import com.example.fruits.abilities.PortalAbilities;
+import com.example.fruits.abilities.VampireAbilities;
 import org.bukkit.Material;
 import java.util.*;
 
@@ -123,7 +124,38 @@ public class FruitRegistry {
         
         fruits.put("voidweaver", new Fruit("voidweaver", "§5§l🌀 Voidweaver", Material.PURPLE_DYE, 1014, voidweaverLore, voidweaverAbilities));
         
-        // ==================== 5. OTHER MAGICAL FRUITS (Placeholder) ====================
+        // ==================== 5. DRACULA BITES (Vampire) ====================
+        List<Ability> draculaAbilities = Arrays.asList(
+            new Ability("§c🩸 Bloodlust Phase", 30, (p, target) -> {
+                VampireAbilities.bloodlustPhase(p);
+            }),
+            new Ability("§c🦇 Bat Ride", 45, (p, target) -> {
+                VampireAbilities.batRide(p);
+            })
+        );
+        
+        List<String> draculaLore = Arrays.asList(
+            "§7=================================",
+            "§e§l🔮 MYSTICAL FRUIT",
+            "§7=================================",
+            "§f⚡ Right Click:",
+            "§7  Enter Bloodlust Phase (15 seconds)",
+            "§7  Every 3 hits heals 1 heart!",
+            "§7  Blood particles surround you",
+            "§f🔧 Right + Crouch:",
+            "§7  Summon a rideable bat (20 seconds)",
+            "§7  Control with W/A/S/D and mouse",
+            "§7  Left-click for Blood Bite attack!",
+            "§7  Bite deals 1 heart damage + heals you",
+            "§7  Blood Bite has 3 second cooldown",
+            "§f⏰ Cooldowns: §e30s (Phase), 45s (Ride)",
+            "§7=================================",
+            "§c§l✦ Dracula Bites ✦"
+        );
+        
+        fruits.put("dracula_bites", new Fruit("dracula_bites", "§c§l🦇 Dracula Bites", Material.RED_DYE, 1015, draculaLore, draculaAbilities));
+        
+        // ==================== 6. OTHER MAGICAL FRUITS (Placeholder) ====================
         List<String> defaultLore = Arrays.asList(
             "§7=================================",
             "§e§l🔮 MAGICAL FRUIT",
