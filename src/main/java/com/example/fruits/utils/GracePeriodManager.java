@@ -14,7 +14,6 @@ import java.util.UUID;
 
 public class GracePeriodManager {
     private final Map<UUID, BossBar> activeBars = new HashMap<>();
-    private final Map<UUID, Integer> remainingTime = new HashMap<>();
     private boolean globalGraceActive = false;
     private BossBar globalBar = null;
 
@@ -29,9 +28,8 @@ public class GracePeriodManager {
         bar.addPlayer(player);
         bar.setProgress(1.0);
         activeBars.put(uuid, bar);
-        remainingTime.put(uuid, seconds);
         
-        player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("messages.grace_start")
+        player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("grace_period.start_message")
             .replace("{time}", String.valueOf(seconds))
             .replace('&', '§'));
         
@@ -50,9 +48,11 @@ public class GracePeriodManager {
             globalBar.addPlayer(p);
         }
         
-        Bukkit.broadcastMessage(FruitsPlugin.getInstance().getConfig().getString("messages.grace_start")
+        // Announce grace period start
+        String startMsg = FruitsPlugin.getInstance().getConfig().getString("grace_period.start_message")
             .replace("{time}", String.valueOf(seconds))
-            .replace('&', '§'));
+            .replace('&', '§');
+        Bukkit.broadcastMessage(startMsg);
         
         new BukkitRunnable() {
             int timeLeft = seconds;
@@ -61,7 +61,12 @@ public class GracePeriodManager {
                 if(timeLeft <= 0) {
                     globalGraceActive = false;
                     if(globalBar != null) globalBar.removeAll();
-                    Bukkit.broadcastMessage(FruitsPlugin.getInstance().getConfig().getString("messages.grace_end").replace('&', '§'));
+                    
+                    // Announce grace period end
+                    String endMsg = FruitsPlugin.getInstance().getConfig().getString("grace_period.end_message")
+                        .replace('&', '§');
+                    Bukkit.broadcastMessage(endMsg);
+                    
                     this.cancel();
                     return;
                 }
@@ -82,7 +87,11 @@ public class GracePeriodManager {
                 if(!player.isOnline() || timeLeft <= 0) {
                     BossBar bar = activeBars.remove(player.getUniqueId());
                     if(bar != null) bar.removeAll();
-                    remainingTime.remove(player.getUniqueId());
+                    
+                    if(timeLeft <= 0) {
+                        player.sendMessage(FruitsPlugin.getInstance().getConfig().getString("grace_period.end_message")
+                            .replace('&', '§'));
+                    }
                     this.cancel();
                     return;
                 }
@@ -111,6 +120,5 @@ public class GracePeriodManager {
     public void endGracePeriod(Player player) {
         BossBar bar = activeBars.remove(player.getUniqueId());
         if(bar != null) bar.removeAll();
-        remainingTime.remove(player.getUniqueId());
     }
 }
