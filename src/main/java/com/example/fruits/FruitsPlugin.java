@@ -12,6 +12,8 @@ import com.example.fruits.commands.RewardCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class FruitsPlugin extends JavaPlugin {
     private static FruitsPlugin instance;
@@ -76,5 +78,17 @@ public class FruitsPlugin extends JavaPlugin {
     
     public boolean isActivePlayer(Player player) {
         return playerManager.isActivePlayer(player);
+    }
+    
+    // For FruitCommand compatibility - returns the internal map
+    public Map<UUID, com.example.fruits.models.PlayerFruitData> getActivePlayersMap() {
+        // This returns a view of the map - for compatibility
+        return new java.util.HashMap<UUID, com.example.fruits.models.PlayerFruitData>() {
+            {
+                for(Player p : playerManager.getActivePlayers()) {
+                    put(p.getUniqueId(), playerManager.getPlayerData(p));
+                }
+            }
+        };
     }
 }
