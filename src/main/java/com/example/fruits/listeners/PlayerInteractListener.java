@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.block.Action;
+import org.bukkit.inventory.EquipmentSlot;
 
 public class PlayerInteractListener implements Listener {
 
@@ -18,25 +19,30 @@ public class PlayerInteractListener implements Listener {
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         
-        PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
-        if(data == null || data.getFruit() == null) return;
+        // Check if holding a fruit (dye)
+        if(event.getItem() == null) return;
+        String fruitId = Fruit.getFruitId(event.getItem());
+        if(fruitId == null) return;
         
-        Fruit fruit = data.getFruit();
+        Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
+        if(fruit == null) return;
+        
         Action action = event.getAction();
         
+        // RIGHT CLICK = Ability 1
         if(action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
             if(!player.isSneaking()) {
                 event.setCancelled(true);
-                // Get target entity (what player is looking at)
                 Entity target = getTargetEntity(player, 20);
-                useAbility(player, data, fruit, 0, target);
+                useAbility(player, fruit, 0, target);
             }
         }
         
+        // SHIFT + RIGHT CLICK = Ability 2
         if(player.isSneaking() && (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
             Entity target = getTargetEntity(player, 20);
-            useAbility(player, data, fruit, 1, target);
+            useAbility(player, fruit, 1, target);
         }
     }
     
@@ -44,22 +50,25 @@ public class PlayerInteractListener implements Listener {
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
         
-        PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
-        if(data == null || data.getFruit() == null) return;
+        if(event.getHand() != EquipmentSlot.HAND) return;
+        if(event.getItem() == null) return;
         
-        Fruit fruit = data.getFruit();
+        String fruitId = Fruit.getFruitId(event.getItem());
+        if(fruitId == null) return;
         
-        // This is already interacting with an entity, so target is the entity
-        if(player.isSneaking()) {
-            event.setCancelled(true);
-            useAbility(player, data, fruit, 1, event.getRightClicked());
+        Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
+        if(fruit == null) return;
+        
+        event.setCancelled(true);
+        
+        if(!player.isSneaking()) {
+            useAbility(player, fruit, 0, event.getRightClicked());
         } else {
-            event.setCancelled(true);
-            useAbility(player, data, fruit, 0, event.getRightClicked());
+            useAbility(player, fruit, 1, event.getRightClicked());
         }
     }
     
-    private void useAbility(Player player, PlayerFruitData data, Fruit fruit, int index, Entity target) {
+    private void useAbility(Player player, Fruit fruit, int index, Entity target) {
         if(index < 0 || index >= fruit.getAbilities().size()) {
             player.sendMessage("§c❌ Invalid ability!");
             return;
@@ -74,18 +83,12 @@ public class PlayerInteractListener implements Listener {
         ability.getExecutor().execute(player, target);
         FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
         
-        data.incrementUsed();
-        
-        // Send message with target info
+        // Send message
         if(target != null) {
             String targetName = target instanceof Player ? ((Player) target).getName() : target.getType().name().toLowerCase().replace("_", " ");
-            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a! (" + data.getUsedAbilities() + "/3)");
+            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a!");
         } else {
-            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a! (" + data.getUsedAbilities() + "/3)");
-        }
-        
-        if(data.getFruit() == null) {
-            player.sendMessage("§a🔄 Fruit returned! Eat again to reuse!");
+            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a!");
         }
     }
     
