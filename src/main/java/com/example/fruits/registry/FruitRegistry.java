@@ -176,7 +176,8 @@ public class FruitRegistry {
                                     this.cancel();
                                     return;
                                 }
-                                target.getWorld().spawnParticle(Particle.SPELL_WITCH, target.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5);
+                                // FIXED: SPELL_WITCH -> SPELL_MOB
+                                target.getWorld().spawnParticle(Particle.SPELL_MOB, target.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5);
                                 target.getWorld().playSound(target.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.5f, 0.5f);
                                 timer++;
                             }
@@ -281,7 +282,47 @@ public class FruitRegistry {
                 })
             )));
 
-                // ==================== 10. PRIMORDIAL ESSENCE (GOD FRUIT) ====================
+        // ==================== 8. LAVA FRUIT ====================
+        fruits.put("lava_fruit", new Fruit("lava_fruit", "§c§l🌋 Lava Fruit", Material.MAGMA_CREAM, 1008,
+            Arrays.asList(
+                new Ability("§cLava Wave", 30, p -> {
+                    Location target = p.getTargetBlock(null, 15).getLocation();
+                    for(int i = 0; i < 10; i++) {
+                        target.clone().add(i, 0, 0).getBlock().setType(Material.LAVA);
+                        target.clone().add(-i, 0, 0).getBlock().setType(Material.LAVA);
+                    }
+                    Bukkit.getScheduler().runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), () -> {
+                        for(int i = -10; i <= 10; i++) {
+                            target.clone().add(i, 0, 0).getBlock().setType(Material.AIR);
+                        }
+                    }, 80L);
+                }),
+                new Ability("§cVolcano", 45, p -> {
+                    for(int i = 0; i < 8; i++) {
+                        Location loc = p.getLocation().add(Math.random()*8-4, 0, Math.random()*8-4);
+                        p.getWorld().createExplosion(loc, 2, true, false);
+                        p.getWorld().spawnParticle(Particle.LAVA, loc, 50, 1, 1, 1);
+                    }
+                })
+            )));
+
+        // ==================== 9. THUNDER FRUIT ====================
+        fruits.put("thunder_fruit", new Fruit("thunder_fruit", "§e§l⚡ Thunder Fruit", Material.LIGHTNING_ROD, 1009,
+            Arrays.asList(
+                new Ability("§eLightning Strike", 25, p -> {
+                    Location target = p.getTargetBlock(null, 30).getLocation();
+                    p.getWorld().strikeLightning(target);
+                    p.getWorld().createExplosion(target, 2, false, false);
+                }),
+                new Ability("§eThunder Storm", 50, p -> {
+                    for(int i = 0; i < 15; i++) {
+                        Location loc = p.getLocation().add(Math.random()*15-7.5, 0, Math.random()*15-7.5);
+                        p.getWorld().strikeLightning(loc);
+                    }
+                })
+            )));
+
+        // ==================== 10. PRIMORDIAL ESSENCE (GOD FRUIT) ====================
         fruits.put("primordial_essence", new Fruit("primordial_essence", "§5§l✨ Primordial Essence", 
             Material.ENCHANTED_GOLDEN_APPLE, 1010,
             Arrays.asList(
