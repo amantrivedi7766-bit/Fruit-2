@@ -31,7 +31,9 @@ public class FruitsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JoinListener(), this);
         
         // Register commands
-        getCommand("freward").setExecutor(new RewardCommand());
+        if(getCommand("freward") != null) {
+            getCommand("freward").setExecutor(new RewardCommand());
+        }
         
         getLogger().info("=========================================");
         getLogger().info("§a✓ Fruits Plugin Enabled!");
@@ -45,9 +47,23 @@ public class FruitsPlugin extends JavaPlugin {
         getLogger().info("§c✗ Fruits Plugin Disabled");
     }
 
-    public static FruitsPlugin getInstance() { return instance; }
-    public FruitRegistry getFruitRegistry() { return fruitRegistry; }
-    public CooldownManager getCooldownManager() { return cooldownManager; }
-    public SpinManager getSpinManager() { return spinManager; }
-    public ConfigManager getConfigManager() { return configManager; }
+    public static FruitsPlugin getInstance() { 
+        return instance; 
+    }
+    
+    public FruitRegistry getFruitRegistry() { 
+        return fruitRegistry; 
+    }
+    
+    public CooldownManager getCooldownManager() { 
+        return cooldownManager; 
+    }
+    
+    public SpinManager getSpinManager() { 
+        return spinManager; 
+    }
+    
+    public ConfigManager getConfigManager() { 
+        return configManager; 
+    }
 }
