@@ -1,8 +1,6 @@
 package com.example.fruits.listeners;
 
 import com.example.fruits.FruitsPlugin;
-import com.example.fruits.models.Fruit;
-import com.example.fruits.manager.SpinManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,6 +11,9 @@ public class JoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        
+        // Add to active players
+        FruitsPlugin.getInstance().addActivePlayer(player);
         
         // Check if reward system is enabled
         if(!FruitsPlugin.getInstance().getConfigManager().isRewardEnabled()) {
