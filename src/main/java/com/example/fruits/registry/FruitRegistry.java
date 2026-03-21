@@ -6,6 +6,7 @@ import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.bukkit.inventory.ItemStack;
 import java.util.*;
 
 public class FruitRegistry {
@@ -16,159 +17,418 @@ public class FruitRegistry {
     }
 
     private void registerFruits() {
-        // 1. METEOR FRUIT - COOKIE
-        fruits.put("meteor_fruit", new Fruit("meteor_fruit", "§c§l☄️ Meteor Fruit", Material.COOKIE, 1001,
+        // ==================== 1. NATURE DYE ====================
+        fruits.put("nature_dye", new Fruit("nature_dye", "§a§l🌿 Nature Dye", Material.GREEN_DYE, 1001,
             Arrays.asList(
-                new Ability("§cMeteor Storm", 30, (p, target) -> {
-                    Location loc = target != null ? target.getLocation() : getTargetLocation(p);
-                    for(int i = 0; i < 8; i++) {
-                        final int index = i;
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                Location meteorLoc = loc.clone().add(Math.random()*5-2.5, 8, Math.random()*5-2.5);
-                                for(int y = 0; y < 8; y++) {
-                                    Location trail = meteorLoc.clone().add(0, -y, 0);
-                                    p.getWorld().spawnParticle(Particle.FLAME, trail, 10, 0.2, 0.1, 0.2, 0.02);
-                                }
-                                meteorLoc.getWorld().createExplosion(meteorLoc, 3, true, true);
-                                p.getWorld().playSound(meteorLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 0.7f);
-                            }
-                        }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), index * 3L);
-                    }
-                    p.sendMessage("§c☄️ METEOR STORM!");
-                }),
-                new Ability("§cMagma Shield", 45, (p, target) -> {
-                    new BukkitRunnable() {
-                        int ticks = 0;
-                        @Override
-                        public void run() {
-                            if(ticks >= 100) { this.cancel(); return; }
-                            p.getNearbyEntities(8, 5, 8).forEach(e -> {
-                                if(e != p) {
-                                    e.setFireTicks(80);
-                                    if(e instanceof LivingEntity) ((LivingEntity) e).damage(3, p);
-                                }
-                            });
-                            p.getWorld().spawnParticle(Particle.LAVA, p.getLocation(), 30, 1, 1, 1, 0.05);
-                            ticks++;
-                        }
-                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 5L);
-                    p.sendMessage("§c🛡️ MAGMA SHIELD!");
-                })
-            )));
-
-        // 2. WIND MONSTER FRUIT - BEETROOT
-        fruits.put("wind_monster", new Fruit("wind_monster", "§b§l🌪️ Wind Monster Fruit", Material.BEETROOT, 1002,
-            Arrays.asList(
-                new Ability("§bWind Monster", 60, (p, target) -> {
-                    p.setVelocity(new Vector(0, 2.5, 0));
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_WIND_CHARGE_WIND_BURST, 2.0f, 1.2f);
-                    new BukkitRunnable() {
-                        int ticks = 0;
-                        @Override
-                        public void run() {
-                            if(ticks >= 100) { this.cancel(); return; }
-                            p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5, 0.05);
-                            if(ticks % 8 == 0) {
-                                Location fistLoc = target != null ? target.getLocation() : getTargetLocation(p);
-                                p.getWorld().spawnParticle(Particle.EXPLOSION, fistLoc, 40, 1, 1, 1);
-                                p.getWorld().playSound(fistLoc, Sound.ENTITY_PLAYER_ATTACK_STRONG, 1.5f, 0.8f);
-                                fistLoc.getWorld().getNearbyEntities(fistLoc, 5, 5, 5).forEach(e -> {
-                                    if(e != p && e instanceof LivingEntity) {
-                                        ((LivingEntity) e).damage(8, p);
-                                        e.setVelocity(new Vector(0, 1.5, 0));
-                                    }
-                                });
-                            }
-                            ticks++;
-                        }
-                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 2L);
-                    p.sendMessage("§b🌪️ WIND MONSTER!");
-                }),
-                new Ability("§bStorm Monster", 60, (p, target) -> {
-                    new BukkitRunnable() {
-                        int ticks = 0;
-                        @Override
-                        public void run() {
-                            if(ticks >= 100) { this.cancel(); return; }
-                            p.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, p.getLocation().add(0, 1, 0), 50, 0.5, 0.5, 0.5, 0.1);
-                            if(ticks % 6 == 0) {
-                                Location fistLoc = target != null ? target.getLocation() : getTargetLocation(p);
-                                p.getWorld().strikeLightningEffect(fistLoc);
-                                p.getWorld().playSound(fistLoc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.5f, 1.0f);
-                                fistLoc.getWorld().getNearbyEntities(fistLoc, 6, 4, 6).forEach(e -> {
-                                    if(e != p && e instanceof LivingEntity) {
-                                        ((LivingEntity) e).damage(10, p);
-                                        ((LivingEntity) e).setVelocity(new Vector(0, 0.8, 0));
-                                    }
-                                });
-                            }
-                            ticks++;
-                        }
-                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 2L);
-                    p.sendMessage("§b⚡ STORM MONSTER!");
-                })
-            )));
-
-        // 3. TIME FREEZE FRUIT - POTATO
-        fruits.put("time_freeze", new Fruit("time_freeze", "§d§l⏰ Time Freeze Fruit", Material.POTATO, 1003,
-            Arrays.asList(
-                new Ability("§dTime Freeze", 50, (p, target) -> {
-                    if(target == null || !(target instanceof Player)) {
-                        p.sendMessage("§cNo player target found!");
+                // Right Click: Cursor Attach
+                new Ability("§aVine Attach", 25, (p, target) -> {
+                    if(!(target instanceof Player)) {
+                        p.sendMessage("§cTarget a player!");
                         return;
                     }
-                    Player t = (Player) target;
-                    t.setWalkSpeed(0);
-                    t.setFlySpeed(0);
-                    t.setVelocity(new Vector(0, 0, 0));
+                    Player attached = (Player) target;
                     new BukkitRunnable() {
-                        int timer = 0;
+                        int ticks = 0;
                         @Override
                         public void run() {
-                            if(timer >= 200) {
-                                t.setWalkSpeed(0.2f);
-                                t.setFlySpeed(0.1f);
-                                t.sendMessage("§aTime unfrozen!");
+                            if(ticks >= 300 || !attached.isOnline()) {
+                                attached.sendMessage("§aVine attach ended!");
                                 this.cancel();
                                 return;
                             }
-                            t.getWorld().spawnParticle(Particle.END_ROD, t.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5);
-                            t.getWorld().playSound(t.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.5f, 0.8f);
-                            timer++;
+                            attached.teleport(p.getEyeLocation().add(p.getLocation().getDirection().multiply(2)));
+                            attached.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, attached.getLocation(), 20, 0.3, 0.3, 0.3);
+                            ticks++;
                         }
                     }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
-                    p.sendMessage("§d⏰ TIME FREEZE on " + t.getName() + "!");
+                    
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if(ticks >= 300) this.cancel();
+                            if(p.isLeftClick()) {
+                                attached.setVelocity(p.getLocation().getDirection().multiply(5));
+                                attached.getWorld().playSound(attached.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 1.0f);
+                                this.cancel();
+                            }
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
                 }),
-                new Ability("§dMagnetic Pull", 35, (p, target) -> {
-                    if(target == null) {
-                        p.sendMessage("§cNo target found!");
-                        return;
-                    }
-                    target.teleport(p.getLocation().add(0, 1, 0));
-                    target.getWorld().playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.5f, 1.0f);
-                    target.getWorld().spawnParticle(Particle.PORTAL, target.getLocation(), 80, 0.5, 0.5, 0.5);
-                    p.sendMessage("§d🧲 MAGNETIC PULL! Pulled " + getEntityName(target));
+                // Crouch Right Click: Oak Hammer
+                new Ability("§aOak Hammer", 35, (p, target) -> {
+                    Location targetLoc = target != null ? target.getLocation() : p.getTargetBlock(null, 10).getLocation();
+                    // Create hammer visual
+                    ArmorStand hammer = (ArmorStand) p.getWorld().spawnEntity(p.getEyeLocation(), EntityType.ARMOR_STAND);
+                    hammer.setVisible(false);
+                    hammer.setGravity(false);
+                    hammer.setItemInHand(new ItemStack(Material.OAK_WOOD));
+                    hammer.setRightArmPose(new org.bukkit.util.EulerAngle(Math.toRadians(90), 0, 0));
+                    
+                    new BukkitRunnable() {
+                        int height = 0;
+                        @Override
+                        public void run() {
+                            if(height >= 20) {
+                                hammer.remove();
+                                targetLoc.getWorld().createExplosion(targetLoc, 3, false, true);
+                                targetLoc.getWorld().playSound(targetLoc, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.8f);
+                                targetLoc.getWorld().spawnParticle(Particle.EXPLOSION, targetLoc, 1);
+                                targetLoc.getWorld().getNearbyEntities(targetLoc, 4, 4, 4).forEach(e -> {
+                                    if(e != p && e instanceof LivingEntity) ((LivingEntity) e).damage(12, p);
+                                });
+                                this.cancel();
+                                return;
+                            }
+                            Location hammerLoc = targetLoc.clone().add(0, 5 - height, 0);
+                            hammer.teleport(hammerLoc);
+                            p.getWorld().spawnParticle(Particle.BLOCK_CRACK, hammerLoc, 30, 0.5, 0.2, 0.5, Material.OAK_LOG.createBlockData());
+                            height++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
                 })
             )));
 
-        // Add remaining 7 fruits here (similar pattern)
-        // For brevity, adding placeholder for remaining fruits
-        // You can copy the pattern from above
+        // ==================== 2. WATER DYE ====================
+        fruits.put("water_dye", new Fruit("water_dye", "§b§l💧 Water Dye", Material.LIGHT_BLUE_DYE, 1002,
+            Arrays.asList(
+                // Right Click: Water Geyser
+                new Ability("§bWater Geyser", 20, (p, target) -> {
+                    p.getNearbyEntities(8, 5, 8).forEach(e -> {
+                        Location under = e.getLocation().clone().add(0, -1, 0);
+                        under.getBlock().setType(Material.WATER);
+                        e.setVelocity(new Vector(0, 3, 0));
+                        e.getWorld().playSound(e.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 1.0f, 1.2f);
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                under.getBlock().setType(Material.AIR);
+                            }
+                        }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), 20L);
+                    });
+                }),
+                // Crouch Right Click: Water Wave
+                new Ability("§bWater Wave", 30, (p, target) -> {
+                    Location start = p.getLocation();
+                    Vector direction = p.getLocation().getDirection().normalize();
+                    new BukkitRunnable() {
+                        int distance = 0;
+                        @Override
+                        public void run() {
+                            if(distance >= 20) {
+                                this.cancel();
+                                return;
+                            }
+                            Location waveLoc = start.clone().add(direction.clone().multiply(distance));
+                            waveLoc.getWorld().spawnParticle(Particle.WATER_SPLASH, waveLoc, 50, 1, 0.5, 1, 0.1);
+                            waveLoc.getWorld().playSound(waveLoc, Sound.ENTITY_GENERIC_SPLASH, 1.0f, 1.0f);
+                            waveLoc.getWorld().getNearbyEntities(waveLoc, 3, 2, 3).forEach(e -> {
+                                if(e != p && e instanceof LivingEntity) {
+                                    ((LivingEntity) e).damage(6, p);
+                                    e.setVelocity(direction.clone().multiply(2));
+                                }
+                            });
+                            distance++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 2L);
+                })
+            )));
+
+        // ==================== 3. CYCLONE DYE ====================
+        fruits.put("cyclone_dye", new Fruit("cyclone_dye", "§3§l🌀 Cyclone Dye", Material.CYAN_DYE, 1003,
+            Arrays.asList(
+                // Right Click: Speed Tornado
+                new Ability("§3Speed Tornado", 25, (p, target) -> {
+                    p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, 200, 3));
+                    p.getNearbyEntities(10, 8, 10).forEach(e -> {
+                        if(e != p && e instanceof LivingEntity) {
+                            e.setVelocity(new Vector(0, 2, 0));
+                            new BukkitRunnable() {
+                                int angle = 0;
+                                @Override
+                                public void run() {
+                                    if(angle >= 360) { this.cancel(); return; }
+                                    double rad = Math.toRadians(angle);
+                                    double x = Math.cos(rad) * 2;
+                                    double z = Math.sin(rad) * 2;
+                                    e.teleport(e.getLocation().add(x, 0.2, z));
+                                    e.getWorld().spawnParticle(Particle.CLOUD, e.getLocation(), 10, 0.2, 0.2, 0.2);
+                                    angle += 20;
+                                }
+                            }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                        }
+                    });
+                }),
+                // Crouch Right Click: Block Tornado
+                new Ability("§3Block Tornado", 40, (p, target) -> {
+                    List<Block> blocks = new ArrayList<>();
+                    for(int x = -3; x <= 3; x++) {
+                        for(int z = -3; z <= 3; z++) {
+                            Block b = p.getLocation().add(x, 0, z).getBlock();
+                            if(b.getType() != Material.AIR) {
+                                blocks.add(b);
+                            }
+                        }
+                    }
+                    new BukkitRunnable() {
+                        int angle = 0;
+                        int height = 0;
+                        @Override
+                        public void run() {
+                            if(height >= 50) {
+                                for(Block b : blocks) b.setType(Material.AIR);
+                                this.cancel();
+                                return;
+                            }
+                            for(Block b : blocks) {
+                                double rad = Math.toRadians(angle + b.getX() * 10);
+                                double x = Math.cos(rad) * 2;
+                                double z = Math.sin(rad) * 2;
+                                Location loc = b.getLocation().add(x, height * 0.2, z);
+                                p.getWorld().spawnParticle(Particle.BLOCK_CRACK, loc, 5, 0.1, 0.1, 0.1, b.getBlockData());
+                                if(height % 10 == 0) {
+                                    loc.getWorld().getNearbyEntities(loc, 1, 1, 1).forEach(e -> {
+                                        if(e != p && e instanceof LivingEntity) ((LivingEntity) e).damage(5, p);
+                                    });
+                                }
+                            }
+                            angle += 15;
+                            height++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                })
+            )));
+
+        // ==================== 4. DRACULA DYE ====================
+        fruits.put("dracula_dye", new Fruit("dracula_dye", "§c§l🦇 Dracula Dye", Material.RED_DYE, 1004,
+            Arrays.asList(
+                // Right Click: Vampire Phase
+                new Ability("§cVampire Phase", 20, (p, target) -> {
+                    new BukkitRunnable() {
+                        int hits = 0;
+                        int ticks = 0;
+                        @Override
+                        public void run() {
+                            if(ticks >= 300) {
+                                p.sendMessage("§cVampire phase ended!");
+                                this.cancel();
+                                return;
+                            }
+                            // Detect hits (simplified - in real plugin you'd track damage events)
+                            if(hits >= 3) {
+                                p.setHealth(Math.min(p.getHealth() + 2, p.getMaxHealth()));
+                                p.getWorld().spawnParticle(Particle.HEART, p.getLocation(), 20, 0.5, 0.5, 0.5);
+                                hits = 0;
+                            }
+                            ticks++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                }),
+                // Crouch Right Click: Bat Ride
+                new Ability("§cBat Ride", 45, (p, target) -> {
+                    Bat bat = (Bat) p.getWorld().spawnEntity(p.getLocation(), EntityType.BAT);
+                    bat.setAI(false);
+                    bat.addPassenger(p);
+                    p.sendMessage("§c🦇 You are riding a bat! Use W/S to control!");
+                    
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if(!p.isOnline() || bat.isDead()) {
+                                this.cancel();
+                                return;
+                            }
+                            Vector dir = p.getLocation().getDirection().normalize();
+                            bat.setVelocity(dir.multiply(1.5));
+                            if(p.isLeftClick()) {
+                                bat.remove();
+                                Location targetLoc = p.getTargetBlock(null, 20).getLocation();
+                                targetLoc.getWorld().getNearbyEntities(targetLoc, 3, 3, 3).forEach(e -> {
+                                    if(e != p && e instanceof LivingEntity) {
+                                        ((LivingEntity) e).damage(8, p);
+                                        p.setHealth(Math.min(p.getHealth() + 2, p.getMaxHealth()));
+                                    }
+                                });
+                                this.cancel();
+                            }
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                })
+            )));
+
+        // ==================== 5. PORTAL DYE ====================
+        fruits.put("portal_dye", new Fruit("portal_dye", "§5§l🌀 Portal Dye", Material.PURPLE_DYE, 1005,
+            Arrays.asList(
+                // Right Click: Portal Creation
+                new Ability("§5Portal Link", 30, (p, target) -> {
+                    Location portal1 = p.getTargetBlock(null, 30).getLocation();
+                    p.sendMessage("§5First portal set! Click again within 20 seconds!");
+                    new BukkitRunnable() {
+                        boolean portal2Set = false;
+                        Location portal2 = null;
+                        @Override
+                        public void run() {
+                            if(!portal2Set && p.isRightClick()) {
+                                portal2 = p.getTargetBlock(null, 30).getLocation();
+                                portal2Set = true;
+                                p.sendMessage("§5Portals linked!");
+                                
+                                // Visual portal rings
+                                for(int i = 0; i < 360; i += 10) {
+                                    double rad = Math.toRadians(i);
+                                    double x = Math.cos(rad) * 2;
+                                    double z = Math.sin(rad) * 2;
+                                    portal1.clone().add(x, 0, z).getWorld().spawnParticle(Particle.PORTAL, portal1.clone().add(x, 0, z), 1);
+                                    portal2.clone().add(x, 0, z).getWorld().spawnParticle(Particle.PORTAL, portal2.clone().add(x, 0, z), 1);
+                                }
+                            }
+                            if(portal2Set) {
+                                portal1.getWorld().getNearbyEntities(portal1, 2, 2, 2).forEach(e -> e.teleport(portal2));
+                                portal2.getWorld().getNearbyEntities(portal2, 2, 2, 2).forEach(e -> e.teleport(portal1));
+                            }
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                }),
+                // Crouch Right Click: Player Summon Portal
+                new Ability("§5Summon Portal", 120, (p, target) -> {
+                    Location portal = p.getTargetBlock(null, 50).getLocation();
+                    portal.getBlock().setType(Material.NETHER_PORTAL);
+                    p.sendMessage("§5Portal created! Left-click to summon a player!");
+                    
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if(p.isLeftClick()) {
+                                // Open GUI with online players
+                                p.sendMessage("§5Select a player to summon!");
+                                // Simplified - in real plugin you'd open GUI
+                                this.cancel();
+                            }
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                })
+            )));
+
+        // ==================== 6. THRONE DYE ====================
+        fruits.put("throne_dye", new Fruit("throne_dye", "§6§l👑 Throne Dye", Material.YELLOW_DYE, 1006,
+            Arrays.asList(
+                // Right Click: Shield
+                new Ability("§6Royal Shield", 25, (p, target) -> {
+                    p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.DAMAGE_RESISTANCE, 300, 1));
+                    p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, p.getLocation(), 50, 1, 2, 1);
+                    p.sendMessage("§6🛡️ Royal Shield active for 15 seconds!");
+                }),
+                // Crouch Right Click: Wall
+                new Ability("§6Stone Wall", 35, (p, target) -> {
+                    Location wallStart = p.getLocation().add(p.getLocation().getDirection().multiply(3));
+                    List<Block> wallBlocks = new ArrayList<>();
+                    for(int x = -3; x <= 3; x++) {
+                        Block b = wallStart.clone().add(x, 0, 0).getBlock();
+                        b.setType(Material.STONE);
+                        wallBlocks.add(b);
+                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            for(Block b : wallBlocks) b.setType(Material.AIR);
+                        }
+                    }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), 300L);
+                })
+            )));
+
+        // ==================== 7. THIEF DYE ====================
+        fruits.put("thief_dye", new Fruit("thief_dye", "§8§l🗡️ Thief Dye", Material.BLACK_DYE, 1007,
+            Arrays.asList(
+                // Right Click: Steal Ability
+                new Ability("§8Ability Steal", 120, (p, target) -> {
+                    // Open GUI with online players (simplified)
+                    p.sendMessage("§8Select a player to steal from!");
+                    // Freeze nearby players
+                    p.getNearbyEntities(30, 30, 30).forEach(e -> {
+                        if(e instanceof Player && e != p) {
+                            ((Player) e).setWalkSpeed(0);
+                            ((Player) e).sendMessage("§8You have been frozen by a thief!");
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    ((Player) e).setWalkSpeed(0.2f);
+                                }
+                            }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), 100L);
+                        }
+                    });
+                }),
+                 // Crouch Right Click: Decoy
+                new Ability("§8Decoy", 40, (p, target) -> {
+                    ArmorStand decoy = (ArmorStand) p.getWorld().spawnEntity(p.getLocation(), EntityType.ARMOR_STAND);
+                    decoy.setCustomName("§cDECOY");
+                    decoy.setCustomNameVisible(true);
+                    decoy.setItemInHand(p.getInventory().getItemInMainHand());
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            decoy.remove();
+                        }
+                    }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), 100L);
+                })
+            )));
+
+        // ==================== 8. STAR DYE ====================
+        fruits.put("star_dye", new Fruit("star_dye", "§e§l⭐ Star Dye", Material.ORANGE_DYE, 1008,
+            Arrays.asList(
+                new Ability("§eShooting Star", 25, (p, target) -> {
+                    Location targetLoc = target != null ? target.getLocation() : p.getTargetBlock(null, 30).getLocation();
+                    for(int i = 0; i < 10; i++) {
+                        Location starLoc = targetLoc.clone().add(Math.random()*10-5, 10, Math.random()*10-5);
+                        p.getWorld().spawnParticle(Particle.FIREWORK, starLoc, 20, 0.2, 0.2, 0.2);
+                        starLoc.getWorld().createExplosion(starLoc, 1, false, false);
+                    }
+                }),
+                new Ability("§eMeteor Rain", 40, (p, target) -> {
+                    for(int i = 0; i < 20; i++) {
+                        Location meteor = p.getLocation().add(Math.random()*20-10, 15, Math.random()*20-10);
+                        meteor.getWorld().strikeLightning(meteor);
+                    }
+                })
+            )));
+
+        // ==================== 9. SHADOW DYE ====================
+        fruits.put("shadow_dye", new Fruit("shadow_dye", "§7§l🌑 Shadow Dye", Material.GRAY_DYE, 1009,
+            Arrays.asList(
+                new Ability("§7Shadow Cloak", 30, (p, target) -> {
+                    p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY, 200, 1));
+                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                }),
+                new Ability("§7Dark Pulse", 35, (p, target) -> {
+                    p.getNearbyEntities(8, 5, 8).forEach(e -> {
+                        if(e != p && e instanceof LivingEntity) {
+                            ((LivingEntity) e).damage(8, p);
+                            e.setVelocity(e.getLocation().toVector().subtract(p.getLocation().toVector()).normalize().multiply(2));
+                        }
+                    });
+                })
+            )));
+
+        // ==================== 10. PRIMORDIAL DYE ====================
+        fruits.put("primordial_dye", new Fruit("primordial_dye", "§5§l✨ Primordial Dye", Material.MAGENTA_DYE, 1010,
+            Arrays.asList(
+                new Ability("§c§l💀 ONE SHOT", 110, (p, target) -> {
+                    if(p.getLevel() < 30) {
+                        p.sendMessage("§c❌ Need 30 XP levels!");
+                        return;
+                    }
+                    if(target instanceof Player) {
+                        ((Player) target).setHealth(0);
+                        p.setLevel(p.getLevel() - 30);
+                        p.getWorld().strikeLightningEffect(target.getLocation());
+                        p.sendMessage("§c§l💀 ONE SHOT! Killed " + ((Player) target).getName());
+                    }
+                }),
+                new Ability("§5Divine Protection", 85, (p, target) -> {
+                    p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.RESISTANCE, 400, 3));
+                    p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.REGENERATION, 400, 2));
+                })
+            )));
     }
-    
-    private Location getTargetLocation(Player p) {
-        Location target = p.getTargetBlock(null, 30).getLocation();
-        if(target == null) target = p.getLocation().add(p.getLocation().getDirection().multiply(10));
-        return target;
-    }
-    
-    private String getEntityName(Entity e) {
-        if(e instanceof Player) return ((Player) e).getName();
-        return e.getType().name().toLowerCase().replace("_", " ");
-    }
-    
+
     public Fruit getFruit(String id) { return fruits.get(id); }
     public Collection<Fruit> getAllFruits() { return fruits.values(); }
 }
