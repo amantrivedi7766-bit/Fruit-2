@@ -4,6 +4,7 @@ import com.example.fruits.FruitsPlugin;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import java.util.*;
@@ -146,7 +147,7 @@ public class CycloneAbilities {
                     activeTornados.remove(uuid);
                     // Drop remaining blocks
                     for(FlyingBlock fb : blocks) {
-                        fb.entity.remove();
+                        if(fb.entity != null) fb.entity.remove();
                     }
                     flyingBlocks.remove(uuid);
                     if(player.isOnline()) {
@@ -258,10 +259,9 @@ public class CycloneAbilities {
                             // Create display entity
                             Location spawnLoc = block.getLocation().add(0.5, 0.5, 0.5);
                             ItemDisplay display = (ItemDisplay) block.getWorld().spawnEntity(spawnLoc, EntityType.ITEM_DISPLAY);
-                            display.setItemStack(new org.bukkit.inventory.ItemStack(blockType));
-                            display.setBlockDisplayData(blockData);
-                            display.setGravity(false);
-                            display.setInvulnerable(true);
+                            
+                            // FIXED: Use ItemStack instead of setBlockDisplayData
+                            display.setItemStack(new ItemStack(blockType));
                             
                             // Store block info
                             FlyingBlock fb = new FlyingBlock(display, block.getLocation(), blockType, blockData);
@@ -331,16 +331,13 @@ public class CycloneAbilities {
                             });
                             
                             // Restore block or drop item
-                            if(fb.entity instanceof ItemDisplay) {
-                                // Try to restore block if air
-                                Block targetBlock = loc.getBlock();
-                                if(targetBlock.getType() == Material.AIR) {
-                                    targetBlock.setType(fb.blockType);
-                                    targetBlock.setBlockData(fb.blockData);
-                                } else {
-                                    // Drop item
-                                    loc.getWorld().dropItem(loc, new org.bukkit.inventory.ItemStack(fb.blockType));
-                                }
+                            Block targetBlock = loc.getBlock();
+                            if(targetBlock.getType() == Material.AIR) {
+                                targetBlock.setType(fb.blockType);
+                                targetBlock.setBlockData(fb.blockData);
+                            } else {
+                                // Drop item
+                                loc.getWorld().dropItem(loc, new ItemStack(fb.blockType));
                             }
                             
                             fb.entity.remove();
@@ -404,4 +401,4 @@ public class CycloneAbilities {
             this.height = 0.5;
         }
     }
-      }
+}
