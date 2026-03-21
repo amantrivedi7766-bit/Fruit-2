@@ -1,125 +1,194 @@
-package com.example.fruits.manager;
+package com.example.fruits.managers;
 
+import com.example.fruits.FruitsPlugin;
+import com.example.fruits.models.Fruit;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerManager {
-    private final Set<UUID> activePlayers = new HashSet<>();
-    private final Map<UUID, Map<String, Object>> playerData = new HashMap<>();
+    
+    private final FruitsPlugin plugin;
+    private final Set<UUID> activePlayers = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, PlayerStats> playerStats = new HashMap<>();
+    private final Map<UUID, Long> lastActiveTime = new HashMap<>();
+    
+    public PlayerManager(FruitsPlugin plugin) {
+        this.plugin = plugin;
+        startInactiveCleanupTask();
+    }
     
     public void addActivePlayer(Player player) {
-        activePlayers.add(player.getUniqueId());
-        if(!playerData.containsKey(player.getUniqueId())) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("fruit", null);
-            data.put("usedAbilities", 0);
-            data.put("abilityUsage", new HashMap<String, Integer>());
-            playerData.put(player.getUniqueId(), data);
+        UUID uuid = player.getUniqueId();
+        activePlayers.add(uuid);
+        lastActiveTime.put(uuid, System.currentTimeMillis());
+        
+        if (!playerStats.containsKey(uuid)) {
+            playerStats.put(uuid, new PlayerStats(player.getName()));
         }
     }
     
     public void removeActivePlayer(Player player) {
-        activePlayers.remove(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
+        activePlayers.remove(uuid);
+        savePlayerStats(player);
     }
     
-    public boolean isActivePlayer(Player player) {
-        return activePlayers.contains(player.getUniqueId());
-    }
-    
-    public List<Player> getActivePlayers() {
-        List<Player> players = new ArrayList<>();
-        for(UUID uuid : activePlayers) {
-            Player p = Bukkit.getPlayer(uuid);
-            if(p != null && p.isOnline()) {
-                players.add(p);
+    public Set<Player> getActivePlayers() {
+        Set<Player> players = new HashSet<>();
+        for (UUID uuid : activePlayers) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null && player.isOnline()) {
+                players.add(player);
             }
         }
         return players;
     }
     
-    public void setPlayerFruit(Player player, String fruitId) {
-        UUID uuid = player.getUniqueId();
-        if(!playerData.containsKey(uuid)) {
-            addActivePlayer(player);
+    public boolean isActive(Player player) {
+        return activePlayers.contains(player.getUniqueId());
+    }
+    
+    public void updateLastActive(Player player) {
+        lastActiveTime.put(player.getUniqueId(), System.currentTimeMillis());
+    }
+    
+    public long getInactiveTime(Player player) {
+        Long lastActive = lastActiveTime.get(player.getUniqueId());
+        if (lastActive == null) return 0;
+        return System.currentTimeMillis() - lastActive;
+    }
+    
+    public PlayerStats getPlayerStats(Player player) {
+        return playerStats.computeIfAbsent(player.getUniqueId(), 
+            k -> new PlayerStats(player.getName()));
+    }
+    
+    public void savePlayerStats(Player player) {
+        PlayerStats stats = playerStats.get(player.getUniqueId());
+        if (stats != null) {
+            stats.updateFromPlayer(player);
+            plugin.getConfigManager().setPlayerData(player.getName(), "stats", stats.serialize());
         }
-        playerData.get(uuid).put("fruit", fruitId);
     }
     
-    public String getPlayerFruit(Player player) {
-        UUID uuid = player.getUniqueId();
-        if(!playerData.containsKey(uuid)) return null;
-        return (String) playerData.get(uuid).get("fruit");
-    }
-    
-    public String getFruit(Player player) {
-        return getPlayerFruit(player);
-    }
-    
-    public boolean hasFruit(Player player) {
-        return getPlayerFruit(player) != null;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public int getUsedAbilities(Player player) {
-        UUID uuid = player.getUniqueId();
-        if(!playerData.containsKey(uuid)) return 0;
-        return (int) playerData.get(uuid).getOrDefault("usedAbilities", 0);
-    }
-    
-    public void incrementUsed(Player player) {
-        UUID uuid = player.getUniqueId();
-        if(!playerData.containsKey(uuid)) {
-            addActivePlayer(player);
+    public void loadPlayerStats(Player player) {
+        Map<String, Object> data = plugin.getConfigManager().getPlayerData(player.getName());
+        if (data.containsKey("stats")) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> statsData = (Map<String, Object>) data.get("stats");
+            PlayerStats stats = PlayerStats.deserialize(statsData);
+            playerStats.put(player.getUniqueId(), stats);
+        } else {
+            playerStats.put(player.getUniqueId(), new PlayerStats(player.getName()));
         }
-        int current = getUsedAbilities(player);
-        playerData.get(uuid).put("usedAbilities", current + 1);
     }
     
-    public void incrementUsedAbilities(Player player) {
-        incrementUsed(player);
-    }
-    
-    @SuppressWarnings("unchecked")
-    public Map<String, Integer> getAbilityUsage(Player player) {
-        UUID uuid = player.getUniqueId();
-        if(!playerData.containsKey(uuid)) return new HashMap<>();
-        return (Map<String, Integer>) playerData.get(uuid).getOrDefault("abilityUsage", new HashMap<>());
-    }
-    
-    @SuppressWarnings("unchecked")
-    public void recordAbilityUse(Player player, String abilityId) {
-        UUID uuid = player.getUniqueId();
-        if(!playerData.containsKey(uuid)) {
-            addActivePlayer(player);
+    public int getTotalFruits(Player player) {
+        int total = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && Fruit.getFruitId(item) != null) {
+                total += item.getAmount();
+            }
         }
-        Map<String, Integer> usage = (Map<String, Integer>) playerData.get(uuid).get("abilityUsage");
-        if(usage == null) {
-            usage = new HashMap<>();
-            playerData.get(uuid).put("abilityUsage", usage);
+        return total;
+    }
+    
+    public Map<String, Integer> getFruitBreakdown(Player player) {
+        Map<String, Integer> breakdown = new HashMap<>();
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null) {
+                String fruitId = Fruit.getFruitId(item);
+                if (fruitId != null) {
+                    breakdown.put(fruitId, breakdown.getOrDefault(fruitId, 0) + item.getAmount());
+                }
+            }
         }
-        usage.put(abilityId, usage.getOrDefault(abilityId, 0) + 1);
-        incrementUsed(player);
+        return breakdown;
     }
     
-    public Map<String, Object> getPlayerData(Player player) {
-        return playerData.get(player.getUniqueId());
+    private void startInactiveCleanupTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                long now = System.currentTimeMillis();
+                long inactiveThreshold = 300000; // 5 minutes
+                
+                for (UUID uuid : new ArrayList<>(activePlayers)) {
+                    Long lastActive = lastActiveTime.get(uuid);
+                    if (lastActive != null && (now - lastActive) > inactiveThreshold) {
+                        Player player = Bukkit.getPlayer(uuid);
+                        if (player != null) {
+                            savePlayerStats(player);
+                        }
+                        activePlayers.remove(uuid);
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 6000L, 6000L); // Every 5 minutes
     }
     
-    public Map<String, Object> get(UUID uuid) {
-        return playerData.get(uuid);
-    }
-    
-    public boolean containsKey(UUID uuid) {
-        return playerData.containsKey(uuid);
-    }
-    
-    public Map<UUID, Map<String, Object>> getPlayerDataMap() {
-        return playerData;
-    }
-    
-    public void clear() {
-        activePlayers.clear();
-        playerData.clear();
+    public static class PlayerStats {
+        private String playerName;
+        private int totalSpins;
+        private int totalSteals;
+        private int totalFruitsCollected;
+        private int totalAbilitiesUsed;
+        private long firstJoinTime;
+        private long lastPlayTime;
+        
+        public PlayerStats(String playerName) {
+            this.playerName = playerName;
+            this.totalSpins = 0;
+            this.totalSteals = 0;
+            this.totalFruitsCollected = 0;
+            this.totalAbilitiesUsed = 0;
+            this.firstJoinTime = System.currentTimeMillis();
+            this.lastPlayTime = System.currentTimeMillis();
+        }
+        
+        public void incrementSpins() { totalSpins++; }
+        public void incrementSteals() { totalSteals++; }
+        public void incrementFruits(int amount) { totalFruitsCollected += amount; }
+        public void incrementAbilitiesUsed() { totalAbilitiesUsed++; }
+        public void updatePlayTime() { lastPlayTime = System.currentTimeMillis(); }
+        
+        public void updateFromPlayer(Player player) {
+            lastPlayTime = System.currentTimeMillis();
+        }
+        
+        public Map<String, Object> serialize() {
+            Map<String, Object> data = new HashMap<>();
+            data.put("playerName", playerName);
+            data.put("totalSpins", totalSpins);
+            data.put("totalSteals", totalSteals);
+            data.put("totalFruitsCollected", totalFruitsCollected);
+            data.put("totalAbilitiesUsed", totalAbilitiesUsed);
+            data.put("firstJoinTime", firstJoinTime);
+            data.put("lastPlayTime", lastPlayTime);
+            return data;
+        }
+        
+        @SuppressWarnings("unchecked")
+        public static PlayerStats deserialize(Map<String, Object> data) {
+            PlayerStats stats = new PlayerStats((String) data.get("playerName"));
+            stats.totalSpins = (int) data.getOrDefault("totalSpins", 0);
+            stats.totalSteals = (int) data.getOrDefault("totalSteals", 0);
+            stats.totalFruitsCollected = (int) data.getOrDefault("totalFruitsCollected", 0);
+            stats.totalAbilitiesUsed = (int) data.getOrDefault("totalAbilitiesUsed", 0);
+            stats.firstJoinTime = (long) data.getOrDefault("firstJoinTime", System.currentTimeMillis());
+            stats.lastPlayTime = (long) data.getOrDefault("lastPlayTime", System.currentTimeMillis());
+            return stats;
+        }
+        
+        public String getPlayerName() { return playerName; }
+        public int getTotalSpins() { return totalSpins; }
+        public int getTotalSteals() { return totalSteals; }
+        public int getTotalFruitsCollected() { return totalFruitsCollected; }
+        public int getTotalAbilitiesUsed() { return totalAbilitiesUsed; }
     }
 }
