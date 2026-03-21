@@ -3,6 +3,7 @@ package com.example.fruits;
 import com.example.fruits.listeners.PlayerInteractListener;
 import com.example.fruits.listeners.JoinListener;
 import com.example.fruits.listeners.ThiefGUIListener;
+import com.example.fruits.listeners.PlayerDamageListener;
 import com.example.fruits.registry.FruitRegistry;
 import com.example.fruits.manager.CooldownManager;
 import com.example.fruits.manager.SpinManager;
@@ -45,8 +46,8 @@ public class FruitsPlugin extends JavaPlugin {
         // Thief ability GUI listener
         getServer().getPluginManager().registerEvents(new ThiefGUIListener(), this);
         
-        // Admin GUI listener (if you have it)
-        // getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);
+        // Damage listener for Golden Aegis shield
+        getServer().getPluginManager().registerEvents(new PlayerDamageListener(), this);
         
         // ==================== REGISTER COMMANDS ====================
         if(getCommand("freward") != null) {
@@ -56,9 +57,12 @@ public class FruitsPlugin extends JavaPlugin {
         // ==================== PLUGIN STARTUP MESSAGE ====================
         getLogger().info("=========================================");
         getLogger().info("§a✓ Fruits Plugin Enabled!");
-        getLogger().info("§e✓ 10+ Magical Fruits Loaded");
+        getLogger().info("§e✓ Magical Fruits Loaded:");
+        getLogger().info("§e  - Vine Weaver (Nature)");
+        getLogger().info("§e  - Shadowweaver (Thief)");
+        getLogger().info("§e  - Golden Aegis (Throne)");
+        getLogger().info("§e  - 8+ More Fruits Coming Soon!");
         getLogger().info("§e✓ Join Reward: " + (configManager.isRewardEnabled() ? "ENABLED" : "DISABLED"));
-        getLogger().info("§e✓ Abilities: Vine Weaver, Shadowweaver");
         getLogger().info("=========================================");
     }
 
