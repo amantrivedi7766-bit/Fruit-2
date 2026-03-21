@@ -4,6 +4,7 @@ import com.example.fruits.listeners.PlayerInteractListener;
 import com.example.fruits.listeners.JoinListener;
 import com.example.fruits.listeners.ThiefGUIListener;
 import com.example.fruits.listeners.PlayerDamageListener;
+import com.example.fruits.listeners.PortalListener;
 import com.example.fruits.registry.FruitRegistry;
 import com.example.fruits.manager.CooldownManager;
 import com.example.fruits.manager.SpinManager;
@@ -49,6 +50,9 @@ public class FruitsPlugin extends JavaPlugin {
         // Damage listener for Golden Aegis shield
         getServer().getPluginManager().registerEvents(new PlayerDamageListener(), this);
         
+        // Portal listener for Voidweaver
+        getServer().getPluginManager().registerEvents(new PortalListener(), this);
+        
         // ==================== REGISTER COMMANDS ====================
         if(getCommand("freward") != null) {
             getCommand("freward").setExecutor(new RewardCommand());
@@ -61,7 +65,8 @@ public class FruitsPlugin extends JavaPlugin {
         getLogger().info("§e  - Vine Weaver (Nature)");
         getLogger().info("§e  - Shadowweaver (Thief)");
         getLogger().info("§e  - Golden Aegis (Throne)");
-        getLogger().info("§e  - 8+ More Fruits Coming Soon!");
+        getLogger().info("§e  - Voidweaver (Portal)");
+        getLogger().info("§e  - 7+ More Fruits Coming Soon!");
         getLogger().info("§e✓ Join Reward: " + (configManager.isRewardEnabled() ? "ENABLED" : "DISABLED"));
         getLogger().info("=========================================");
     }
