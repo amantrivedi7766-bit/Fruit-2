@@ -5,11 +5,14 @@ api-version: "1.21"
 
 commands:
   fruit:
-    description: Use your fruit abilities
+    description: Use fruit abilities
     usage: /fruit use <1|2|3>
   fruitadmin:
-    description: Admin commands for fruits
+    description: Admin commands
     usage: /fruitadmin <give|spin|spinall|gui|reload>
+  graceperiod:
+    description: Start or stop grace period
+    usage: /graceperiod <start|stop> [minutes]
 
 permissions:
   fruits.admin:
