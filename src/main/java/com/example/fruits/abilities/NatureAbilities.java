@@ -10,7 +10,7 @@ import java.util.*;
 
 public class NatureAbilities {
     
-    // Store attached players
+    // Store attached players: Target -> Owner
     private static final Map<UUID, UUID> attachedPlayers = new HashMap<>();
     private static final Map<UUID, Integer> attachTasks = new HashMap<>();
     
@@ -110,27 +110,39 @@ public class NatureAbilities {
         target.getWorld().playSound(target.getLocation(), Sound.BLOCK_VINE_BREAK, 1.0f, 1.0f);
     }
     
-    public static void handleLaunch(Player attacker, Player target) {
-        // Check if target is attached to this attacker
-        UUID attachedTo = attachedPlayers.get(target.getUniqueId());
-        if(attachedTo == null || !attachedTo.equals(attacker.getUniqueId())) {
+    // ==================== HANDLE LAUNCH FROM LEFT CLICK ====================
+    
+    public static void handleLaunch(Player player) {
+        // Check if player has anyone attached to them
+        UUID attachedId = null;
+        Player attached = null;
+        
+        for(Map.Entry<UUID, UUID> entry : attachedPlayers.entrySet()) {
+            if(entry.getValue().equals(player.getUniqueId())) {
+                attachedId = entry.getKey();
+                attached = org.bukkit.Bukkit.getPlayer(attachedId);
+                break;
+            }
+        }
+        
+        if(attached == null) {
             return;
         }
         
-        // Launch the target
-        Vector direction = attacker.getLocation().getDirection().normalize();
-        target.setVelocity(direction.multiply(3));
+        // Launch the attached player
+        Vector direction = player.getLocation().getDirection().normalize();
+        attached.setVelocity(direction.multiply(3));
         
         // Launch effects
-        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GHAST_SHOOT, 2.0f, 0.8f);
-        target.getWorld().spawnParticle(Particle.EXPLOSION, target.getLocation(), 5, 0.5, 0.5, 0.5);
-        target.getWorld().spawnParticle(Particle.CLOUD, target.getLocation(), 30, 0.5, 0.5, 0.5);
+        attached.getWorld().playSound(attached.getLocation(), Sound.ENTITY_GHAST_SHOOT, 2.0f, 0.8f);
+        attached.getWorld().spawnParticle(Particle.EXPLOSION, attached.getLocation(), 5, 0.5, 0.5, 0.5);
+        attached.getWorld().spawnParticle(Particle.CLOUD, attached.getLocation(), 30, 0.5, 0.5, 0.5);
         
-        attacker.sendMessage("§a💥 You launched §e" + target.getName() + "§a like a cannonball!");
-        target.sendMessage("§c💥 You were launched by §e" + attacker.getName() + "§c!");
+        player.sendMessage("§a💥 You launched §e" + attached.getName() + "§a like a cannonball!");
+        attached.sendMessage("§c💥 You were launched by §e" + player.getName() + "§c!");
         
         // Detach after launch
-        detachPlayer(target);
+        detachPlayer(attached);
     }
     
     // ==================== ABILITY 2: OAK HAMMER ====================
@@ -143,7 +155,12 @@ public class NatureAbilities {
         if(target != null && target instanceof LivingEntity) {
             targetLoc = target.getLocation();
         } else {
-            targetLoc = getNearestEnemy(player, 10).getLocation();
+            LivingEntity nearest = getNearestEnemy(player, 10);
+            if(nearest != null) {
+                targetLoc = nearest.getLocation();
+            } else {
+                targetLoc = player.getTargetBlock(null, 10).getLocation();
+            }
         }
         
         // Create hammer entity
@@ -166,14 +183,10 @@ public class NatureAbilities {
         double endY = targetLoc.getY();
         double distance = startY - endY;
         
-        // Store blocks for impact effect
-        List<Location> impactBlocks = new ArrayList<>();
-        
         new BukkitRunnable() {
             int height = 0;
             int maxHeight = 30;
             boolean smashing = false;
-            boolean rising = true;
             int smashFrame = 0;
             
             @Override
@@ -184,7 +197,7 @@ public class NatureAbilities {
                     return;
                 }
                 
-                if(rising) {
+                if(!smashing) {
                     // Hammer rises
                     double progress = (double) height / maxHeight;
                     double y = startY + (distance * progress);
@@ -198,7 +211,6 @@ public class NatureAbilities {
                     height++;
                     
                     if(height >= maxHeight) {
-                        rising = false;
                         smashing = true;
                         
                         // Pause at top
@@ -206,7 +218,7 @@ public class NatureAbilities {
                         player.getWorld().spawnParticle(Particle.FIREWORK, hammer.getLocation(), 30, 0.5, 0.2, 0.5);
                     }
                 }
-                else if(smashing) {
+                else {
                     // SMASH! Hammer falls
                     double progress = 1.0 - (double) smashFrame / maxHeight;
                     double y = startY + (distance * progress);
@@ -247,7 +259,6 @@ public class NatureAbilities {
                             if(e != player && e instanceof LivingEntity) {
                                 LivingEntity living = (LivingEntity) e;
                                 living.damage(12, player);
-                                living.setVelocity(new Vector(0, 1.5, 0));
                                 
                                 // Knockback based on direction
                                 Vector kb = living.getLocation().toVector().subtract(targetLoc.toVector()).normalize().multiply(1.5);
@@ -288,5 +299,16 @@ public class NatureAbilities {
             .map(e -> (LivingEntity) e)
             .min(Comparator.comparingDouble(e -> e.getLocation().distance(player.getLocation())))
             .orElse(null);
+    }
+    
+    // ==================== UTILITY METHOD ====================
+    
+    public static boolean isPlayerAttached(Player player) {
+        return attachedPlayers.containsKey(player.getUniqueId());
+    }
+    
+    public static void removeAllAttachments() {
+        attachedPlayers.clear();
+        attachTasks.clear();
     }
 }
