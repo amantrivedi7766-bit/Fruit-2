@@ -5,11 +5,22 @@ grace_period:
   enabled: true
   duration: 60
   bossbar_title: "&c⚠️ GRACE PERIOD &7| &e{time}s &7remaining"
-  message: "&c⚠️ &lGRACE PERIOD ACTIVE! &cDon't die or you'll lose your fruit!"
+  start_message: "&c⚠️ &lGRACE PERIOD STARTED! &cPVP is disabled for {time} seconds!"
+  end_message: "&a✅ &lGRACE PERIOD ENDED! &aPVP is now enabled! &cFight wisely!"
 
 # Death Settings
 death:
   lose_power: true
+
+# Cooldown Settings
+cooldowns:
+  default: 15
+  meteor_storm: 30
+  magma_shield: 45
+  wind_monster: 60
+  storm_monster: 60
+  time_freeze: 50
+  magnetic_pull: 35
 
 # Messages
 messages:
@@ -18,7 +29,5 @@ messages:
   ability_used: "&a⚡ Used &6{ability}&a! ({used}/3)"
   fruit_returned: "&a🔄 Fruit returned to inventory! Eat again to reuse!"
   no_fruit: "&c❌ You haven't eaten any fruit!"
-  power_lost: "&c💀 &lYou died and lost your fruit powers!"
-  power_kept: "&a✨ You kept your fruit powers after death!"
-  grace_start: "&c⚠️ &lGRACE PERIOD STARTED! &cYou have {time}s to prepare!"
-  grace_end: "&a✅ &lGRACE PERIOD ENDED! &aYour fruit is now safe!"
+  grace_start: "&c⚠️ &lGRACE PERIOD STARTED! &cPVP disabled for {time}s!"
+  grace_end: "&a✅ &lGRACE PERIOD ENDED! &aPVP enabled now!"
