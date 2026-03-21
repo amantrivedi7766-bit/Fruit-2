@@ -9,6 +9,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.Action;
+import org.bukkit.Location;
+import org.bukkit.util.Vector;
 
 public class PlayerInteractListener implements Listener {
 
@@ -18,9 +20,7 @@ public class PlayerInteractListener implements Listener {
         
         // Check if player has eaten a fruit
         PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
-        if(data == null || data.getFruit() == null) {
-            return;
-        }
+        if(data == null || data.getFruit() == null) return;
         
         Fruit fruit = data.getFruit();
         Action action = event.getAction();
@@ -33,7 +33,7 @@ public class PlayerInteractListener implements Listener {
             }
         }
         
-        // SHIFT + RIGHT CLICK = Ability 2 (NO LEFT CLICK!)
+        // SHIFT + RIGHT CLICK = Ability 2
         if(player.isSneaking() && (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
             useAbility(player, data, fruit, 1);
@@ -50,22 +50,18 @@ public class PlayerInteractListener implements Listener {
         String cooldownKey = fruit.getId() + "_" + index;
         
         // Check cooldown
-        if(!FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
-            return;
-        }
+        if(!FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) return;
         
-        // Execute ability
+        // Execute ability in the direction player is facing
         ability.getExecutor().execute(player);
         FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
         
         data.incrementUsed();
         
-        // Send message - NO shift+left click mention
         player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a! (" + data.getUsedAbilities() + "/3)");
         
-        // Check if fruit returned
         if(data.getFruit() == null) {
-            player.sendMessage("§a🔄 Fruit returned to inventory! Eat again to reuse abilities!");
+            player.sendMessage("§a🔄 Fruit returned! Eat again to reuse!");
         }
     }
 }
