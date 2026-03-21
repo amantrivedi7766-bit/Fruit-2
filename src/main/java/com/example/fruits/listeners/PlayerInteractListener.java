@@ -6,6 +6,7 @@ import com.example.fruits.models.Ability;
 import com.example.fruits.abilities.NatureAbilities;
 import com.example.fruits.abilities.ThiefAbilities;
 import com.example.fruits.abilities.VampireAbilities;
+import com.example.fruits.abilities.CycloneAbilities;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,6 +43,12 @@ public class PlayerInteractListener implements Listener {
             // Dracula Bites - Blood Bite while riding bat
             if(fruitId.equals("dracula_bites") && VampireAbilities.isRidingBat(player)) {
                 VampireAbilities.bloodBite(player);
+                return;
+            }
+            
+            // Cyclone Fury - Launch blocks from block tornado
+            if(fruitId.equals("cyclone_fury") && CycloneAbilities.hasActiveBlockTornado(player)) {
+                CycloneAbilities.launchBlocks(player);
                 return;
             }
             return;
