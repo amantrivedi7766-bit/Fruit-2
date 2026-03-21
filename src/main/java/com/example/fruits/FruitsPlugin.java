@@ -5,6 +5,7 @@ import com.example.fruits.listeners.JoinListener;
 import com.example.fruits.listeners.ThiefGUIListener;
 import com.example.fruits.listeners.PlayerDamageListener;
 import com.example.fruits.listeners.PortalListener;
+import com.example.fruits.listeners.VampireListener;
 import com.example.fruits.registry.FruitRegistry;
 import com.example.fruits.manager.CooldownManager;
 import com.example.fruits.manager.SpinManager;
@@ -53,6 +54,9 @@ public class FruitsPlugin extends JavaPlugin {
         // Portal listener for Voidweaver
         getServer().getPluginManager().registerEvents(new PortalListener(), this);
         
+        // Vampire listener for Dracula Bites
+        getServer().getPluginManager().registerEvents(new VampireListener(), this);
+        
         // ==================== REGISTER COMMANDS ====================
         if(getCommand("freward") != null) {
             getCommand("freward").setExecutor(new RewardCommand());
@@ -66,7 +70,8 @@ public class FruitsPlugin extends JavaPlugin {
         getLogger().info("§e  - Shadowweaver (Thief)");
         getLogger().info("§e  - Golden Aegis (Throne)");
         getLogger().info("§e  - Voidweaver (Portal)");
-        getLogger().info("§e  - 7+ More Fruits Coming Soon!");
+        getLogger().info("§e  - Dracula Bites (Vampire)");
+        getLogger().info("§e  - 6+ More Fruits Coming Soon!");
         getLogger().info("§e✓ Join Reward: " + (configManager.isRewardEnabled() ? "ENABLED" : "DISABLED"));
         getLogger().info("=========================================");
     }
