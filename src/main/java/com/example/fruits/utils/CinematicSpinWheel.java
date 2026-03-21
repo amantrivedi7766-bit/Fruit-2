@@ -31,11 +31,10 @@ public class CinematicSpinWheel {
     private Location originalLocation;
     private Location cameraCenter;
     private ArmorStand centerDisplay;
-    private List<ArmorStand> fruitHolograms = new ArrayList<>();
     private List<ItemDisplay> fruitDisplays = new ArrayList<>();
+    private List<ArmorStand> fruitHolograms = new ArrayList<>();
     private Random random = new Random();
     private Fruit currentHighlightFruit = null;
-    private int lastHighlightIndex = 0;
     
     // For resource pack custom model data
     private static final Map<String, Integer> FRUIT_CUSTOM_MODELS = new HashMap<>();
@@ -46,15 +45,11 @@ public class CinematicSpinWheel {
         this.allFruits = new ArrayList<>(plugin.getFruitRegistry().getAllFruits());
         this.fruitWeights = new HashMap<>();
         
-        // Initialize custom model data mapping (for resource pack)
         initCustomModels();
-        
-        // Setup weighted rewards
         setupWeights();
     }
     
     private void initCustomModels() {
-        // Assign custom model data IDs for each fruit (matches your resource pack)
         FRUIT_CUSTOM_MODELS.put("nature_dye", 1001);
         FRUIT_CUSTOM_MODELS.put("water_dye", 1002);
         FRUIT_CUSTOM_MODELS.put("cyclone_dye", 1003);
@@ -69,8 +64,7 @@ public class CinematicSpinWheel {
     
     private void setupWeights() {
         for(Fruit fruit : allFruits) {
-            int weight = 100; // Default weight
-            // Rarer fruits have lower weight
+            int weight = 100;
             switch(fruit.getId()) {
                 case "primordial_dye": weight = 5; break;
                 case "dracula_dye": weight = 10; break;
@@ -98,22 +92,12 @@ public class CinematicSpinWheel {
         originalLocation = player.getLocation().clone();
         cameraCenter = player.getLocation().clone().add(0, 2, 0);
         
-        // ========== 1. FREEZE PLAYER ==========
         freezePlayer();
-        
-        // ========== 2. CREATE 3D DISPLAY ARENA ==========
         create3DArena();
-        
-        // ========== 3. START MAIN SPIN LOOP ==========
         startSpinLoop();
-        
-        // ========== 4. START PARTICLE EFFECTS ==========
         startParticleSystems();
-        
-        // ========== 5. START CAMERA MOVEMENT ==========
         startCameraMovement();
         
-        // ========== 6. SEND TITLE ==========
         player.sendTitle("§6§l🎰 CINEMATIC SPIN", "§eWatch the fruits appear!", 10, 40, 10);
         player.sendMessage("§6§l═══════════════════════════════");
         player.sendMessage("§a✨ CINEMATIC SPIN STARTED! ✨");
@@ -122,7 +106,6 @@ public class CinematicSpinWheel {
     }
     
     private void freezePlayer() {
-        // Save original state
         player.setWalkSpeed(0);
         player.setFlySpeed(0);
         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 400, 255, false, false));
@@ -131,23 +114,20 @@ public class CinematicSpinWheel {
         player.setFlying(true);
         player.setAllowFlight(true);
         
-        // Hide player for cinematic view
         for(Player p : Bukkit.getOnlinePlayers()) {
             if(p != player) {
                 p.hidePlayer(plugin, player);
             }
         }
         
-        // Teleport to center
         player.teleport(cameraCenter);
-        
         player.sendMessage("§c⚠ You are frozen! Watch the magic unfold... ⚠");
     }
     
     private void create3DArena() {
         World world = player.getWorld();
         
-        // ========== CENTER DISPLAY STAND ==========
+        // Center display
         centerDisplay = (ArmorStand) world.spawnEntity(cameraCenter.clone().add(0, 1, 0), EntityType.ARMOR_STAND);
         centerDisplay.setVisible(false);
         centerDisplay.setGravity(false);
@@ -155,7 +135,7 @@ public class CinematicSpinWheel {
         centerDisplay.setCustomNameVisible(true);
         centerDisplay.setCustomName("§6§l⚡ SPINNING... ⚡");
         
-        // ========== CREATE FRUIT DISPLAYS IN A CIRCLE ==========
+        // Create fruit displays in a circle
         int fruitCount = allFruits.size();
         for(int i = 0; i < fruitCount; i++) {
             Fruit fruit = allFruits.get(i);
@@ -165,22 +145,16 @@ public class CinematicSpinWheel {
             double z = cameraCenter.getZ() + Math.sin(angle) * radius;
             Location fruitLoc = new Location(world, x, cameraCenter.getY(), z);
             
-            // Create ItemDisplay entity (better for 3D items)
             ItemDisplay display = (ItemDisplay) world.spawnEntity(fruitLoc, EntityType.ITEM_DISPLAY);
-            ItemStack fruitItem = createCustomModelItem(fruit);
-            display.setItemStack(fruitItem);
+            display.setItemStack(createCustomModelItem(fruit));
             display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.GROUND);
             display.setRotation(0, (float) (Math.toDegrees(angle)));
             display.setInvulnerable(true);
             display.setPersistent(true);
-            
-            // Add glow effect
             display.setGlowing(true);
             display.setGlowColorOverride(Color.YELLOW);
-            
             fruitDisplays.add(display);
             
-            // Add name hologram above each fruit
             ArmorStand nameTag = (ArmorStand) world.spawnEntity(fruitLoc.clone().add(0, 0.8, 0), EntityType.ARMOR_STAND);
             nameTag.setVisible(false);
             nameTag.setGravity(false);
@@ -190,7 +164,6 @@ public class CinematicSpinWheel {
             fruitHolograms.add(nameTag);
         }
         
-        // ========== CREATE FLOATING PARTICLES AROUND CIRCLE ==========
         createParticleRing();
     }
     
@@ -198,20 +171,17 @@ public class CinematicSpinWheel {
         ItemStack item = fruit.createItemStack(1);
         ItemMeta meta = item.getItemMeta();
         
-        // Set custom model data for resource pack
         Integer modelId = FRUIT_CUSTOM_MODELS.get(fruit.getId());
         if(modelId != null) {
             meta.setCustomModelData(modelId);
         }
         
-        // Add glowing effect lore
         List<String> lore = new ArrayList<>();
         lore.add("§7✨ " + fruit.getAbilities().get(0).getName() + " ✨");
         if(fruit.getAbilities().size() > 1) {
             lore.add("§7🌀 " + fruit.getAbilities().get(1).getName() + " 🌀");
         }
         meta.setLore(lore);
-        
         item.setItemMeta(meta);
         return item;
     }
@@ -227,7 +197,6 @@ public class CinematicSpinWheel {
                     return;
                 }
                 
-                // Create rotating particle ring
                 for(int i = 0; i < 360; i += 10) {
                     double rad = Math.toRadians(i + angle);
                     double radius = 5;
@@ -235,7 +204,6 @@ public class CinematicSpinWheel {
                     double z = cameraCenter.getZ() + Math.sin(rad) * radius;
                     Location ringLoc = new Location(player.getWorld(), x, cameraCenter.getY() + 0.5, z);
                     
-                    // Rainbow particles
                     Color color = Color.fromRGB(
                         (int)(Math.sin(rad) * 127 + 128),
                         (int)(Math.cos(rad) * 127 + 128),
@@ -244,7 +212,6 @@ public class CinematicSpinWheel {
                     Particle.DustOptions dust = new Particle.DustOptions(color, 1.2f);
                     player.getWorld().spawnParticle(Particle.DUST, ringLoc, 1, 0, 0, 0, dust);
                 }
-                
                 angle += 8;
             }
         }.runTaskTimer(plugin, 0L, 1L);
@@ -252,8 +219,6 @@ public class CinematicSpinWheel {
     
     private void startSpinLoop() {
         spinTask = new BukkitRunnable() {
-            int animationStep = 0;
-            
             @Override
             public void run() {
                 if(elapsedTicks >= TOTAL_DURATION_TICKS) {
@@ -262,35 +227,25 @@ public class CinematicSpinWheel {
                     return;
                 }
                 
-                // Update center display text
                 updateCenterDisplay();
-                
-                // Animate fruit displays (rotate and bounce)
                 animateFruitDisplays();
                 
-                // Create fruit popups at player's cursor
                 if(elapsedTicks % 4 == 0) {
                     createFruitPopupAtCursor();
                 }
                 
-                // Highlight random fruits (speed increases over time)
                 if(elapsedTicks % Math.max(2, 20 - (elapsedTicks / 15)) == 0) {
                     highlightRandomFruit();
                 }
                 
-                // Play sound effects
                 playSpinSounds();
                 
-                // Update timer title
                 if(elapsedTicks % 20 == 0) {
                     int secondsLeft = (TOTAL_DURATION_TICKS - elapsedTicks) / 20;
-                    player.sendTitle("§6§l🎰 SPINNING...", 
-                        "§e" + secondsLeft + " seconds remaining", 
-                        0, 30, 0);
+                    player.sendTitle("§6§l🎰 SPINNING...", "§e" + secondsLeft + " seconds remaining", 0, 30, 0);
                 }
                 
                 elapsedTicks++;
-                animationStep++;
             }
         }.runTaskTimer(plugin, 0L, 1L);
     }
@@ -309,7 +264,6 @@ public class CinematicSpinWheel {
         int index = (elapsedTicks / 20) % messages.length;
         centerDisplay.setCustomName(messages[index]);
         
-        // Make it float up and down
         double yOffset = Math.sin(elapsedTicks * 0.1) * 0.2;
         centerDisplay.teleport(cameraCenter.clone().add(0, 1 + yOffset, 0));
     }
@@ -319,17 +273,14 @@ public class CinematicSpinWheel {
             ItemDisplay display = fruitDisplays.get(i);
             ArmorStand hologram = fruitHolograms.get(i);
             
-            // Rotate each fruit
             float currentRot = display.getLocation().getYaw();
             display.setRotation(currentRot + 5, 0);
             
-            // Bounce animation
             double yOffset = Math.sin((elapsedTicks * 0.1) + (i * 0.5)) * 0.15;
             Location newLoc = getOriginalFruitLocation(i).clone().add(0, yOffset, 0);
             display.teleport(newLoc);
             hologram.teleport(newLoc.clone().add(0, 0.8, 0));
             
-            // Change glow color based on progress
             if(display.isGlowing()) {
                 float progress = (float) elapsedTicks / TOTAL_DURATION_TICKS;
                 Color color = Color.fromRGB(
@@ -351,21 +302,17 @@ public class CinematicSpinWheel {
     }
     
     private void createFruitPopupAtCursor() {
-        // Get where player is looking
         Location cursorLoc = getCursorLocation();
         if(cursorLoc == null) return;
         
-        // Get random fruit
         Fruit randomFruit = getRandomWeightedFruit();
         
-        // Create 3D floating fruit hologram
         ItemDisplay popup = (ItemDisplay) player.getWorld().spawnEntity(cursorLoc, EntityType.ITEM_DISPLAY);
         popup.setItemStack(createCustomModelItem(randomFruit));
         popup.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.GROUND);
         popup.setGlowing(true);
         popup.setGlowColorOverride(getFruitColor(randomFruit));
         
-        // Animate floating up and fade out
         new BukkitRunnable() {
             int height = 0;
             float scale = 1.0f;
@@ -378,30 +325,20 @@ public class CinematicSpinWheel {
                     return;
                 }
                 
-                // Float upward
                 popup.teleport(popup.getLocation().add(0, 0.08, 0));
-                
-                // Scale down over time
                 scale -= 0.03f;
-                popup.setTransformationMatrix(
-                    new org.joml.Matrix4f().scale(scale, scale, scale)
-                );
-                
+                popup.setTransformationMatrix(new org.joml.Matrix4f().scale(scale, scale, scale));
                 height++;
             }
         }.runTaskTimer(plugin, 0L, 1L);
         
-        // Play pop sound
         player.playSound(cursorLoc, Sound.ENTITY_ITEM_PICKUP, 0.5f, 1.5f);
-        
-        // Add particle burst
         player.getWorld().spawnParticle(Particle.FIREWORK, cursorLoc, 10, 0.2, 0.2, 0.2, 0.1);
     }
     
     private void highlightRandomFruit() {
         if(fruitDisplays.isEmpty()) return;
         
-        // Remove previous highlight
         if(currentHighlightFruit != null) {
             int prevIndex = allFruits.indexOf(currentHighlightFruit);
             if(prevIndex >= 0 && prevIndex < fruitDisplays.size()) {
@@ -409,34 +346,28 @@ public class CinematicSpinWheel {
             }
         }
         
-        // Select new random fruit
         int randomIndex = random.nextInt(fruitDisplays.size());
         Fruit selectedFruit = allFruits.get(randomIndex);
         currentHighlightFruit = selectedFruit;
         
-        // Highlight with color based on rarity
         Color highlightColor = getFruitRarityColor(selectedFruit);
         fruitDisplays.get(randomIndex).setGlowColorOverride(highlightColor);
         
-        // Add lightning effect on highlight
         Location fruitLoc = fruitDisplays.get(randomIndex).getLocation();
         player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, fruitLoc, 20, 0.3, 0.3, 0.3, 0.1);
         player.playSound(fruitLoc, Sound.BLOCK_BEACON_POWER_SELECT, 0.6f, 1.2f);
         
-        // Update center display with fruit name
         centerDisplay.setCustomName("§6§l✨ " + selectedFruit.getName() + " §6§l✨");
-        
-        lastHighlightIndex = randomIndex;
     }
     
     private Color getFruitRarityColor(Fruit fruit) {
         switch(fruit.getId()) {
-            case "primordial_dye": return Color.fromRGB(255, 0, 255); // Purple
-            case "dracula_dye": return Color.fromRGB(255, 0, 0); // Red
-            case "portal_dye": return Color.fromRGB(128, 0, 128); // Dark Purple
-            case "star_dye": return Color.fromRGB(255, 215, 0); // Gold
-            case "shadow_dye": return Color.fromRGB(0, 0, 0); // Black
-            default: return Color.fromRGB(255, 255, 0); // Yellow
+            case "primordial_dye": return Color.fromRGB(255, 0, 255);
+            case "dracula_dye": return Color.fromRGB(255, 0, 0);
+            case "portal_dye": return Color.fromRGB(128, 0, 128);
+            case "star_dye": return Color.fromRGB(255, 215, 0);
+            case "shadow_dye": return Color.fromRGB(0, 0, 0);
+            default: return Color.fromRGB(255, 255, 0);
         }
     }
     
@@ -460,7 +391,6 @@ public class CinematicSpinWheel {
         Vector direction = player.getEyeLocation().getDirection();
         Location eyeLoc = player.getEyeLocation();
         
-        // Ray trace up to 12 blocks
         for(double d = 1; d <= 12; d += 0.5) {
             Location check = eyeLoc.clone().add(direction.clone().multiply(d));
             if(check.getBlock().getType().isSolid()) {
@@ -485,7 +415,6 @@ public class CinematicSpinWheel {
     }
     
     private void playSpinSounds() {
-        // Increasing pitch over time
         float pitch = 0.5f + (elapsedTicks / (float)TOTAL_DURATION_TICKS) * 1.2f;
         
         if(elapsedTicks % 8 == 0) {
@@ -496,11 +425,8 @@ public class CinematicSpinWheel {
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, pitch);
         }
         
-        // Heartbeat effect near the end
         if(elapsedTicks > TOTAL_DURATION_TICKS - 60 && elapsedTicks % 10 == 0) {
             player.playSound(player.getLocation(), Sound.ENTITY_WARDEN_HEARTBEAT, 1.0f, 1.0f);
-            
-            // Screen pulse effect
             player.sendTitle("", "§c§l!! FINAL SPIN !!", 0, 5, 0);
         }
     }
@@ -516,7 +442,6 @@ public class CinematicSpinWheel {
                     return;
                 }
                 
-                // Spiral particles around player
                 for(int i = 0; i < 360; i += 15) {
                     double rad = Math.toRadians(i + angle);
                     double radius = 2.5;
@@ -526,7 +451,6 @@ public class CinematicSpinWheel {
                     
                     Location spiralLoc = new Location(player.getWorld(), x, y, z);
                     
-                    // Rainbow spiral
                     Color color = Color.fromRGB(
                         (int)(Math.sin(rad) * 127 + 128),
                         (int)(Math.cos(rad) * 127 + 128),
@@ -535,7 +459,6 @@ public class CinematicSpinWheel {
                     Particle.DustOptions dust = new Particle.DustOptions(color, 1.0f);
                     player.getWorld().spawnParticle(Particle.DUST, spiralLoc, 1, 0, 0, 0, dust);
                 }
-                
                 angle += 12;
             }
         }.runTaskTimer(plugin, 0L, 1L);
@@ -553,13 +476,11 @@ public class CinematicSpinWheel {
                     return;
                 }
                 
-                // Smooth circular camera movement
                 angle += 0.03;
                 double x = cameraCenter.getX() + Math.cos(angle) * radius;
                 double z = cameraCenter.getZ() + Math.sin(angle) * radius;
                 Location camLoc = new Location(player.getWorld(), x, cameraCenter.getY() + 1, z);
                 
-                // Make player look at center
                 Vector direction = cameraCenter.toVector().subtract(camLoc.toVector()).normalize();
                 float yaw = (float) Math.toDegrees(Math.atan2(-direction.getX(), direction.getZ()));
                 float pitch = (float) Math.toDegrees(Math.asin(-direction.getY()));
@@ -574,26 +495,20 @@ public class CinematicSpinWheel {
     private void finishSpin() {
         spinning = false;
         
-        // Stop all tasks
         if(spinTask != null) spinTask.cancel();
         if(particleTask != null) particleTask.cancel();
         if(cameraTask != null) cameraTask.cancel();
         
-        // Determine final reward (weighted)
         Fruit finalReward = getRandomWeightedFruit();
-        int amount = random.nextInt(3) + 1; // 1-3 fruits
+        int amount = random.nextInt(3) + 1;
         
-        // Give reward
         player.getInventory().addItem(createCustomModelItem(finalReward).asQuantity(amount));
         
-        // ========== GRAND FINALE - GOKU TRANSFORMATION PARTICLES ==========
         playGrandFinale(finalReward, amount);
         
-        // Cleanup
         cleanupArena();
         unfreezePlayer();
         
-        // Send result
         player.sendTitle("§6§l🎉 SPIN COMPLETE! 🎉", 
             "§aYou won §6" + amount + "x " + finalReward.getName() + "§a!", 
             10, 100, 20);
@@ -606,7 +521,6 @@ public class CinematicSpinWheel {
         player.sendMessage("§6§l║ §7Rarity: " + getRarityText(finalReward));
         player.sendMessage("§6§l╚═══════════════════════════════════╝");
         
-        // Play victory sounds
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.5f, 1.0f);
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_DEATH, 1.0f, 0.8f);
         player.playSound(player.getLocation(), Sound.MUSIC_DISC_PIGSTEP, 1.0f, 1.0f);
@@ -645,7 +559,6 @@ public class CinematicSpinWheel {
                             double y = center.getY() + random.nextDouble() * 4;
                             Location energyLoc = new Location(player.getWorld(), x, y, z);
                             
-                            // Particles flow to center
                             Vector toCenter = center.toVector().subtract(energyLoc.toVector()).normalize();
                             player.getWorld().spawnParticle(Particle.END_ROD, energyLoc, 1, toCenter.getX(), toCenter.getY(), toCenter.getZ(), 0.1);
                         }
@@ -658,7 +571,7 @@ public class CinematicSpinWheel {
                             double y = center.getY() + random.nextDouble() * 5;
                             Location expLoc = new Location(player.getWorld(), x, y, z);
                             
-                            player.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, expLoc, 1, 0, 0, 0, 0);
+                            player.getWorld().spawnParticle(Particle.EXPLOSION, expLoc, 1, 0, 0, 0, 0);
                             player.getWorld().spawnParticle(Particle.FLASH, expLoc, 1, 0, 0, 0, 0);
                         }
                         player.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.5f);
@@ -694,7 +607,6 @@ public class CinematicSpinWheel {
                         
                     case 4: // Reward reveal
                         if(subPhase == 0) {
-                            // Create reward hologram
                             ArmorStand rewardDisplay = (ArmorStand) player.getWorld().spawnEntity(center.clone().add(0, 2, 0), EntityType.ARMOR_STAND);
                             rewardDisplay.setVisible(false);
                             rewardDisplay.setGravity(false);
@@ -702,7 +614,6 @@ public class CinematicSpinWheel {
                             rewardDisplay.setCustomNameVisible(true);
                             rewardDisplay.setCustomName("§6§l✨ " + amount + "x " + reward.getName() + " ✨");
                             
-                            // Confetti explosion
                             for(int i = 0; i < 200; i++) {
                                 double x = center.getX() + (random.nextDouble() - 0.5) * 8;
                                 double y = center.getY() + random.nextDouble() * 6;
@@ -758,16 +669,17 @@ public class CinematicSpinWheel {
         player.setFlying(false);
         player.setAllowFlight(false);
         
-        // Show player to others
         for(Player p : Bukkit.getOnlinePlayers()) {
             if(p != player) {
                 p.showPlayer(plugin, player);
             }
         }
         
-        // Teleport back
         player.teleport(originalLocation);
-        
         player.sendMessage("§a✓ Spin complete! You can move again!");
+    }
+    
+    public static void stopSpin(Player player) {
+        // Implementation if needed
     }
 }
