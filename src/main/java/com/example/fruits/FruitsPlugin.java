@@ -80,15 +80,8 @@ public class FruitsPlugin extends JavaPlugin {
         return playerManager.isActivePlayer(player);
     }
     
-    // For FruitCommand compatibility - returns the internal map
-    public Map<UUID, com.example.fruits.models.PlayerFruitData> getActivePlayersMap() {
-        // This returns a view of the map - for compatibility
-        return new java.util.HashMap<UUID, com.example.fruits.models.PlayerFruitData>() {
-            {
-                for(Player p : playerManager.getActivePlayers()) {
-                    put(p.getUniqueId(), playerManager.getPlayerData(p));
-                }
-            }
-        };
+    // For FruitCommand compatibility
+    public Map<UUID, Map<String, Object>> getActivePlayersMap() {
+        return playerManager.getPlayerDataMap();
     }
 }
