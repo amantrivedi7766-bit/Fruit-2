@@ -8,6 +8,7 @@ import com.example.fruits.abilities.ThroneAbilities;
 import com.example.fruits.abilities.PortalAbilities;
 import com.example.fruits.abilities.VampireAbilities;
 import com.example.fruits.abilities.CycloneAbilities;
+import com.example.fruits.abilities.StormAbilities;
 import org.bukkit.Material;
 import java.util.*;
 
@@ -188,7 +189,40 @@ public class FruitRegistry {
         
         fruits.put("cyclone_fury", new Fruit("cyclone_fury", "§3§l🌀 Cyclone Fury", Material.CYAN_DYE, 1016, cycloneLore, cycloneAbilities));
         
-        // ==================== 7. OTHER MAGICAL FRUITS (Placeholder) ====================
+        // ==================== 7. STORM MONSTER (Wind/Storm) ====================
+        List<Ability> stormAbilities = Arrays.asList(
+            new Ability("§b🌬️ Wind Monster", 60, (p, target) -> {
+                StormAbilities.windMonster(p);
+            }),
+            new Ability("§9⚡ Storm Monster", 60, (p, target) -> {
+                StormAbilities.stormMonster(p);
+            })
+        );
+        
+        List<String> stormLore = Arrays.asList(
+            "§7=================================",
+            "§e§l🔮 MYSTICAL FRUIT",
+            "§7=================================",
+            "§f⚡ Right Click:",
+            "§7  Transform into Wind Monster",
+            "§7  Rise 6 blocks into the air",
+            "§7  Giant wind fist slams every 1.5s",
+            "§7  5x5 area damage below you",
+            "§7  Cloud particles from hands/back",
+            "§f⚡ Right + Crouch:",
+            "§7  Transform into Storm Monster",
+            "§7  Villain look with electric aura",
+            "§7  Lightning strikes with each slam",
+            "§7  Electric damage + slowness",
+            "§f⏰ Duration: §e10 seconds",
+            "§f⏰ Cooldown: §e1 minute",
+            "§7=================================",
+            "§9§l✦ Storm Monster ✦"
+        );
+        
+        fruits.put("storm_monster", new Fruit("storm_monster", "§9§l⚡ Storm Monster", Material.LIGHT_BLUE_DYE, 1017, stormLore, stormAbilities));
+        
+        // ==================== 8. OTHER MAGICAL FRUITS (Placeholder) ====================
         List<String> defaultLore = Arrays.asList(
             "§7=================================",
             "§e§l🔮 MAGICAL FRUIT",
