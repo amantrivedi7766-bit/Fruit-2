@@ -4,6 +4,7 @@ import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.models.Ability;
 import com.example.fruits.abilities.NatureAbilities;
+import com.example.fruits.abilities.ThiefAbilities;  // ✅ ADD THIS IMPORT
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,16 +30,32 @@ public class PlayerInteractListener implements Listener {
         
         Action action = event.getAction();
         
-        // Right click for abilities
+        // LEFT CLICK - LAUNCH ATTACHED PLAYER (Vine Weaver)
+        if((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
+            if(fruitId.equals("vine_weaver")) {
+                NatureAbilities.handleLaunch(player);
+            }
+            return;
+        }
+        
+        // RIGHT CLICK for abilities
         if((action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
             
+            // FIRST ABILITY - Normal Right Click
             if(!player.isSneaking()) {
-                // FIRST ABILITY - VINE ATTACH (Right Click)
-                if(fruitId.equals("vine_weaver") && fruit.getAbilities().size() > 0) {
+                // Check for stolen ability first
+                if(ThiefAbilities.hasStolenAbility(player)) {
+                    Entity target = getTargetEntity(player, 15);
+                    if(ThiefAbilities.useStolenAbility(player, target)) {
+                        return;
+                    }
+                }
+                
+                // Normal fruit ability
+                if(fruit.getAbilities().size() > 0) {
                     Entity target = getTargetEntity(player, 15);
                     Ability ability = fruit.getAbilities().get(0);
-                    
                     String cooldownKey = fruitId + "_0";
                     if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
                         ability.getExecutor().execute(player, target);
@@ -47,12 +64,12 @@ public class PlayerInteractListener implements Listener {
                 } else {
                     player.sendMessage("§e🍎 " + fruit.getName() + " §7- Right-click ability coming soon!");
                 }
-            } else {
-                // SECOND ABILITY - OAK HAMMER (Crouch + Right Click)
-                if(fruitId.equals("vine_weaver") && fruit.getAbilities().size() > 1) {
+            } 
+            // SECOND ABILITY - Crouch + Right Click
+            else {
+                if(fruit.getAbilities().size() > 1) {
                     Entity target = getTargetEntity(player, 20);
                     Ability ability = fruit.getAbilities().get(1);
-                    
                     String cooldownKey = fruitId + "_1";
                     if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
                         ability.getExecutor().execute(player, target);
@@ -60,18 +77,6 @@ public class PlayerInteractListener implements Listener {
                     }
                 } else {
                     player.sendMessage("§e🍎 " + fruit.getName() + " §7- Crouch + Right-click ability coming soon!");
-                }
-            }
-        }
-        
-        // LEFT CLICK - LAUNCH ATTACHED PLAYER
-        if((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
-            ItemStack item = player.getInventory().getItemInMainHand();
-            if(item != null) {
-                String id = Fruit.getFruitId(item);
-                if(id != null && id.equals("vine_weaver")) {
-                    // Try to launch any attached player
-                    NatureAbilities.handleLaunch(player);
                 }
             }
         }
@@ -94,9 +99,16 @@ public class PlayerInteractListener implements Listener {
         
         event.setCancelled(true);
         
-        // FIRST ABILITY on entity click
+        // Check for stolen ability first
+        if(ThiefAbilities.hasStolenAbility(player)) {
+            if(ThiefAbilities.useStolenAbility(player, event.getRightClicked())) {
+                return;
+            }
+        }
+        
+        // Normal fruit ability on entity click
         if(!player.isSneaking()) {
-            if(fruitId.equals("vine_weaver") && fruit.getAbilities().size() > 0) {
+            if(fruit.getAbilities().size() > 0) {
                 Ability ability = fruit.getAbilities().get(0);
                 String cooldownKey = fruitId + "_0";
                 if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
@@ -104,22 +116,8 @@ public class PlayerInteractListener implements Listener {
                     FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
                 }
             }
-            
-            // In onInteract method, add this check:
-
-// Check for stolen ability first
-if(ThiefAbilities.hasStolenAbility(player)) {
-    event.setCancelled(true);
-    Entity target = getTargetEntity(player, 15);
-    if(ThiefAbilities.useStolenAbility(player, target)) {
-        return;
-    }
-}
-
-// Then normal fruit abilities...
         } else {
-            // SECOND ABILITY on entity click
-            if(fruitId.equals("vine_weaver") && fruit.getAbilities().size() > 1) {
+            if(fruit.getAbilities().size() > 1) {
                 Ability ability = fruit.getAbilities().get(1);
                 String cooldownKey = fruitId + "_1";
                 if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
