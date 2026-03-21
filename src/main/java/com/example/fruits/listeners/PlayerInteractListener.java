@@ -8,7 +8,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.block.Action;
 
 public class PlayerInteractListener implements Listener {
@@ -34,27 +33,10 @@ public class PlayerInteractListener implements Listener {
             }
         }
         
-        // SHIFT + RIGHT CLICK = Ability 2
+        // SHIFT + RIGHT CLICK = Ability 2 (NO LEFT CLICK!)
         if(player.isSneaking() && (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
             useAbility(player, data, fruit, 1);
-        }
-    }
-    
-    @EventHandler
-    public void onInteractEntity(PlayerInteractEntityEvent event) {
-        Player player = event.getPlayer();
-        
-        // Check if player has eaten a fruit
-        PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
-        if(data == null || data.getFruit() == null) return;
-        
-        Fruit fruit = data.getFruit();
-        
-        // SHIFT + LEFT CLICK = Ability 3
-        if(player.isSneaking()) {
-            event.setCancelled(true);
-            useAbility(player, data, fruit, 2);
         }
     }
     
@@ -78,7 +60,7 @@ public class PlayerInteractListener implements Listener {
         
         data.incrementUsed();
         
-        // Send message
+        // Send message - NO shift+left click mention
         player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a! (" + data.getUsedAbilities() + "/3)");
         
         // Check if fruit returned
