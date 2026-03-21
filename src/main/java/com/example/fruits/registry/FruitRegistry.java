@@ -16,17 +16,18 @@ public class FruitRegistry {
     }
 
     private void registerFruits() {
+        // ==================== 1. METEOR FRUIT ====================
         fruits.put("meteor_fruit", new Fruit("meteor_fruit", "§c§l☄️ Meteor Fruit", Material.APPLE, 1001,
             Arrays.asList(
                 new Ability("§cMeteor Storm", 30, p -> {
-                    Location target = p.getTargetBlock(null, 30).getLocation();
-                    if(target == null) target = p.getLocation().add(p.getLocation().getDirection().multiply(10));
+                    final Location targetLoc = p.getTargetBlock(null, 30).getLocation();
+                    final Location finalTarget = targetLoc != null ? targetLoc : p.getLocation().add(p.getLocation().getDirection().multiply(10));
                     for(int i = 0; i < 5; i++) {
-                        int finalI = i;
+                        final int index = i;
                         new BukkitRunnable() {
                             @Override
                             public void run() {
-                                Location spikeLoc = target.clone().add(finalI * 2, 0, 0);
+                                Location spikeLoc = finalTarget.clone().add(index * 2, 0, 0);
                                 for(int y = 0; y < 5; y++) {
                                     Location fallLoc = spikeLoc.clone().add(0, 10 - y, 0);
                                     p.getWorld().spawnParticle(Particle.FLAME, fallLoc, 20, 0.3, 0.3, 0.3, 0.05);
@@ -41,18 +42,18 @@ public class FruitRegistry {
                                     if(e instanceof Player && e != p) ((Player) e).damage(8, p);
                                 });
                             }
-                        }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), i * 5L);
+                        }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), index * 5L);
                     }
                     p.sendMessage("§c☄️ METEOR STORM!");
                 }),
                 new Ability("§cMagma Shield", 45, p -> {
-                    Location center = p.getLocation();
+                    final Location center = p.getLocation();
                     for(int angle = 0; angle < 360; angle += 30) {
                         double rad = Math.toRadians(angle);
                         for(int r = 0; r < 10; r++) {
                             double x = Math.cos(rad) * r;
                             double z = Math.sin(rad) * r;
-                            Location loc = center.clone().add(x, r / 2, z);
+                            final Location loc = center.clone().add(x, r / 2, z);
                             loc.getBlock().setType(Material.MAGMA_BLOCK);
                             new BukkitRunnable() {
                                 int wave = 0;
@@ -91,6 +92,7 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 2. WIND MONSTER FRUIT ====================
         fruits.put("wind_monster", new Fruit("wind_monster", "§b§l🌪️ Wind Monster Fruit", Material.GOLDEN_CARROT, 1002,
             Arrays.asList(
                 new Ability("§bWind Monster", 60, p -> {
@@ -145,10 +147,11 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 3. TIME FREEZE FRUIT ====================
         fruits.put("time_freeze", new Fruit("time_freeze", "§d§l⏰ Time Freeze Fruit", Material.CLOCK, 1003,
             Arrays.asList(
                 new Ability("§dTime Freeze", 50, p -> {
-                    Player target = getTarget(p, 20);
+                    final Player target = getTarget(p, 20);
                     if(target != null) {
                         target.setWalkSpeed(0);
                         target.setFlySpeed(0);
@@ -173,7 +176,7 @@ public class FruitRegistry {
                     }
                 }),
                 new Ability("§dMagnetic Pull", 35, p -> {
-                    Player target = getTarget(p, 15);
+                    final Player target = getTarget(p, 15);
                     if(target != null) {
                         target.teleport(p.getLocation().add(0, 1, 0));
                         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.5f, 1.0f);
@@ -183,10 +186,11 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 4. DRAGON FRUIT ====================
         fruits.put("dragon_fruit", new Fruit("dragon_fruit", "§4§l🐉 Dragon Fruit", Material.CHORUS_FRUIT, 1004,
             Arrays.asList(
                 new Ability("§4Dragon Breath", 30, p -> {
-                    Location target = p.getTargetBlock(null, 20).getLocation();
+                    final Location target = p.getTargetBlock(null, 20).getLocation();
                     for(int i = 0; i < 20; i++) {
                         Location breathLoc = target.clone().add(Math.random()*3-1.5, Math.random()*2, Math.random()*3-1.5);
                         p.getWorld().spawnParticle(Particle.DRAGON_BREATH, breathLoc, 10, 0.2, 0.2, 0.2);
@@ -205,10 +209,11 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 5. PHOENIX FRUIT ====================
         fruits.put("phoenix_fruit", new Fruit("phoenix_fruit", "§6§l🔥 Phoenix Fruit", Material.GOLDEN_APPLE, 1005,
             Arrays.asList(
                 new Ability("§6Phoenix Dive", 30, p -> {
-                    Location target = p.getTargetBlock(null, 20).getLocation();
+                    final Location target = p.getTargetBlock(null, 20).getLocation();
                     p.teleport(target);
                     p.getWorld().createExplosion(target, 3, false, true);
                     p.getWorld().playSound(target, Sound.ENTITY_BLAZE_SHOOT, 2.0f, 1.2f);
@@ -220,10 +225,11 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 6. VOID FRUIT ====================
         fruits.put("void_fruit", new Fruit("void_fruit", "§5§l🌀 Void Fruit", Material.GLOW_BERRIES, 1006,
             Arrays.asList(
                 new Ability("§5Void Walk", 30, p -> {
-                    Location target = p.getTargetBlock(null, 25).getLocation();
+                    final Location target = p.getTargetBlock(null, 25).getLocation();
                     p.teleport(target);
                     p.getWorld().playSound(target, Sound.ENTITY_ENDERMAN_TELEPORT, 1.5f, 0.5f);
                 }),
@@ -236,10 +242,11 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 7. ICE DRAGON FRUIT ====================
         fruits.put("ice_dragon", new Fruit("ice_dragon", "§b§l❄️ Ice Dragon Fruit", Material.SNOWBALL, 1007,
             Arrays.asList(
                 new Ability("§bIce Breath", 30, p -> {
-                    Location target = p.getTargetBlock(null, 20).getLocation();
+                    final Location target = p.getTargetBlock(null, 20).getLocation();
                     for(int i = 0; i < 20; i++) {
                         Location breathLoc = target.clone().add(Math.random()*2-1, Math.random()*2, Math.random()*2-1);
                         p.getWorld().spawnParticle(Particle.SNOWFLAKE, breathLoc, 15, 0.2, 0.2, 0.2);
@@ -252,7 +259,7 @@ public class FruitRegistry {
                     }
                 }),
                 new Ability("§bIce Wall", 40, p -> {
-                    Location target = p.getTargetBlock(null, 15).getLocation();
+                    final Location target = p.getTargetBlock(null, 15).getLocation();
                     for(int i = 0; i < 5; i++) {
                         target.clone().add(i, 0, 0).getBlock().setType(Material.ICE);
                         target.clone().add(-i, 0, 0).getBlock().setType(Material.ICE);
@@ -265,10 +272,11 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 8. LAVA FRUIT ====================
         fruits.put("lava_fruit", new Fruit("lava_fruit", "§c§l🌋 Lava Fruit", Material.MAGMA_CREAM, 1008,
             Arrays.asList(
                 new Ability("§cLava Wave", 30, p -> {
-                    Location target = p.getTargetBlock(null, 15).getLocation();
+                    final Location target = p.getTargetBlock(null, 15).getLocation();
                     for(int i = 0; i < 10; i++) {
                         target.clone().add(i, 0, 0).getBlock().setType(Material.LAVA);
                         target.clone().add(-i, 0, 0).getBlock().setType(Material.LAVA);
@@ -288,10 +296,11 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 9. THUNDER FRUIT ====================
         fruits.put("thunder_fruit", new Fruit("thunder_fruit", "§e§l⚡ Thunder Fruit", Material.LIGHTNING_ROD, 1009,
             Arrays.asList(
                 new Ability("§eLightning Strike", 25, p -> {
-                    Location target = p.getTargetBlock(null, 30).getLocation();
+                    final Location target = p.getTargetBlock(null, 30).getLocation();
                     p.getWorld().strikeLightning(target);
                     p.getWorld().createExplosion(target, 2, false, false);
                 }),
@@ -303,6 +312,7 @@ public class FruitRegistry {
                 })
             )));
 
+        // ==================== 10. PRIMORDIAL ESSENCE (GOD FRUIT) ====================
         fruits.put("primordial_essence", new Fruit("primordial_essence", "§5§l✨ Primordial Essence", 
             Material.ENCHANTED_GOLDEN_APPLE, 1010,
             Arrays.asList(
@@ -311,7 +321,7 @@ public class FruitRegistry {
                         p.sendMessage("§c❌ Need 30 XP levels!");
                         return;
                     }
-                    Player target = getTarget(p, 20);
+                    final Player target = getTarget(p, 20);
                     if(target != null) {
                         target.setHealth(0);
                         p.setLevel(p.getLevel() - 30);
