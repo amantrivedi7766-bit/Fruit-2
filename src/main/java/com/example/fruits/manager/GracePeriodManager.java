@@ -1,6 +1,3 @@
-package com.example.fruits.manager;
-
-import org.bukkit.Bukkit;
 package com.example.fruits.managers;
 
 import com.example.fruits.FruitsPlugin;
@@ -99,12 +96,10 @@ public class GracePeriodManager {
     }
     
     public void startProtectionOnJoin(Player player) {
-        // Give 10 seconds of protection on join
         startGracePeriod(player, 10, "Join Protection");
     }
     
     public void startProtectionAfterDeath(Player player) {
-        // Give 5 seconds of protection after respawn
         startGracePeriod(player, 5, "Death Protection");
     }
     
