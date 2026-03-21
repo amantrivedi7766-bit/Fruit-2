@@ -3,136 +3,182 @@ package com.example.fruits.listeners;
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.gui.AdminGUI;
 import com.example.fruits.models.Fruit;
-import com.example.fruits.models.PlayerFruitData;
-import com.example.fruits.utils.SpinWheel;
-import org.bukkit.Bukkit;
-import org.bukkit.Sound;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-
-import java.util.*;
+import org.bukkit.inventory.ItemStack;
 
 public class AdminGUIListener implements Listener {
-
+    
+    private final AdminGUI adminGUI = new AdminGUI();
+    
     @EventHandler
-    public void onClick(InventoryClickEvent e) {
-        if(!(e.getInventory().getHolder() instanceof AdminGUI.GUIHolder)) return;
+    public void onInventoryClick(InventoryClickEvent event) {
+        if(!(event.getWhoClicked() instanceof Player)) return;
         
-        e.setCancelled(true);
-        if(e.getCurrentItem() == null) return;
+        Player player = (Player) event.getWhoClicked();
+        String title = event.getView().getTitle();
+        ItemStack clicked = event.getCurrentItem();
         
-        Player p = (Player) e.getWhoClicked();
-        int slot = e.getSlot();
+        if(clicked == null || clicked.getType() == Material.AIR) return;
         
-        // Fruits Section (0-9)
-        if(slot >= 0 && slot <= 9) {
-            String fruitId = Fruit.getFruitId(e.getCurrentItem());
-            if(fruitId != null) {
-                p.closeInventory();
-                p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.2f);
-                p.performCommand("fruitadmin give " + p.getName() + " " + fruitId);
-            }
+        event.setCancelled(true);
+        
+        // Main Menu
+        if(title.equals("§6§l🍎 FRUIT ADMIN PANEL")) {
+            handleMainMenu(player, clicked);
         }
-        // Admin Controls
-        else if(slot == 10) {
-            p.performCommand("fruitadmin reload");
-            p.sendMessage("§aConfig reloaded!");
+        // Player Management
+        else if(title.equals("§a§l👥 Player Management")) {
+            handlePlayerManagement(player, clicked);
         }
-        else if(slot == 11) {
-            p.closeInventory();
-            p.sendMessage("§eOnline players: §b" + Bukkit.getOnlinePlayers().size());
-            for(Player player : Bukkit.getOnlinePlayers()) {
-                PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(player.getUniqueId());
-                String status = (data != null && data.getFruit() != null) ? "§a✓ Has Power" : "§c✗ No Power";
-                p.sendMessage(" §7- §f" + player.getName() + " §7" + status);
-            }
+        // Fruit Management
+        else if(title.equals("§e§l🍎 Fruit Management")) {
+            handleFruitManagement(player, clicked);
         }
-        else if(slot == 12) {
-            p.closeInventory();
-            Fruit[] fruits = FruitsPlugin.getInstance().getFruitRegistry().getAllFruits().toArray(new Fruit[0]);
-            Random random = new Random();
-            for(Player player : Bukkit.getOnlinePlayers()) {
-                Fruit randomFruit = fruits[random.nextInt(fruits.length)];
-                player.getInventory().addItem(randomFruit.createItem());
-                player.sendMessage("§a🎁 You received a random fruit from admin!");
-            }
-            p.sendMessage("§aGave random fruits to all players!");
+        // Reward Settings
+        else if(title.equals("§b§l🎁 Reward Settings")) {
+            handleRewardSettings(player, clicked);
         }
-        else if(slot == 13) {
-            p.closeInventory();
-            FruitsPlugin.getInstance().getActivePlayers().clear();
-            Bukkit.broadcastMessage("§c§l🗑️ All fruit powers have been removed by admin!");
+        // Grace Period
+        else if(title.equals("§3§l🛡️ Grace Period")) {
+            handleGracePeriod(player, clicked);
         }
-        // Player Management (18-35)
-        else if(slot >= 18 && slot <= 35) {
-            int playerIndex = slot - 18;
-            List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
-            if(playerIndex < players.size()) {
-                Player target = players.get(playerIndex);
-                if(e.isLeftClick()) {
-                    p.closeInventory();
-                    PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(target.getUniqueId());
-                    if(data != null && data.getFruit() != null) {
-                        p.sendMessage("§6=== " + target.getName() + "'s Power ===");
-                        p.sendMessage("§7Fruit: " + data.getFruit().getDisplayName());
-                        p.sendMessage("§7Uses remaining: §e" + (3 - data.getUsedAbilities()));
-                    } else {
-                        p.sendMessage("§c" + target.getName() + " has no fruit power!");
-                    }
-                } else if(e.isRightClick()) {
-                    p.closeInventory();
-                    FruitsPlugin.getInstance().getActivePlayers().remove(target.getUniqueId());
-                    p.sendMessage("§c🗑️ Removed " + target.getName() + "'s fruit power!");
-                    target.sendMessage("§c🗑️ Your fruit power was removed by admin!");
-                }
-            }
+        // Give Fruit to Player
+        else if(title.startsWith("§e§lGive Fruit to ")) {
+            String targetName = title.replace("§e§lGive Fruit to ", "");
+            Player target = player.getServer().getPlayer(targetName);
+            handleGiveFruit(player, target, clicked);
         }
-        // Grace Period Controls
-        else if(slot == 36) {
-            p.closeInventory();
-            FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(60);
-            p.sendMessage("§a✅ Started 60 second global grace period!");
+    }
+    
+    private void handleMainMenu(Player player, ItemStack clicked) {
+        String name = clicked.getItemMeta().getDisplayName();
+        
+        if(name.contains("Player Management")) {
+            adminGUI.openPlayerManagement(player);
         }
-        else if(slot == 37) {
-            p.closeInventory();
-            // End grace period logic
-            p.sendMessage("§cGrace period ended!");
+        else if(name.contains("Fruit Management")) {
+            adminGUI.openFruitManagement(player);
         }
-        else if(slot == 38) {
-            p.closeInventory();
-            boolean current = FruitsPlugin.getInstance().getConfig().getBoolean("death.lose_power", true);
-            FruitsPlugin.getInstance().getConfig().set("death.lose_power", !current);
-            FruitsPlugin.getInstance().saveConfig();
-            p.sendMessage("§aDeath power loss set to: " + (!current ? "§cLOSE POWER" : "§aKEEP POWER"));
+        else if(name.contains("Reward Settings")) {
+            adminGUI.openRewardSettings(player);
         }
-        // Spin Controls
-        else if(slot == 45) {
-            p.closeInventory();
-            p.performCommand("fruitadmin spin " + p.getName());
+        else if(name.contains("Grace Period")) {
+            adminGUI.openGracePeriod(player);
         }
-        else if(slot == 46) {
-            p.closeInventory();
-            p.performCommand("fruitadmin spinall");
+        else if(name.contains("Statistics")) {
+            player.sendMessage("§e§l📊 STATISTICS");
+            player.sendMessage("§7Active Players: §e" + FruitsPlugin.getInstance().getActivePlayers().size());
+            player.sendMessage("§7Total Fruits Given: §e" + getTotalFruitsGiven());
+            player.sendMessage("§7Join Reward: " + (FruitsPlugin.getInstance().getConfigManager().isRewardEnabled() ? "§aENABLED" : "§cDISABLED"));
         }
-        else if(slot == 47) {
-            p.closeInventory();
-            List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
-            if(!players.isEmpty()) {
-                Random random = new Random();
-                Player randomPlayer = players.get(random.nextInt(players.size()));
-                p.performCommand("fruitadmin spin " + randomPlayer.getName());
-                p.sendMessage("§aSpun for random player: §e" + randomPlayer.getName());
+        else if(name.contains("Close")) {
+            player.closeInventory();
+        }
+    }
+    
+    private void handlePlayerManagement(Player player, ItemStack clicked) {
+        if(clicked.getType() == Material.ARROW) {
+            adminGUI.openMainMenu(player);
+            return;
+        }
+        
+        if(clicked.getType() == Material.PLAYER_HEAD) {
+            String targetName = clicked.getItemMeta().getDisplayName().replace("§a", "");
+            Player target = player.getServer().getPlayer(targetName);
+            if(target != null) {
+                adminGUI.openPlayerFruitSelect(player, target);
             }
         }
     }
     
-    @EventHandler
-    public void onDrag(InventoryDragEvent e) {
-        if(e.getInventory().getHolder() instanceof AdminGUI.GUIHolder) {
-            e.setCancelled(true);
+    private void handleFruitManagement(Player player, ItemStack clicked) {
+        if(clicked.getType() == Material.ARROW) {
+            adminGUI.openMainMenu(player);
+            return;
         }
+        
+        // Get fruit from clicked item
+        String fruitId = Fruit.getFruitId(clicked);
+        if(fruitId != null) {
+            adminGUI.openPlayerFruitSelect(player, player);
+        }
+    }
+    
+    private void handleRewardSettings(Player player, ItemStack clicked) {
+        String name = clicked.getItemMeta().getDisplayName();
+        
+        if(name.contains("Reward")) {
+            boolean enabled = FruitsPlugin.getInstance().getConfigManager().isRewardEnabled();
+            FruitsPlugin.getInstance().getConfigManager().setRewardEnabled(!enabled);
+            player.sendMessage("§a✅ Join reward " + (!enabled ? "enabled" : "disabled") + "!");
+            adminGUI.openRewardSettings(player);
+        }
+        else if(name.contains("Test Spin")) {
+            FruitsPlugin.getInstance().getSpinManager().startSpin(player);
+        }
+        else if(clicked.getType() == Material.ARROW) {
+            adminGUI.openMainMenu(player);
+        }
+    }
+    
+    private void handleGracePeriod(Player player, ItemStack clicked) {
+        String name = clicked.getItemMeta().getDisplayName();
+        
+        if(name.contains("30 Seconds")) {
+            FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(30);
+            player.sendMessage("§a✅ 30 second grace period started!");
+            adminGUI.openMainMenu(player);
+        }
+        else if(name.contains("60 Seconds")) {
+            FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(60);
+            player.sendMessage("§a✅ 60 second grace period started!");
+            adminGUI.openMainMenu(player);
+        }
+        else if(name.contains("120 Seconds")) {
+            FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(120);
+            player.sendMessage("§a✅ 120 second grace period started!");
+            adminGUI.openMainMenu(player);
+        }
+        else if(name.contains("Cancel Grace")) {
+            FruitsPlugin.getInstance().getGracePeriodManager().endGlobalGrace();
+            player.sendMessage("§c❌ Grace period cancelled!");
+            adminGUI.openMainMenu(player);
+        }
+        else if(clicked.getType() == Material.ARROW) {
+            adminGUI.openMainMenu(player);
+        }
+    }
+    
+    private void handleGiveFruit(Player admin, Player target, ItemStack clicked) {
+        if(clicked.getType() == Material.ARROW) {
+            adminGUI.openPlayerManagement(admin);
+            return;
+        }
+        
+        String fruitId = Fruit.getFruitId(clicked);
+        if(fruitId != null && target != null) {
+            Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
+            if(fruit != null) {
+                ItemStack fruitItem = fruit.createItem();
+                target.getInventory().addItem(fruitItem);
+                admin.sendMessage("§a✅ Gave " + fruit.getName() + " §ato " + target.getName());
+                target.sendMessage("§a🎁 You received " + fruit.getName() + " §afrom admin!");
+                adminGUI.openPlayerManagement(admin);
+            }
+        }
+    }
+    
+    private int getTotalFruitsGiven() {
+        int total = 0;
+        for(Player p : FruitsPlugin.getInstance().getActivePlayers()) {
+            if(FruitsPlugin.getInstance().getPlayerManager().hasFruit(p)) {
+                total++;
+            }
+        }
+        return total;
     }
 }
