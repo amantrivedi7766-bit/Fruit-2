@@ -2,7 +2,6 @@ package com.example.fruits.listeners;
 
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
-import com.example.fruits.models.PlayerFruitData;
 import com.example.fruits.models.Ability;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -12,6 +11,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
 public class PlayerInteractListener implements Listener {
 
@@ -19,7 +19,6 @@ public class PlayerInteractListener implements Listener {
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         
-        // Check if holding a fruit (dye)
         if(event.getItem() == null) return;
         String fruitId = Fruit.getFruitId(event.getItem());
         if(fruitId == null) return;
@@ -29,7 +28,6 @@ public class PlayerInteractListener implements Listener {
         
         Action action = event.getAction();
         
-        // RIGHT CLICK = Ability 1
         if(action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
             if(!player.isSneaking()) {
                 event.setCancelled(true);
@@ -38,7 +36,6 @@ public class PlayerInteractListener implements Listener {
             }
         }
         
-        // SHIFT + RIGHT CLICK = Ability 2
         if(player.isSneaking() && (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
             Entity target = getTargetEntity(player, 20);
@@ -51,9 +48,11 @@ public class PlayerInteractListener implements Listener {
         Player player = event.getPlayer();
         
         if(event.getHand() != EquipmentSlot.HAND) return;
-        if(event.getItem() == null) return;
         
-        String fruitId = Fruit.getFruitId(event.getItem());
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if(item == null) return;
+        
+        String fruitId = Fruit.getFruitId(item);
         if(fruitId == null) return;
         
         Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
@@ -79,11 +78,9 @@ public class PlayerInteractListener implements Listener {
         
         if(!FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) return;
         
-        // Execute ability with target
         ability.getExecutor().execute(player, target);
         FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
         
-        // Send message
         if(target != null) {
             String targetName = target instanceof Player ? ((Player) target).getName() : target.getType().name().toLowerCase().replace("_", " ");
             player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a!");
