@@ -104,6 +104,19 @@ public class PlayerInteractListener implements Listener {
                     FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
                 }
             }
+            
+            // In onInteract method, add this check:
+
+// Check for stolen ability first
+if(ThiefAbilities.hasStolenAbility(player)) {
+    event.setCancelled(true);
+    Entity target = getTargetEntity(player, 15);
+    if(ThiefAbilities.useStolenAbility(player, target)) {
+        return;
+    }
+}
+
+// Then normal fruit abilities...
         } else {
             // SECOND ABILITY on entity click
             if(fruitId.equals("vine_weaver") && fruit.getAbilities().size() > 1) {
