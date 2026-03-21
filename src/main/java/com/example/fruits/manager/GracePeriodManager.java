@@ -1,118 +1,144 @@
 package com.example.fruits.manager;
 
 import org.bukkit.Bukkit;
+package com.example.fruits.managers;
+
+import com.example.fruits.FruitsPlugin;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GracePeriodManager {
-    private final Map<UUID, Long> gracePeriods = new HashMap<>();
-    private final int DEFAULT_GRACE_SECONDS = 30;
-    private boolean globalGraceActive = false;
-    private long globalGraceExpiry = 0;
-
-    // ==================== PLAYER GRACE PERIOD ====================
     
-    public void setGracePeriod(Player player, int seconds) {
-        long expiry = System.currentTimeMillis() + (seconds * 1000L);
-        gracePeriods.put(player.getUniqueId(), expiry);
-        player.sendMessage("§e🛡️ Grace period activated for " + seconds + " seconds!");
+    private final FruitsPlugin plugin;
+    private final Map<UUID, GracePeriod> activePeriods = new ConcurrentHashMap<>();
+    private final Map<UUID, List<Runnable>> pendingActions = new HashMap<>();
+    
+    public GracePeriodManager(FruitsPlugin plugin) {
+        this.plugin = plugin;
     }
     
-    public void startGracePeriod(Player player, int seconds) {
-        setGracePeriod(player, seconds);
-    }
-    
-    public boolean hasGracePeriod(Player player) {
-        if(!gracePeriods.containsKey(player.getUniqueId())) {
-            return false;
+    public void startGracePeriod(Player player, int durationSeconds, String reason) {
+        UUID uuid = player.getUniqueId();
+        
+        // Cancel existing period if any
+        if (activePeriods.containsKey(uuid)) {
+            cancelGracePeriod(player);
         }
         
-        long expiry = gracePeriods.get(player.getUniqueId());
-        if(System.currentTimeMillis() > expiry) {
-            gracePeriods.remove(player.getUniqueId());
-            return false;
+        GracePeriod period = new GracePeriod(player, durationSeconds, reason);
+        activePeriods.put(uuid, period);
+        
+        player.sendMessage("§e⚠ Grace period started: " + reason);
+        player.sendMessage("§7You have " + durationSeconds + " seconds of protection!");
+        
+        // Auto-end after duration
+        period.task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                endGracePeriod(player);
+            }
+        }.runTaskLater(plugin, durationSeconds * 20L);
+    }
+    
+    public void endGracePeriod(Player player) {
+        UUID uuid = player.getUniqueId();
+        GracePeriod period = activePeriods.remove(uuid);
+        
+        if (period != null) {
+            if (period.task != null) {
+                period.task.cancel();
+            }
+            
+            player.sendMessage("§a✓ Grace period ended!");
+            
+            // Execute pending actions
+            List<Runnable> actions = pendingActions.remove(uuid);
+            if (actions != null) {
+                for (Runnable action : actions) {
+                    action.run();
+                }
+            }
         }
+    }
+    
+    public void cancelGracePeriod(Player player) {
+        UUID uuid = player.getUniqueId();
+        GracePeriod period = activePeriods.remove(uuid);
         
-        return true;
-    }
-    
-    public boolean isGraceActive(Player player) {
-        return hasGracePeriod(player);
-    }
-    
-    public long getRemainingTime(Player player) {
-        if(!gracePeriods.containsKey(player.getUniqueId())) {
-            return 0;
+        if (period != null) {
+            if (period.task != null) {
+                period.task.cancel();
+            }
+            player.sendMessage("§c✗ Grace period cancelled!");
         }
-        
-        long remaining = gracePeriods.get(player.getUniqueId()) - System.currentTimeMillis();
-        return Math.max(0, remaining);
     }
     
-    public void removeGracePeriod(Player player) {
-        gracePeriods.remove(player.getUniqueId());
-        player.sendMessage("§c🛡️ Grace period removed!");
+    public boolean isInGracePeriod(Player player) {
+        return activePeriods.containsKey(player.getUniqueId());
     }
     
-    // ==================== GLOBAL GRACE PERIOD ====================
-    
-    public void startGlobalGrace(int seconds) {
-        globalGraceActive = true;
-        globalGraceExpiry = System.currentTimeMillis() + (seconds * 1000L);
+    public int getRemainingTime(Player player) {
+        GracePeriod period = activePeriods.get(player.getUniqueId());
+        if (period == null) return 0;
         
-        // Broadcast to all players
-        Bukkit.broadcastMessage("§6§l=================================");
-        Bukkit.broadcastMessage("§e🛡️ GLOBAL GRACE PERIOD ACTIVATED!");
-        Bukkit.broadcastMessage("§7All players are protected for §e" + seconds + " §7seconds!");
-        Bukkit.broadcastMessage("§6§l=================================");
-        
-        // Schedule end
-        Bukkit.getScheduler().runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), () -> {
-            endGlobalGrace();
-        }, seconds * 20L);
+        long elapsed = System.currentTimeMillis() - period.startTime;
+        long remaining = (period.durationSeconds * 1000L) - elapsed;
+        return remaining > 0 ? (int) (remaining / 1000) : 0;
     }
     
-    public void endGlobalGrace() {
-        globalGraceActive = false;
-        globalGraceExpiry = 0;
-        
-        Bukkit.broadcastMessage("§6§l=================================");
-        Bukkit.broadcastMessage("§c🛡️ GLOBAL GRACE PERIOD ENDED!");
-        Bukkit.broadcastMessage("§7Players can now attack each other!");
-        Bukkit.broadcastMessage("§6§l=================================");
+    public String getGracePeriodReason(Player player) {
+        GracePeriod period = activePeriods.get(player.getUniqueId());
+        return period != null ? period.reason : null;
     }
     
-    public boolean isGlobalGraceActive() {
-        if(!globalGraceActive) {
-            return false;
+    public void addPendingAction(Player player, Runnable action) {
+        pendingActions.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>()).add(action);
+    }
+    
+    public void startProtectionOnJoin(Player player) {
+        // Give 10 seconds of protection on join
+        startGracePeriod(player, 10, "Join Protection");
+    }
+    
+    public void startProtectionAfterDeath(Player player) {
+        // Give 5 seconds of protection after respawn
+        startGracePeriod(player, 5, "Death Protection");
+    }
+    
+    public void startPvPProtection(Player player, int seconds) {
+        startGracePeriod(player, seconds, "PvP Protection");
+    }
+    
+    public void removeAllGracePeriods() {
+        for (UUID uuid : new ArrayList<>(activePeriods.keySet())) {
+            Player player = plugin.getServer().getPlayer(uuid);
+            if (player != null) {
+                endGracePeriod(player);
+            } else {
+                activePeriods.remove(uuid);
+            }
         }
+    }
+    
+    public Map<UUID, GracePeriod> getAllActivePeriods() {
+        return new HashMap<>(activePeriods);
+    }
+    
+    private static class GracePeriod {
+        final Player player;
+        final int durationSeconds;
+        final String reason;
+        final long startTime;
+        BukkitRunnable task;
         
-        if(System.currentTimeMillis() > globalGraceExpiry) {
-            globalGraceActive = false;
-            return false;
+        GracePeriod(Player player, int durationSeconds, String reason) {
+            this.player = player;
+            this.durationSeconds = durationSeconds;
+            this.reason = reason;
+            this.startTime = System.currentTimeMillis();
         }
-        
-        return true;
-    }
-    
-    public long getGlobalGraceRemaining() {
-        if(!globalGraceActive) {
-            return 0;
-        }
-        return Math.max(0, globalGraceExpiry - System.currentTimeMillis());
-    }
-    
-    public void cancelGlobalGrace() {
-        globalGraceActive = false;
-        globalGraceExpiry = 0;
-        Bukkit.broadcastMessage("§c🛡️ Global grace period cancelled!");
-    }
-    
-    // ==================== UTILITY ====================
-    
-    public void clearAll() {
-        gracePeriods.clear();
-        globalGraceActive = false;
-        globalGraceExpiry = 0;
     }
 }
