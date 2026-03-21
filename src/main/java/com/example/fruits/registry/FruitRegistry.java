@@ -5,6 +5,7 @@ import com.example.fruits.models.Fruit;
 import com.example.fruits.abilities.NatureAbilities;
 import com.example.fruits.abilities.ThiefAbilities;
 import com.example.fruits.abilities.ThroneAbilities;
+import com.example.fruits.abilities.PortalAbilities;
 import org.bukkit.Material;
 import java.util.*;
 
@@ -92,7 +93,37 @@ public class FruitRegistry {
         
         fruits.put("golden_aegis", new Fruit("golden_aegis", "§6§l🛡️ Golden Aegis", Material.GOLD_INGOT, 1013, goldenAegisLore, goldenAegisAbilities));
         
-        // ==================== 4. OTHER MAGICAL FRUITS (Placeholder) ====================
+        // ==================== 4. VOIDWEAVER (Portal) ====================
+        List<Ability> voidweaverAbilities = Arrays.asList(
+            new Ability("§5🌀 Portal Link", 120, (p, target) -> {
+                PortalAbilities.portalLink(p);
+            }),
+            new Ability("§5🌌 Portal Summon", 1200, (p, target) -> {
+                PortalAbilities.portalSummon(p);
+            })
+        );
+        
+        List<String> voidweaverLore = Arrays.asList(
+            "§7=================================",
+            "§e§l🔮 MYSTICAL FRUIT",
+            "§7=================================",
+            "§f⚡ Right Click:",
+            "§7  Place first portal (20s to place second)",
+            "§7  Second click links portals together",
+            "§7  Step through to teleport between them!",
+            "§7  Portals last 60 seconds",
+            "§f🔧 Right + Crouch:",
+            "§7  Create a summon portal at cursor",
+            "§7  Left-click to summon any online player!",
+            "§7  Summoned player teleports to you",
+            "§f⏰ Cooldowns: §e2 min (Link), 20 min (Summon)",
+            "§7=================================",
+            "§5§l✦ Voidweaver ✦"
+        );
+        
+        fruits.put("voidweaver", new Fruit("voidweaver", "§5§l🌀 Voidweaver", Material.PURPLE_DYE, 1014, voidweaverLore, voidweaverAbilities));
+        
+        // ==================== 5. OTHER MAGICAL FRUITS (Placeholder) ====================
         List<String> defaultLore = Arrays.asList(
             "§7=================================",
             "§e§l🔮 MAGICAL FRUIT",
