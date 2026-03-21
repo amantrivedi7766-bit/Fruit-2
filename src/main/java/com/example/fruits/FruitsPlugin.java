@@ -2,6 +2,7 @@ package com.example.fruits;
 
 import com.example.fruits.listeners.PlayerInteractListener;
 import com.example.fruits.listeners.JoinListener;
+import com.example.fruits.listeners.ThiefGUIListener;
 import com.example.fruits.registry.FruitRegistry;
 import com.example.fruits.manager.CooldownManager;
 import com.example.fruits.manager.SpinManager;
@@ -28,6 +29,7 @@ public class FruitsPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         
+        // Initialize all managers
         fruitRegistry = new FruitRegistry();
         cooldownManager = new CooldownManager();
         configManager = new ConfigManager(this);
@@ -35,25 +37,39 @@ public class FruitsPlugin extends JavaPlugin {
         playerManager = new PlayerManager();
         gracePeriodManager = new GracePeriodManager();
         
+        // ==================== REGISTER ALL LISTENERS ====================
+        // Main listeners
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
         getServer().getPluginManager().registerEvents(new JoinListener(), this);
         
+        // Thief ability GUI listener
+        getServer().getPluginManager().registerEvents(new ThiefGUIListener(), this);
+        
+        // Admin GUI listener (if you have it)
+        // getServer().getPluginManager().registerEvents(new AdminGUIListener(), this);
+        
+        // ==================== REGISTER COMMANDS ====================
         if(getCommand("freward") != null) {
             getCommand("freward").setExecutor(new RewardCommand());
         }
         
+        // ==================== PLUGIN STARTUP MESSAGE ====================
         getLogger().info("=========================================");
         getLogger().info("§a✓ Fruits Plugin Enabled!");
-        getLogger().info("§e✓ 10 Magical Fruits Loaded");
+        getLogger().info("§e✓ 10+ Magical Fruits Loaded");
         getLogger().info("§e✓ Join Reward: " + (configManager.isRewardEnabled() ? "ENABLED" : "DISABLED"));
+        getLogger().info("§e✓ Abilities: Vine Weaver, Shadowweaver");
         getLogger().info("=========================================");
     }
 
     @Override
     public void onDisable() {
+        // Cleanup any running tasks
         getLogger().info("§c✗ Fruits Plugin Disabled");
     }
 
+    // ==================== GETTERS ====================
+    
     public static FruitsPlugin getInstance() { return instance; }
     public FruitRegistry getFruitRegistry() { return fruitRegistry; }
     public CooldownManager getCooldownManager() { return cooldownManager; }
@@ -61,6 +77,8 @@ public class FruitsPlugin extends JavaPlugin {
     public ConfigManager getConfigManager() { return configManager; }
     public PlayerManager getPlayerManager() { return playerManager; }
     public GracePeriodManager getGracePeriodManager() { return gracePeriodManager; }
+    
+    // ==================== PLAYER MANAGEMENT METHODS ====================
     
     public List<Player> getActivePlayers() {
         return playerManager.getActivePlayers();
