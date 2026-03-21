@@ -27,44 +27,27 @@ public class PlayerFruitData {
     public void setLastUsed(long time) { this.lastUsed = time; }
     public void updateLastUsed() { this.lastUsed = System.currentTimeMillis(); }
     
+    // Yeh method PlayerManager use kar raha hai
     public int getUsedCount() { return usedCount; }
     public void setUsedCount(int count) { this.usedCount = count; }
     
+    // Yeh method PlayerManager use kar raha hai
     public Map<String, Integer> getAbilityUsage() { return abilityUsage; }
     
-    // ==================== ALIAS METHODS ====================
+    // Yeh method PlayerManager use kar raha hai
+    public void incrementUsed() { this.usedCount++; }
     
-    public String getFruit() {
-        return currentFruit;
-    }
-    
-    public void setFruit(String fruitId) {
-        this.currentFruit = fruitId;
-    }
-    
-    public int getUsedAbilities() {
-        return usedCount;
-    }
-    
-    public void incrementUsed() {
-        this.usedCount++;
-    }
-    
-    public void incrementUsedAbilities() {
-        this.usedCount++;
-    }
-    
+    // Yeh method PlayerManager use kar raha hai
     public void recordAbilityUse(String abilityId) {
         abilityUsage.put(abilityId, abilityUsage.getOrDefault(abilityId, 0) + 1);
         usedCount++;
     }
     
-    public int getAbilityUseCount(String abilityId) {
-        return abilityUsage.getOrDefault(abilityId, 0);
-    }
-    
-    public void resetStats() {
-        usedCount = 0;
-        abilityUsage.clear();
-    }
+    // Alias methods
+    public String getFruit() { return currentFruit; }
+    public void setFruit(String fruitId) { this.currentFruit = fruitId; }
+    public int getUsedAbilities() { return usedCount; }
+    public void incrementUsedAbilities() { this.usedCount++; }
+    public int getAbilityUseCount(String abilityId) { return abilityUsage.getOrDefault(abilityId, 0); }
+    public void resetStats() { usedCount = 0; abilityUsage.clear(); }
 }
