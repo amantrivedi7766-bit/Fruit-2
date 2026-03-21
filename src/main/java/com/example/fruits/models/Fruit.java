@@ -72,6 +72,8 @@ public class Fruit {
             case 1016: return "cyclone_fury";
             case 1017: return "storm_monster";
             case 1018: return "tidal_weaver";
+            case 1019: return "starfall";
+            case 1020: return "frostbite";
             default: return null;
         }
     }
