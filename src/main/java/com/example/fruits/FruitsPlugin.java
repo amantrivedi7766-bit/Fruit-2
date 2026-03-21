@@ -6,6 +6,8 @@ import com.example.fruits.registry.FruitRegistry;
 import com.example.fruits.manager.CooldownManager;
 import com.example.fruits.manager.SpinManager;
 import com.example.fruits.manager.ConfigManager;
+import com.example.fruits.manager.PlayerManager;
+import com.example.fruits.manager.GracePeriodManager;
 import com.example.fruits.commands.RewardCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,22 +17,23 @@ public class FruitsPlugin extends JavaPlugin {
     private CooldownManager cooldownManager;
     private SpinManager spinManager;
     private ConfigManager configManager;
+    private PlayerManager playerManager;
+    private GracePeriodManager gracePeriodManager;
 
     @Override
     public void onEnable() {
         instance = this;
         
-        // Initialize managers
         fruitRegistry = new FruitRegistry();
         cooldownManager = new CooldownManager();
         configManager = new ConfigManager(this);
         spinManager = new SpinManager();
+        playerManager = new PlayerManager();
+        gracePeriodManager = new GracePeriodManager();
         
-        // Register listeners
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
         getServer().getPluginManager().registerEvents(new JoinListener(), this);
         
-        // Register commands
         if(getCommand("freward") != null) {
             getCommand("freward").setExecutor(new RewardCommand());
         }
@@ -47,23 +50,11 @@ public class FruitsPlugin extends JavaPlugin {
         getLogger().info("§c✗ Fruits Plugin Disabled");
     }
 
-    public static FruitsPlugin getInstance() { 
-        return instance; 
-    }
-    
-    public FruitRegistry getFruitRegistry() { 
-        return fruitRegistry; 
-    }
-    
-    public CooldownManager getCooldownManager() { 
-        return cooldownManager; 
-    }
-    
-    public SpinManager getSpinManager() { 
-        return spinManager; 
-    }
-    
-    public ConfigManager getConfigManager() { 
-        return configManager; 
-    }
+    public static FruitsPlugin getInstance() { return instance; }
+    public FruitRegistry getFruitRegistry() { return fruitRegistry; }
+    public CooldownManager getCooldownManager() { return cooldownManager; }
+    public SpinManager getSpinManager() { return spinManager; }
+    public ConfigManager getConfigManager() { return configManager; }
+    public PlayerManager getPlayerManager() { return playerManager; }
+    public GracePeriodManager getGracePeriodManager() { return gracePeriodManager; }
 }
