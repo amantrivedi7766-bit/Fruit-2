@@ -20,7 +20,6 @@ public class PlayerFruitData {
     
     public UUID getPlayerId() { return playerId; }
     
-    // Primary methods
     public String getCurrentFruit() { return currentFruit; }
     public void setCurrentFruit(String fruitId) { this.currentFruit = fruitId; }
     
@@ -33,7 +32,7 @@ public class PlayerFruitData {
     
     public Map<String, Integer> getAbilityUsage() { return abilityUsage; }
     
-    // ==================== ALIAS METHODS FOR COMPATIBILITY ====================
+    // ==================== ALIAS METHODS ====================
     
     public String getFruit() {
         return currentFruit;
