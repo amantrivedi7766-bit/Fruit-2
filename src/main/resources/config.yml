@@ -31,3 +31,13 @@ messages:
   no_fruit: "&c❌ You haven't eaten any fruit!"
   grace_start: "&c⚠️ &lGRACE PERIOD STARTED! &cPVP disabled for {time}s!"
   grace_end: "&a✅ &lGRACE PERIOD ENDED! &aPVP enabled now!"
+  
+# Fruits Plugin Configuration
+# =================================
+
+# Join Reward System
+# When enabled, new players get a random magical fruit on first join
+reward-on-join: true
+
+# =================================
+# Version: 1.0
