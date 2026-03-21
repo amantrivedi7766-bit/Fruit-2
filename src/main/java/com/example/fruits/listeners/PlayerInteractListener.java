@@ -4,42 +4,6 @@ import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.models.Ability;
 import com.example.fruits.abilities.NatureAbilities;
-import com.example.fruits.abilities.ThiefAbilities;  // ✅ ADD THIS IMPORT
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.block.Action;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
-
-public class PlayerInteractListener implements Listener {
-    
-    @EventHandler
-    public void onInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        
-        if(event.getItem() == null) return;
-        String fruitId = Fruit.getFruitId(event.getItem());
-        if(fruitId == null) return;
-        
-        Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
-        if(fruit == null) return;
-        
-        Action action = event.getAction();
-        
-        // LEFT CLICK - LAUNCH ATTACHED PLAYER (Vine Weaver)
-        if((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
-            if(fruitId.equals("vine_weaver")) {
-                NatureAbilities.handleLaunch(player);
-package com.example.fruits.listeners;
-
-import com.example.fruits.FruitsPlugin;
-import com.example.fruits.models.Fruit;
-import com.example.fruits.models.Ability;
-import com.example.fruits.abilities.NatureAbilities;
 import com.example.fruits.abilities.ThiefAbilities;
 import com.example.fruits.abilities.VampireAbilities;
 import org.bukkit.entity.Entity;
