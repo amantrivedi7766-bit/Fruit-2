@@ -65,7 +65,7 @@ public class SpinManager {
             public void run() {
                 spinningPlayers.put(uuid, false);
             }
-        }.runTaskLater(plugin, 400L); // 20 seconds
+        }.runTaskLater(plugin, 400L);
     }
     
     public void stopSpin(Player player) {
@@ -107,7 +107,7 @@ public class SpinManager {
                 resetAllDailySpins();
                 plugin.getLogger().info("Daily spin limits reset!");
             }
-        }.runTaskTimer(plugin, 86400L, 86400L); // 24 hours
+        }.runTaskTimer(plugin, 86400L, 86400L);
     }
     
     public long getSpinCooldownRemaining(Player player) {
