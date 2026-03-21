@@ -2,9 +2,16 @@ name: FruitsPlugin
 version: 1.0
 main: com.example.fruits.FruitsPlugin
 api-version: 1.21
-description: Magical Fruits Plugin with Join Rewards
+description: Magical Fruits Plugin with Join Rewards and Admin GUI
 
 commands:
+  fruit:
+    description: Main fruit command
+    usage: /<command>
+  fruitadmin:
+    description: Admin command for fruit plugin
+    usage: /<command> [toggle|status]
+    aliases: [fa]
   freward:
     description: Admin command for fruit reward system
     usage: /<command> <toggle|status|reload|test>
@@ -14,3 +21,6 @@ permissions:
   fruits.admin:
     description: Admin permission for fruit plugin
     default: op
+  fruits.user:
+    description: User permission for fruit plugin
+    default: true
