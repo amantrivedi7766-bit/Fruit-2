@@ -1,62 +1,70 @@
 package com.example.fruits.models;
 
-import com.example.fruits.FruitsPlugin;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Fruit {
     private final String id;
-    private final String displayName;
+    private final String name;
     private final Material material;
     private final int customModelData;
+    private final List<String> lore;
     private final List<Ability> abilities;
 
-    public Fruit(String id, String displayName, Material material, int customModelData, List<Ability> abilities) {
+    public Fruit(String id, String name, Material material, int customModelData, List<String> lore, List<Ability> abilities) {
         this.id = id;
-        this.displayName = displayName;
+        this.name = name;
         this.material = material;
         this.customModelData = customModelData;
+        this.lore = lore;
         this.abilities = abilities;
     }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public Material getMaterial() { return material; }
+    public int getCustomModelData() { return customModelData; }
+    public List<String> getLore() { return lore; }
+    public List<Ability> getAbilities() { return abilities; }
 
     public ItemStack createItem() {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(displayName);
-        meta.setCustomModelData(customModelData);
-        
-        List<String> lore = new ArrayList<>();
-        lore.add("§7§m-------------------");
-        lore.add("§6✨ Magical Dye");
-        lore.add("§7§m-------------------");
-        lore.add("§eAbilities:");
-        for(int i = 0; i < abilities.size(); i++) {
-            Ability a = abilities.get(i);
-            lore.add("§7 " + (i+1) + ". §f" + a.getName() + " §7(§b" + a.getCooldown() + "s§7)");
+        if (meta != null) {
+            meta.setDisplayName(name);
+            meta.setCustomModelData(customModelData);
+            
+            List<String> finalLore = new ArrayList<>();
+            finalLore.addAll(lore);
+            meta.setLore(finalLore);
+            
+            item.setItemMeta(meta);
         }
-        lore.add("§7§m-------------------");
-        lore.add("§a🔮 Hold and right-click to use!");
-        lore.add("§7Use §e/fruit withdraw §7to cancel power");
-        meta.setLore(lore);
-        
-        NamespacedKey key = new NamespacedKey(FruitsPlugin.getInstance(), "fruit_id");
-        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, id);
-        item.setItemMeta(meta);
         return item;
     }
 
     public static String getFruitId(ItemStack item) {
-        if(item == null || !item.hasItemMeta()) return null;
-        NamespacedKey key = new NamespacedKey(FruitsPlugin.getInstance(), "fruit_id");
-        return item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.STRING);
+        if (item == null || !item.hasItemMeta()) return null;
+        ItemMeta meta = item.getItemMeta();
+        if (!meta.hasCustomModelData()) return null;
+        
+        int cmd = meta.getCustomModelData();
+        switch (cmd) {
+            case 1001: return "dragonfruit";
+            case 1002: return "starfruit";
+            case 1003: return "moonberry";
+            case 1004: return "voidberry";
+            case 1005: return "stormberry";
+            case 1006: return "frostberry";
+            case 1007: return "flameberry";
+            case 1008: return "shadowberry";
+            case 1009: return "soulberry";
+            case 1010: return "mysticberry";
+            default: return null;
+        }
     }
-
-    public String getId() { return id; }
-    public String getDisplayName() { return displayName; }
-    public List<Ability> getAbilities() { return abilities; }
 }
