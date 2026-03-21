@@ -1,20 +1,23 @@
 package com.example.fruits.manager;
 
+import com.example.fruits.models.PlayerFruitData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import java.util.*;
 
 public class PlayerManager {
     private final Set<UUID> activePlayers = new HashSet<>();
-    private final Map<UUID, String> playerFruits = new HashMap<>();
+    private final Map<UUID, PlayerFruitData> playerFruits = new HashMap<>();
     
     public void addActivePlayer(Player player) {
         activePlayers.add(player.getUniqueId());
+        if(!playerFruits.containsKey(player.getUniqueId())) {
+            playerFruits.put(player.getUniqueId(), new PlayerFruitData(player.getUniqueId(), null));
+        }
     }
     
     public void removeActivePlayer(Player player) {
         activePlayers.remove(player.getUniqueId());
-        playerFruits.remove(player.getUniqueId());
     }
     
     public boolean isActivePlayer(Player player) {
@@ -33,15 +36,27 @@ public class PlayerManager {
     }
     
     public void setPlayerFruit(Player player, String fruitId) {
-        playerFruits.put(player.getUniqueId(), fruitId);
+        UUID uuid = player.getUniqueId();
+        if(playerFruits.containsKey(uuid)) {
+            playerFruits.get(uuid).setCurrentFruit(fruitId);
+            playerFruits.get(uuid).updateLastUsed();
+        } else {
+            playerFruits.put(uuid, new PlayerFruitData(uuid, fruitId));
+        }
     }
     
     public String getPlayerFruit(Player player) {
-        return playerFruits.get(player.getUniqueId());
+        PlayerFruitData data = playerFruits.get(player.getUniqueId());
+        return data != null ? data.getCurrentFruit() : null;
     }
     
     public boolean hasFruit(Player player) {
-        return playerFruits.containsKey(player.getUniqueId());
+        return playerFruits.containsKey(player.getUniqueId()) && 
+               playerFruits.get(player.getUniqueId()).getCurrentFruit() != null;
+    }
+    
+    public PlayerFruitData getPlayerData(Player player) {
+        return playerFruits.get(player.getUniqueId());
     }
     
     public void clear() {
