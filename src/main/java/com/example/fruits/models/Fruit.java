@@ -69,6 +69,7 @@ public class Fruit {
             case 1013: return "golden_aegis";
             case 1014: return "voidweaver";
             case 1015: return "dracula_bites";
+            case 1016: return "cyclone_fury";
             default: return null;
         }
     }
