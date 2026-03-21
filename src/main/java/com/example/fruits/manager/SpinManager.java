@@ -1,92 +1,123 @@
-package com.example.fruits.manager;
+package com.example.fruits.managers;
 
 import com.example.fruits.FruitsPlugin;
-import com.example.fruits.models.Fruit;
-import org.bukkit.Bukkit;
-import org.bukkit.Sound;
+import com.example.fruits.utils.CinematicSpinWheel;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+
 import java.util.*;
 
 public class SpinManager {
-    private final Map<UUID, Integer> spinTasks = new HashMap<>();
-    private final Random random = new Random();
-    private final List<Fruit> fruits;
     
-    public SpinManager() {
-        this.fruits = new ArrayList<>(FruitsPlugin.getInstance().getFruitRegistry().getAllFruits());
+    private final FruitsPlugin plugin;
+    private final Map<UUID, Boolean> spinningPlayers = new HashMap<>();
+    private final Map<UUID, Integer> dailySpins = new HashMap<>();
+    private final Map<UUID, Long> lastSpinTime = new HashMap<>();
+    
+    public SpinManager(FruitsPlugin plugin) {
+        this.plugin = plugin;
+        startDailyResetTask();
     }
     
-    public void startSpin(Player player) {
-        player.sendMessage("§6§l=================================");
-        player.sendMessage("§e§l🎁 WELCOME TO FRUITS PLUGIN!");
-        player.sendMessage("§e§l🎲 Spinning for your magical fruit...");
-        player.sendMessage("§6§l=================================");
+    public void startSpin(Player player, int spins) {
+        UUID uuid = player.getUniqueId();
         
-        // Play spin sound
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+        // Check if already spinning
+        if (spinningPlayers.getOrDefault(uuid, false)) {
+            player.sendMessage("§cYou are already spinning!");
+            return;
+        }
         
-        // Spin animation - 20 spins over 2 seconds
-        BukkitRunnable spinTask = new BukkitRunnable() {
-            int spinCount = 0;
-            final int maxSpins = 20;
-            
+        // Check daily limit
+        int maxSpins = plugin.getConfigManager().getMaxSpinsPerDay();
+        int spinsToday = dailySpins.getOrDefault(uuid, 0);
+        
+        if (spinsToday >= maxSpins && maxSpins > 0) {
+            player.sendMessage("§cYou have reached your daily spin limit (" + maxSpins + " spins)!");
+            return;
+        }
+        
+        // Check cooldown
+        long lastSpin = lastSpinTime.getOrDefault(uuid, 0L);
+        long cooldown = plugin.getConfigManager().getSpinCooldown() * 1000L;
+        long remaining = (lastSpin + cooldown) - System.currentTimeMillis();
+        
+        if (remaining > 0 && cooldown > 0) {
+            player.sendMessage("§cSpin on cooldown! §7" + (remaining / 1000) + " seconds remaining");
+            return;
+        }
+        
+        // Mark as spinning
+        spinningPlayers.put(uuid, true);
+        
+        // Start cinematic spin
+        player.sendMessage("§a✨ Starting cinematic spin! Get ready! ✨");
+        CinematicSpinWheel spinWheel = new CinematicSpinWheel(plugin, player);
+        spinWheel.startSpin();
+        
+        // Update stats
+        dailySpins.put(uuid, spinsToday + spins);
+        lastSpinTime.put(uuid, System.currentTimeMillis());
+        
+        // Auto-unmark after spin duration
+        new BukkitRunnable() {
             @Override
             public void run() {
-                if(spinCount >= maxSpins) {
-                    // Spin finished - give random fruit
-                    Fruit selectedFruit = fruits.get(random.nextInt(fruits.size()));
-                    giveFruitReward(player, selectedFruit);
-                    spinTasks.remove(player.getUniqueId());
-                    this.cancel();
-                    return;
-                }
-                
-                // Show spinning animation message
-                Fruit tempFruit = fruits.get(spinCount % fruits.size());
-                player.sendMessage("§7🎲 Spinning... §f" + tempFruit.getName());
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f + (spinCount * 0.05f));
-                
-                spinCount++;
+                spinningPlayers.put(uuid, false);
             }
-        };
-        
-        spinTask.runTaskTimer(FruitsPlugin.getInstance(), 0L, 2L);
-        spinTasks.put(player.getUniqueId(), spinTask.getTaskId());
+        }.runTaskLater(plugin, 400L); // 20 seconds
     }
     
-    private void giveFruitReward(Player player, Fruit fruit) {
-        ItemStack fruitItem = fruit.createItem();
-        
-        // Check inventory space
-        if(player.getInventory().firstEmpty() == -1) {
-            player.getWorld().dropItem(player.getLocation(), fruitItem);
-            player.sendMessage("§c⚠️ Inventory full! Fruit dropped on ground!");
-        } else {
-            player.getInventory().addItem(fruitItem);
-        }
-        
-        // Celebration effects
-        player.sendMessage("§6§l=================================");
-        player.sendMessage("§a§l✨ CONGRATULATIONS! ✨");
-        player.sendMessage("§aYou received: " + fruit.getName());
-        player.sendMessage("§7Right-click to use abilities!");
-        player.sendMessage("§6§l=================================");
-        
-        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
-        
-        // Firework effect
-        player.getWorld().spawnParticle(org.bukkit.Particle.FIREWORK, player.getLocation(), 30, 0.5, 1, 0.5);
-        
-        Bukkit.getLogger().info("[Fruits] " + player.getName() + " received " + fruit.getId() + " from spin!");
+    public void stopSpin(Player player) {
+        UUID uuid = player.getUniqueId();
+        spinningPlayers.put(uuid, false);
+        CinematicSpinWheel.stopSpin(player);
+        player.sendMessage("§cYour spin has been stopped!");
     }
     
-    public void cancelSpin(Player player) {
-        Integer taskId = spinTasks.remove(player.getUniqueId());
-        if(taskId != null) {
-            Bukkit.getScheduler().cancelTask(taskId);
+    public void stopAllSpins() {
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            stopSpin(player);
         }
+        spinningPlayers.clear();
+        plugin.getLogger().info("All spins stopped!");
+    }
+    
+    public boolean isSpinning(Player player) {
+        return spinningPlayers.getOrDefault(player.getUniqueId(), false);
+    }
+    
+    public int getDailySpins(Player player) {
+        return dailySpins.getOrDefault(player.getUniqueId(), 0);
+    }
+    
+    public void resetDailySpins(Player player) {
+        dailySpins.put(player.getUniqueId(), 0);
+    }
+    
+    public void resetAllDailySpins() {
+        dailySpins.clear();
+        plugin.getLogger().info("All daily spins reset!");
+    }
+    
+    private void startDailyResetTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                resetAllDailySpins();
+                plugin.getLogger().info("Daily spin limits reset!");
+            }
+        }.runTaskTimer(plugin, 86400L, 86400L); // 24 hours
+    }
+    
+    public long getSpinCooldownRemaining(Player player) {
+        long lastSpin = lastSpinTime.getOrDefault(player.getUniqueId(), 0L);
+        long cooldown = plugin.getConfigManager().getSpinCooldown() * 1000L;
+        long remaining = (lastSpin + cooldown) - System.currentTimeMillis();
+        return remaining > 0 ? remaining / 1000 : 0;
+    }
+    
+    public Map<UUID, Integer> getAllDailySpins() {
+        return new HashMap<>(dailySpins);
     }
 }
