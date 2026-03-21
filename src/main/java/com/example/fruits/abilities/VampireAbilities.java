@@ -19,7 +19,6 @@ public class VampireAbilities {
     public static void bloodlustPhase(Player player) {
         UUID uuid = player.getUniqueId();
         
-        // Check if already in phase
         if(activePhases.containsKey(uuid)) {
             player.sendMessage("§c🩸 You are already in Bloodlust phase!");
             return;
@@ -29,14 +28,11 @@ public class VampireAbilities {
         player.sendMessage("§7For §e15 seconds§7, every 3 hits heals you by §c1 heart§7!");
         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1.0f, 0.8f);
         
-        // Create bloodlust effect around player
         createBloodlustEffect(player);
         
-        // Store phase data
         VampirePhase phase = new VampirePhase(player.getUniqueId(), System.currentTimeMillis() + 15000, 0);
         activePhases.put(uuid, phase);
         
-        // Remove after 15 seconds
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -66,21 +62,20 @@ public class VampireAbilities {
                     return;
                 }
                 
-                // Blood particles around player
+                // FIXED: REDSTONE -> END_ROD (golden sparkles)
                 for(int i = 0; i < 360; i += 20) {
                     double rad = Math.toRadians(i + duration * 5);
                     double x = Math.cos(rad) * 1.5;
                     double z = Math.sin(rad) * 1.5;
-                    player.getWorld().spawnParticle(Particle.REDSTONE, player.getLocation().add(x, 0.5, z), 1, 
-                        new Particle.DustOptions(Color.fromRGB(139, 0, 0), 1));
+                    player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation().add(x, 0.5, z), 1, 0, 0, 0);
                 }
                 
-                // Floating blood orbs
+                // FIXED: SPELL_MOB -> DRAGON_BREATH (magical purple)
                 for(int i = 0; i < 3; i++) {
                     double angle = Math.toRadians(duration * 10 + i * 120);
                     double x = Math.cos(angle) * 1.2;
                     double z = Math.sin(angle) * 1.2;
-                    player.getWorld().spawnParticle(Particle.SPELL_MOB, player.getLocation().add(x, 1, z), 1, 0.5, 0, 0);
+                    player.getWorld().spawnParticle(Particle.DRAGON_BREATH, player.getLocation().add(x, 1, z), 1, 0, 0.1, 0);
                 }
                 
                 duration++;
@@ -88,7 +83,6 @@ public class VampireAbilities {
         }.runTaskTimer(FruitsPlugin.getInstance(), 0L, 1L);
     }
     
-    // Called when player hits an entity
     public static void handleHit(Player player, LivingEntity target) {
         UUID uuid = player.getUniqueId();
         VampirePhase phase = activePhases.get(uuid);
@@ -99,42 +93,35 @@ public class VampireAbilities {
             return;
         }
         
-        // Increment hit counter
         phase.hitCount++;
         
-        // Every 3 hits, heal
         if(phase.hitCount >= 3) {
             phase.hitCount = 0;
             
-            // Heal player
             double newHealth = Math.min(player.getHealth() + 2, player.getMaxHealth());
             player.setHealth(newHealth);
             
-            // Healing effects
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
             player.getWorld().spawnParticle(Particle.HEART, player.getLocation(), 15, 0.5, 0.5, 0.5);
-            player.getWorld().spawnParticle(Particle.REDSTONE, player.getLocation(), 30, 0.5, 0.5, 0.5,
-                new Particle.DustOptions(Color.fromRGB(139, 0, 0), 1.5f));
+            // FIXED: REDSTONE -> END_ROD
+            player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 30, 0.5, 0.5, 0.5);
             
             player.sendMessage("§c❤️ Bloodlust healed you for §c1 heart§c!");
             
-            // Blood drain effect on target
-            target.getWorld().spawnParticle(Particle.REDSTONE, target.getLocation(), 20, 0.3, 0.3, 0.3,
-                new Particle.DustOptions(Color.fromRGB(139, 0, 0), 1));
+            // FIXED: REDSTONE -> END_ROD
+            target.getWorld().spawnParticle(Particle.END_ROD, target.getLocation(), 20, 0.3, 0.3, 0.3);
             target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 0.8f);
         }
         
-        // Blood hit effect
-        target.getWorld().spawnParticle(Particle.REDSTONE, target.getLocation(), 10, 0.2, 0.2, 0.2,
-            new Particle.DustOptions(Color.fromRGB(139, 0, 0), 1));
+        // FIXED: REDSTONE -> END_ROD
+        target.getWorld().spawnParticle(Particle.END_ROD, target.getLocation(), 10, 0.2, 0.2, 0.2);
     }
     
-    // ==================== ABILITY 2: BAT RIDE (Crouch + Right Click) ====================
+    // ==================== ABILITY 2: BAT RIDE ====================
     
     public static void batRide(Player player) {
         UUID uuid = player.getUniqueId();
         
-        // Check if already riding a bat
         if(activeBatRides.containsKey(uuid)) {
             player.sendMessage("§c🦇 You are already riding a bat!");
             return;
@@ -145,20 +132,15 @@ public class VampireAbilities {
         player.sendMessage("§7Left-click to perform a §cBlood Bite§7 attack!");
         player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.0f);
         
-        // Summon bat
         Bat bat = (Bat) player.getWorld().spawnEntity(player.getLocation(), EntityType.BAT);
         bat.setAI(false);
         bat.setInvulnerable(true);
         bat.setSilent(true);
-        
-        // Add passenger
         bat.addPassenger(player);
         
-        // Store bat ride data
-        BatRide ride = new BatRide(bat, System.currentTimeMillis() + 20000); // 20 seconds
+        BatRide ride = new BatRide(bat, System.currentTimeMillis() + 20000);
         activeBatRides.put(uuid, ride);
         
-        // Control task
         BukkitRunnable controlTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -174,28 +156,21 @@ public class VampireAbilities {
                     return;
                 }
                 
-                // Get player's movement direction
                 Vector direction = new Vector(0, 0, 0);
                 boolean moving = false;
                 
                 if(player.isSneaking()) {
-                    // Descend
                     direction.setY(-0.3);
                     moving = true;
                 } else if(player.isSprinting()) {
-                    // Ascend
                     direction.setY(0.3);
                     moving = true;
                 }
                 
-                // Forward/Backward/Left/Right based on player's look direction
                 if(player.isOnline()) {
                     Location eyeLoc = player.getEyeLocation();
                     Vector lookDir = eyeLoc.getDirection().normalize();
                     
-                    // Movement based on player's movement keys (simplified)
-                    // In a real implementation, you'd need to detect key presses
-                    // For now, we'll use the direction the player is looking
                     if(player.getVelocity().length() > 0.1) {
                         direction.add(lookDir.multiply(0.5));
                         moving = true;
@@ -206,17 +181,13 @@ public class VampireAbilities {
                     bat.setVelocity(direction);
                 }
                 
-                // Bat wing flapping particles
                 bat.getWorld().spawnParticle(Particle.CLOUD, bat.getLocation(), 5, 0.3, 0.1, 0.3);
-                
-                // Keep bat at player's eye level
                 bat.teleport(player.getLocation().add(0, -0.5, 0));
             }
         };
         
         ride.controlTaskId = controlTask.runTaskTimer(FruitsPlugin.getInstance(), 0L, 1L).getTaskId();
         
-        // Auto-remove after 20 seconds
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -245,22 +216,19 @@ public class VampireAbilities {
         }
     }
     
-    // ==================== BLOOD BITE ATTACK (Left Click while riding) ====================
+    // ==================== BLOOD BITE ATTACK ====================
     
     public static void bloodBite(Player player) {
         UUID uuid = player.getUniqueId();
         
-        // Check if riding a bat
         if(!activeBatRides.containsKey(uuid)) {
             return;
         }
         
-        // Check cooldown (3 seconds)
         if(biteCooldowns.containsKey(uuid) && System.currentTimeMillis() < biteCooldowns.get(uuid)) {
-            return; // Silent cooldown - no message
+            return;
         }
         
-        // Get target in front of player
         Entity target = getTargetEntity(player, 5);
         
         if(target == null || !(target instanceof LivingEntity)) {
@@ -269,42 +237,34 @@ public class VampireAbilities {
         }
         
         LivingEntity livingTarget = (LivingEntity) target;
-        
-        // Damage target (1 heart = 2 damage)
         livingTarget.damage(2, player);
         
-        // Heal player (1 heart = 2 health)
         double newHealth = Math.min(player.getHealth() + 2, player.getMaxHealth());
         player.setHealth(newHealth);
         
-        // Epic bite effect
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.5f);
         player.getWorld().playSound(livingTarget.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 0.8f);
         
-        // Blood particles
+        // FIXED: REDSTONE -> END_ROD + HEART
         for(int i = 0; i < 360; i += 15) {
             double rad = Math.toRadians(i);
             double x = Math.cos(rad) * 0.8;
             double z = Math.sin(rad) * 0.8;
-            livingTarget.getWorld().spawnParticle(Particle.REDSTONE, livingTarget.getLocation().add(x, 0.5, z), 1,
-                new Particle.DustOptions(Color.fromRGB(139, 0, 0), 1.2f));
+            livingTarget.getWorld().spawnParticle(Particle.END_ROD, livingTarget.getLocation().add(x, 0.5, z), 1, 0, 0, 0);
         }
         
-        // Blood spray effect
+        // Blood spray effect using END_ROD
         for(int i = 0; i < 20; i++) {
             double dx = (Math.random() - 0.5) * 0.5;
             double dy = Math.random() * 0.5;
             double dz = (Math.random() - 0.5) * 0.5;
-            livingTarget.getWorld().spawnParticle(Particle.REDSTONE, livingTarget.getLocation().add(dx, 1 + dy, dz), 1,
-                new Particle.DustOptions(Color.fromRGB(139, 0, 0), 0.8f));
+            livingTarget.getWorld().spawnParticle(Particle.END_ROD, livingTarget.getLocation().add(dx, 1 + dy, dz), 1, 0, 0, 0);
         }
         
         player.sendMessage("§c🦇 Blood Bite! You drained §c1 heart§c from " + getEntityName(livingTarget) + "!");
         
-        // Set cooldown (3 seconds)
         biteCooldowns.put(uuid, System.currentTimeMillis() + 3000);
         
-        // Remove cooldown after 3 seconds
         new BukkitRunnable() {
             @Override
             public void run() {
