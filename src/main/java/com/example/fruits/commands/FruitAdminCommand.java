@@ -72,7 +72,7 @@ public class FruitAdminCommand implements CommandExecutor {
                     FruitsPlugin.getInstance().getGracePeriodManager().startGlobalGrace(seconds);
                     sender.sendMessage("§aStarted " + seconds + " second global grace period!");
                 } else if(args[1].equalsIgnoreCase("end")) {
-                    sender.sendMessage("§cGrace period ended!");
+                    sender.sendMessage("§cGrace period ended manually!");
                 }
                 break;
                 
