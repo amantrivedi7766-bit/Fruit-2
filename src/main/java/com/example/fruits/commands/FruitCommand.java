@@ -3,11 +3,13 @@ package com.example.fruits.commands;
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.models.PlayerFruitData;
+import com.example.fruits.models.Ability;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 public class FruitCommand implements CommandExecutor {
@@ -22,7 +24,7 @@ public class FruitCommand implements CommandExecutor {
             return true;
         }
         
-        // WITHDRAW COMMAND - Cancel fruit power
+        // WITHDRAW COMMAND
         if(args[0].equalsIgnoreCase("withdraw")) {
             PlayerFruitData data = FruitsPlugin.getInstance().getActivePlayers().get(p.getUniqueId());
             if(data == null || data.getFruit() == null) {
@@ -30,10 +32,7 @@ public class FruitCommand implements CommandExecutor {
                 return true;
             }
             
-            // Return fruit to inventory
             p.getInventory().addItem(data.getFruit().createItem());
-            
-            // Remove active fruit
             FruitsPlugin.getInstance().getActivePlayers().remove(p.getUniqueId());
             
             p.sendMessage("§a🔄 You withdrew your fruit power! The fruit has been returned.");
@@ -67,13 +66,13 @@ public class FruitCommand implements CommandExecutor {
             return true;
         }
         
-        com.example.fruits.models.Ability ability = fruit.getAbilities().get(index);
+        Ability ability = fruit.getAbilities().get(index);
         String cooldownKey = fruit.getId() + "_" + index;
         
         if(!FruitsPlugin.getInstance().getCooldownManager().checkCooldown(p, cooldownKey)) return true;
         
-        // Get target (player or mob)
-        org.bukkit.entity.Entity target = getTargetEntity(p, 20);
+        // Get target entity
+        Entity target = getTargetEntity(p, 20);
         
         // Execute ability with target
         ability.getExecutor().execute(p, target);
@@ -81,14 +80,15 @@ public class FruitCommand implements CommandExecutor {
         
         data.incrementUsed();
         
-        // Send message with target info
+        // Send message
         if(target != null) {
-            p.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + getEntityName(target) + "§a! (" + data.getUsedAbilities() + "/3)");
+            String targetName = target instanceof Player ? ((Player) target).getName() : target.getType().name().toLowerCase().replace("_", " ");
+            p.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a! (" + data.getUsedAbilities() + "/3)");
         } else {
             p.sendMessage("§a⚡ Used §6" + ability.getName() + "§a! (" + data.getUsedAbilities() + "/3)");
         }
         
-        // Update action bar
+        // Action bar
         int remaining = 3 - data.getUsedAbilities();
         p.spigot().sendMessage(ChatMessageType.ACTION_BAR, 
             TextComponent.fromLegacyText("§a✓ " + remaining + " §7uses remaining"));
@@ -100,8 +100,7 @@ public class FruitCommand implements CommandExecutor {
         return true;
     }
     
-    private org.bukkit.entity.Entity getTargetEntity(Player player, int range) {
-        // Get the entity the player is looking at
+    private Entity getTargetEntity(Player player, int range) {
         return player.getWorld().getNearbyEntities(player.getEyeLocation(), range, range, range)
             .stream()
             .filter(e -> e != player && e.getLocation().distance(player.getEyeLocation()) <= range)
@@ -111,10 +110,5 @@ public class FruitCommand implements CommandExecutor {
                 return Double.compare(d1, d2);
             })
             .orElse(null);
-    }
-    
-    private String getEntityName(org.bukkit.entity.Entity e) {
-        if(e instanceof Player) return ((Player) e).getName();
-        return e.getType().name().toLowerCase().replace("_", " ");
     }
 }
