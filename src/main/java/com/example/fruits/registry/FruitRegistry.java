@@ -3,8 +3,8 @@ package com.example.fruits.registry;
 import com.example.fruits.models.Ability;
 import com.example.fruits.models.Fruit;
 import org.bukkit.*;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import java.util.*;
 
@@ -16,233 +16,349 @@ public class FruitRegistry {
     }
 
     private void registerFruits() {
-        // 1. CRIMSON STAR - Lightning & Fire (STRONGER)
-        fruits.put("crimson_star", new Fruit("crimson_star", "§c§l⚡ Crimson Star", Material.APPLE, 1001,
+        // ==================== 1. METEOR FRUIT ====================
+        fruits.put("meteor_fruit", new Fruit("meteor_fruit", "§c§l☄️ Meteor Fruit", Material.APPLE, 1001,
             Arrays.asList(
-                new Ability("§cThunder Strike", 18, p -> {
-                    Location target = p.getTargetBlock(null, 25).getLocation();
-                    p.getWorld().strikeLightning(target);
-                    p.getWorld().createExplosion(target, 2.5f, false, true);
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.5f, 1.0f);
-                    p.getWorld().spawnParticle(Particle.FIREWORK, target, 50, 2, 2, 2);
-                    p.sendMessage("§c⚡ THUNDER STRIKE! §7(12 damage)");
+                new Ability("§cMeteor Storm", 30, p -> {
+                    Location target = p.getTargetBlock(null, 30).getLocation();
+                    if(target == null) target = p.getLocation().add(p.getLocation().getDirection().multiply(10));
+                    
+                    for(int i = 0; i < 5; i++) {
+                        int finalI = i;
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                Location spikeLoc = target.clone().add(finalI * 2, 0, 0);
+                                for(int y = 0; y < 5; y++) {
+                                    Location fallLoc = spikeLoc.clone().add(0, 10 - y, 0);
+                                    p.getWorld().spawnParticle(Particle.FLAME, fallLoc, 20, 0.3, 0.3, 0.3, 0.05);
+                                    p.getWorld().spawnParticle(Particle.LAVA, fallLoc, 10, 0.2, 0.2, 0.2, 0.02);
+                                }
+                                
+                                // Create magma block
+                                spikeLoc.getBlock().setType(Material.MAGMA_BLOCK);
+                                p.getWorld().playSound(spikeLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 0.8f);
+                                
+                                // Remove after 10 seconds
+                                Bukkit.getScheduler().runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), () -> {
+                                    spikeLoc.getBlock().setType(Material.AIR);
+                                }, 200L);
+                                
+                                // Damage nearby entities
+                                spikeLoc.getWorld().getNearbyEntities(spikeLoc, 2, 2, 2).forEach(e -> {
+                                    if(e instanceof Player && e != p) {
+                                        ((Player) e).damage(8, p);
+                                    }
+                                });
+                            }
+                        }.runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), i * 5L);
+                    }
+                    p.sendMessage("§c☄️ METEOR STORM! §7(5 meteors falling)");
                 }),
-                new Ability("§cMeteor Crash", 22, p -> {
+                new Ability("§cMagma Shield", 45, p -> {
+                    Location center = p.getLocation();
+                    // Create cone of magma blocks
+                    for(int angle = 0; angle < 360; angle += 30) {
+                        double rad = Math.toRadians(angle);
+                        for(int r = 0; r < 10; r++) {
+                            double x = Math.cos(rad) * r;
+                            double z = Math.sin(rad) * r;
+                            Location loc = center.clone().add(x, r / 2, z);
+                            loc.getBlock().setType(Material.MAGMA_BLOCK);
+                            
+                            // Wave animation
+                            new BukkitRunnable() {
+                                int wave = 0;
+                                @Override
+                                public void run() {
+                                    if(wave >= 20) {
+                                        loc.getBlock().setType(Material.AIR);
+                                        this.cancel();
+                                        return;
+                                    }
+                                    loc.getWorld().spawnParticle(Particle.FLAME, loc, 10, 0.2, 0.2, 0.2, 0.02);
+                                    wave++;
+                                }
+                            }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 2L);
+                        }
+                    }
+                    
+                    // Damage and burn enemies in shield
+                    new BukkitRunnable() {
+                        int ticks = 0;
+                        @Override
+                        public void run() {
+                            if(ticks >= 100) {
+                                this.cancel();
+                                return;
+                            }
+                            p.getNearbyEntities(10, 5, 10).forEach(e -> {
+                                if(e instanceof Player && e != p) {
+                                    e.setFireTicks(60);
+                                    ((Player) e).damage(2, p);
+                                    e.getWorld().spawnParticle(Particle.LAVA, e.getLocation(), 20, 0.5, 0.5, 0.5);
+                                }
+                            });
+                            ticks++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 10L);
+                    
+                    p.sendMessage("§c🛡️ MAGMA SHIELD! §7(Shield active for 10 seconds)");
+                })
+            )));
+
+        // ==================== 2. WIND MONSTER FRUIT ====================
+        fruits.put("wind_monster", new Fruit("wind_monster", "§b§l🌪️ Wind Monster Fruit", Material.GOLDEN_CARROT, 1002,
+            Arrays.asList(
+                new Ability("§bWind Monster", 60, p -> {
+                    // Launch player upward
+                    p.setVelocity(new Vector(0, 2, 0));
+                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_WIND_CHARGE_WIND_BURST, 2.0f, 1.2f);
+                    
+                    // Create cloud particles
+                    new BukkitRunnable() {
+                        int ticks = 0;
+                        @Override
+                        public void run() {
+                            if(ticks >= 100) {
+                                this.cancel();
+                                return;
+                            }
+                            p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.05);
+                            p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation().add(0, 1, 0), 15, 0.3, 0.3, 0.3, 0.02);
+                            
+                            // Giant fist animation
+                            if(ticks % 10 == 0) {
+                                Location fistLoc = p.getLocation().add(p.getLocation().getDirection().multiply(3));
+                                p.getWorld().spawnParticle(Particle.EXPLOSION, fistLoc, 30, 1, 1, 1);
+                                p.getWorld().playSound(fistLoc, Sound.ENTITY_PLAYER_ATTACK_STRONG, 1.5f, 0.8f);
+                                
+                                // Damage enemies below
+                                p.getNearbyEntities(5, 5, 5).forEach(e -> {
+                                    if(e instanceof Player && e != p) {
+                                        ((Player) e).damage(6, p);
+                                        e.setVelocity(new Vector(0, 1, 0));
+                                    }
+                                });
+                            }
+                            ticks++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 2L);
+                    
+                    p.sendMessage("§b🌪️ WIND MONSTER! §7(You are a wind monster for 10 seconds!)");
+                }),
+                new Ability("§bStorm Monster", 60, p -> {
+                    // Blue electric particles
+                    new BukkitRunnable() {
+                        int ticks = 0;
+                        @Override
+                        public void run() {
+                            if(ticks >= 100) {
+                                this.cancel();
+                                return;
+                            }
+                            p.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, p.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5, 0.1);
+                            p.getWorld().spawnParticle(Particle.FIREWORK, p.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0.05);
+                            
+                            // Electric fist attack
+                            if(ticks % 8 == 0) {
+                                Location fistLoc = p.getLocation().add(p.getLocation().getDirection().multiply(3));
+                                p.getWorld().strikeLightningEffect(fistLoc);
+                                p.getWorld().playSound(fistLoc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.5f, 1.0f);
+                                
+                                // Electric damage
+                                p.getNearbyEntities(6, 4, 6).forEach(e -> {
+                                    if(e instanceof Player && e != p) {
+                                        ((Player) e).damage(8, p);
+                                        ((Player) e).setVelocity(new Vector(0, 0.5, 0));
+                                    }
+                                });
+                            }
+                            ticks++;
+                        }
+                    }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 2L);
+                    
+                    p.sendMessage("§b⚡ STORM MONSTER! §7(Electric attacks for 10 seconds!)");
+                })
+            )));
+
+        // ==================== 3. TIME FREEZE FRUIT ====================
+        fruits.put("time_freeze", new Fruit("time_freeze", "§d§l⏰ Time Freeze Fruit", Material.CLOCK, 1003,
+            Arrays.asList(
+                new Ability("§dTime Freeze", 50, p -> {
+                    Player target = getTarget(p, 20);
+                    if(target != null) {
+                        // Store original movement
+                        UUID targetUUID = target.getUniqueId();
+                        
+                        // Freeze player
+                        target.setWalkSpeed(0);
+                        target.setFlySpeed(0);
+                        target.setVelocity(new Vector(0, 0, 0));
+                        
+                        // Particle effect
+                        new BukkitRunnable() {
+                            int timer = 0;
+                            @Override
+                            public void run() {
+                                if(timer >= 200) {
+                                    target.setWalkSpeed(0.2f);
+                                    target.setFlySpeed(0.1f);
+                                    target.sendMessage("§aTime unfrozen!");
+                                    this.cancel();
+                                    return;
+                                }
+                                target.getWorld().spawnParticle(Particle.SPELL_WITCH, target.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5);
+                                target.getWorld().playSound(target.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.5f, 0.5f);
+                                timer++;
+                            }
+                        }.runTaskTimer(com.example.fruits.FruitsPlugin.getInstance(), 0L, 1L);
+                        
+                        p.sendMessage("§d⏰ TIME FREEZE on " + target.getName() + "! (10 seconds)");
+                    }
+                }),
+                new Ability("§dMagnetic Pull", 35, p -> {
+                    Player target = getTarget(p, 15);
+                    if(target != null) {
+                        // Pull target to player
+                        target.teleport(p.getLocation().add(0, 1, 0));
+                        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.5f, 1.0f);
+                        target.getWorld().spawnParticle(Particle.PORTAL, target.getLocation(), 50, 0.5, 0.5, 0.5);
+                        p.sendMessage("§d🧲 MAGNETIC PULL! §7Pulled " + target.getName());
+                    }
+                })
+            )));
+
+        // ==================== 4. DRAGON FRUIT ====================
+        fruits.put("dragon_fruit", new Fruit("dragon_fruit", "§4§l🐉 Dragon Fruit", Material.CHORUS_FRUIT, 1004,
+            Arrays.asList(
+                new Ability("§4Dragon Breath", 30, p -> {
                     Location target = p.getTargetBlock(null, 20).getLocation();
-                    p.getWorld().createExplosion(target, 5.5f, true, true);
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 0.5f);
-                    p.getWorld().spawnParticle(Particle.EXPLOSION, target, 1);
-                    p.sendMessage("§c☄️ METEOR CRASH! §7(15 damage)");
+                    for(int i = 0; i < 20; i++) {
+                        Location breathLoc = target.clone().add(Math.random()*3-1.5, Math.random()*2, Math.random()*3-1.5);
+                        p.getWorld().spawnParticle(Particle.DRAGON_BREATH, breathLoc, 10, 0.2, 0.2, 0.2);
+                        breathLoc.getWorld().getNearbyEntities(breathLoc, 2, 2, 2).forEach(e -> {
+                            if(e instanceof Player && e != p) ((Player) e).damage(5);
+                        });
+                    }
+                    p.getWorld().playSound(target, Sound.ENTITY_ENDER_DRAGON_SHOOT, 2.0f, 0.8f);
                 }),
-                new Ability("§cInferno Blast", 28, p -> {
-                    p.getNearbyEntities(10, 6, 10).forEach(e -> {
-                        e.setFireTicks(150);
+                new Ability("§4Dragon Roar", 45, p -> {
+                    p.getNearbyEntities(12, 8, 12).forEach(e -> {
+                        e.setVelocity(e.getLocation().toVector().subtract(p.getLocation().toVector()).normalize().multiply(3));
                         if(e instanceof Player) ((Player) e).damage(10);
                     });
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.5f, 0.7f);
-                    p.getWorld().spawnParticle(Particle.FLAME, p.getLocation(), 80, 4, 3, 4);
-                    p.sendMessage("§c🔥 INFERNO BLAST! §7(10 damage + fire)");
+                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 2.0f, 0.6f);
                 })
             )));
 
-        // 2. MOON CRESCENT - Gravity & Pull (STRONGER)
-        fruits.put("moon_crescent", new Fruit("moon_crescent", "§e§l🌙 Moon Crescent", Material.GOLDEN_CARROT, 1002,
+        // ==================== 5. PHOENIX FRUIT ====================
+        fruits.put("phoenix_fruit", new Fruit("phoenix_fruit", "§6§l🔥 Phoenix Fruit", Material.GOLDEN_APPLE, 1005,
             Arrays.asList(
-                new Ability("§eGravity Pull", 18, p -> {
-                    p.getNearbyEntities(12, 7, 12).forEach(e -> e.teleport(p.getLocation().add(0, 3, 0)));
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.5f, 0.5f);
-                    p.sendMessage("§e🌀 GRAVITY PULL! §7(Pulls all enemies)");
+                new Ability("§6Phoenix Dive", 30, p -> {
+                    Location target = p.getTargetBlock(null, 20).getLocation();
+                    p.teleport(target);
+                    p.getWorld().createExplosion(target, 3, false, true);
+                    p.getWorld().playSound(target, Sound.ENTITY_BLAZE_SHOOT, 2.0f, 1.2f);
                 }),
-                new Ability("§eBlack Hole", 23, p -> {
-                    p.getNearbyEntities(10, 8, 10).forEach(e -> {
+                new Ability("§6Rebirth", 50, p -> {
+                    p.setHealth(p.getMaxHealth());
+                    p.setFireTicks(0);
+                    p.getWorld().spawnParticle(Particle.FIREWORK, p.getLocation(), 100, 1, 2, 1);
+                })
+            )));
+
+        // ==================== 6. VOID FRUIT ====================
+        fruits.put("void_fruit", new Fruit("void_fruit", "§5§l🌀 Void Fruit", Material.GLOW_BERRIES, 1006,
+            Arrays.asList(
+                new Ability("§5Void Walk", 30, p -> {
+                    Location target = p.getTargetBlock(null, 25).getLocation();
+                    p.teleport(target);
+                    p.getWorld().playSound(target, Sound.ENTITY_ENDERMAN_TELEPORT, 1.5f, 0.5f);
+                }),
+                new Ability("§5Black Hole", 45, p -> {
+                    p.getNearbyEntities(10, 7, 10).forEach(e -> {
                         Vector toCenter = p.getLocation().toVector().subtract(e.getLocation().toVector());
-                        e.setVelocity(toCenter.normalize().multiply(3));
+                        e.setVelocity(toCenter.normalize().multiply(2.5));
                         if(e instanceof Player) ((Player) e).damage(8);
                     });
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 1.5f, 0.3f);
-                    p.sendMessage("§e🕳️ BLACK HOLE! §7(8 damage + pull)");
-                }),
-                new Ability("§eAnti-Gravity", 28, p -> {
-                    p.getNearbyEntities(15, 10, 15).forEach(e -> e.setVelocity(new Vector(0, 4, 0)));
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 0.6f);
-                    p.sendMessage("§e🌕 ANTI-GRAVITY! §7(Sends enemies flying)");
                 })
             )));
 
-        // 3. VOID CLUSTER - Teleport & Push (STRONGER)
-        fruits.put("void_cluster", new Fruit("void_cluster", "§5§l🌀 Void Cluster", Material.GLOW_BERRIES, 1003,
+        // ==================== 7. ICE DRAGON FRUIT ====================
+        fruits.put("ice_dragon", new Fruit("ice_dragon", "§b§l❄️ Ice Dragon Fruit", Material.SNOWBALL, 1007,
             Arrays.asList(
-                new Ability("§5Void Rift", 18, p -> {
-                    Random rand = new Random();
-                    int x = rand.nextInt(30) - 15;
-                    int z = rand.nextInt(30) - 15;
-                    p.teleport(p.getLocation().add(x, 8, z));
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.5f, 1.5f);
-                    p.sendMessage("§5🌀 VOID RIFT! §7(Teleported)");
-                }),
-                new Ability("§5Phase Shift", 22, p -> {
-                    p.setVelocity(p.getLocation().getDirection().multiply(6));
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 1.2f);
-                    p.sendMessage("§5✨ PHASE SHIFT! §7(Dash forward)");
-                }),
-                new Ability("§5Dimensional Slam", 28, p -> {
-                    p.getNearbyEntities(8, 6, 8).forEach(e -> {
-                        e.setVelocity(e.getVelocity().setY(4).multiply(2));
-                        if(e instanceof Player) ((Player) e).damage(12);
-                    });
-                    p.getWorld().createExplosion(p.getLocation(), 4, false, false);
-                    p.sendMessage("§5💥 DIMENSIONAL SLAM! §7(12 damage)");
-                })
-            )));
-
-        // 4. THORNED CROWN - Nature & Vines (STRONGER)
-        fruits.put("thorned_crown", new Fruit("thorned_crown", "§a§l🌿 Thorned Crown", Material.PUMPKIN_PIE, 1004,
-            Arrays.asList(
-                new Ability("§aVine Trap", 18, p -> {
-                    p.getNearbyEntities(7, 5, 7).forEach(e -> e.setVelocity(new Vector(0, -3, 0)));
-                    p.getWorld().playSound(p.getLocation(), Sound.BLOCK_GRASS_BREAK, 1.5f, 0.7f);
-                    p.sendMessage("§a🌿 VINE TRAP! §7(Immobilizes enemies)");
-                }),
-                new Ability("§aThorn Barrage", 22, p -> {
-                    for(int i=0; i<15; i++) {
-                        Arrow arrow = p.launchProjectile(Arrow.class);
-                        arrow.setVelocity(p.getLocation().getDirection().add(new Vector(Math.random()*0.6-0.3, Math.random()*0.4, Math.random()*0.6-0.3)).normalize().multiply(2.5));
-                        arrow.setDamage(6);
+                new Ability("§bIce Breath", 30, p -> {
+                    Location target = p.getTargetBlock(null, 20).getLocation();
+                    for(int i = 0; i < 20; i++) {
+                        Location breathLoc = target.clone().add(Math.random()*2-1, Math.random()*2, Math.random()*2-1);
+                        p.getWorld().spawnParticle(Particle.SNOWFLAKE, breathLoc, 15, 0.2, 0.2, 0.2);
+                        breathLoc.getWorld().getNearbyEntities(breathLoc, 2, 2, 2).forEach(e -> {
+                            if(e instanceof Player && e != p) {
+                                ((Player) e).setVelocity(new Vector(0, -1, 0));
+                                ((Player) e).damage(4);
+                            }
+                        });
                     }
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1.5f, 1.0f);
-                    p.sendMessage("§a🌵 THORN BARRAGE! §7(15 arrows)");
                 }),
-                new Ability("§aNature's Fury", 28, p -> {
-                    p.getNearbyEntities(12, 8, 12).forEach(e -> e.setVelocity(e.getVelocity().setY(3)));
-                    for(int i=0; i<5; i++) {
-                        p.getWorld().strikeLightning(p.getLocation().add(Math.random()*10-5, 0, Math.random()*10-5));
+                new Ability("§bIce Wall", 40, p -> {
+                    Location target = p.getTargetBlock(null, 15).getLocation();
+                    for(int i = 0; i < 5; i++) {
+                        target.clone().add(i, 0, 0).getBlock().setType(Material.ICE);
+                        target.clone().add(-i, 0, 0).getBlock().setType(Material.ICE);
                     }
-                    p.sendMessage("§a🌳 NATURE'S FURY! §7(Lightning + knockback)");
-                })
-            )));
-
-        // 5. STORM EYE - Wind & Lightning (STRONGER)
-        fruits.put("storm_eye", new Fruit("storm_eye", "§3§l🌪️ Storm Eye", Material.CHORUS_FRUIT, 1005,
-            Arrays.asList(
-                new Ability("§3Wind Push", 18, p -> {
-                    p.getNearbyEntities(10, 7, 10).forEach(e -> e.setVelocity(e.getLocation().toVector().subtract(p.getLocation().toVector()).normalize().multiply(4)));
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 0.8f);
-                    p.sendMessage("§3💨 WIND PUSH! §7(Pushes enemies away)");
-                }),
-                new Ability("§3Cyclone", 22, p -> {
-                    p.getNearbyEntities(8, 6, 8).forEach(e -> e.setVelocity(new Vector(Math.random()*3-1.5, 2, Math.random()*3-1.5)));
-                    p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 150, 4, 3, 4);
-                    p.sendMessage("§3🌀 CYCLONE! §7(Traps enemies)");
-                }),
-                new Ability("§3Thunderstorm", 28, p -> {
-                    for(int i=0; i<12; i++) {
-                        p.getWorld().strikeLightning(p.getLocation().add(Math.random()*15-7.5, 0, Math.random()*15-7.5));
-                    }
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.5f, 0.8f);
-                    p.sendMessage("§3⛈️ THUNDERSTORM! §7(12 lightning strikes)");
-                })
-            )));
-
-        // 6. INFERNO HEART - Fire & Explosions (STRONGER)
-        fruits.put("inferno_heart", new Fruit("inferno_heart", "§c§l🔥 Inferno Heart", Material.GOLDEN_APPLE, 1006,
-            Arrays.asList(
-                new Ability("§cFlame Wave", 18, p -> {
-                    p.getNearbyEntities(10, 6, 10).forEach(e -> e.setFireTicks(160));
-                    p.getWorld().spawnParticle(Particle.FLAME, p.getLocation(), 150, 4, 3, 4);
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.5f, 0.9f);
-                    p.sendMessage("§c🔥 FLAME WAVE! §7(Fire damage)");
-                }),
-                new Ability("§cFirestorm", 22, p -> {
-                    for(int i=0; i<25; i++) {
-                        p.getWorld().spawnParticle(Particle.FLAME, p.getLocation().add(Math.random()*12-6, Math.random()*4, Math.random()*12-6), 5);
-                    }
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.5f, 0.7f);
-                    p.sendMessage("§c🌋 FIRESTORM! §7(Fire rain)");
-                }),
-                new Ability("§cEruption", 28, p -> {
-                    p.getWorld().createExplosion(p.getLocation(), 6.5f, true, true);
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 0.5f);
-                    p.sendMessage("§c💥 ERUPTION! §7(Massive explosion)");
-                })
-            )));
-
-        // 7. CRYSTAL HEART - Healing & Light (STRONGER)
-        fruits.put("crystal_heart", new Fruit("crystal_heart", "§b§l💎 Crystal Heart", Material.SWEET_BERRIES, 1007,
-            Arrays.asList(
-                new Ability("§bHealing Pulse", 18, p -> {
-                    p.setHealth(Math.min(p.getHealth() + 12, p.getMaxHealth()));
-                    p.getNearbyEntities(8, 5, 8).forEach(e -> {
-                        if(e instanceof Player) {
-                            ((Player) e).setHealth(Math.min(((Player) e).getHealth() + 6, ((Player) e).getMaxHealth()));
+                    Bukkit.getScheduler().runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), () -> {
+                        for(int i = -5; i <= 5; i++) {
+                            target.clone().add(i, 0, 0).getBlock().setType(Material.AIR);
                         }
-                    });
-                    p.getWorld().spawnParticle(Particle.HEART, p.getLocation(), 80, 3, 2, 3);
-                    p.getWorld().playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.5f, 1.8f);
-                    p.sendMessage("§b💖 HEALING PULSE! §7(Heals 12 hearts)");
+                    }, 100L);
+                })
+            )));
+
+        // ==================== 8. LAVA FRUIT ====================
+        fruits.put("lava_fruit", new Fruit("lava_fruit", "§c§l🌋 Lava Fruit", Material.MAGMA_CREAM, 1008,
+            Arrays.asList(
+                new Ability("§cLava Wave", 30, p -> {
+                    Location target = p.getTargetBlock(null, 15).getLocation();
+                    for(int i = 0; i < 10; i++) {
+                        target.clone().add(i, 0, 0).getBlock().setType(Material.LAVA);
+                        target.clone().add(-i, 0, 0).getBlock().setType(Material.LAVA);
+                    }
+                    Bukkit.getScheduler().runTaskLater(com.example.fruits.FruitsPlugin.getInstance(), () -> {
+                        for(int i = -10; i <= 10; i++) {
+                            target.clone().add(i, 0, 0).getBlock().setType(Material.AIR);
+                        }
+                    }, 80L);
                 }),
-                new Ability("§bCrystal Wall", 22, p -> {
-                    p.getNearbyEntities(7, 5, 7).forEach(e -> e.setVelocity(e.getVelocity().multiply(-2)));
-                    p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation(), 100, 4, 3, 4);
-                    p.sendMessage("§b🔮 CRYSTAL WALL! §7(Pushes enemies back)");
-                }),
-                new Ability("§bLight Beam", 28, p -> {
-                    Player target = getTarget(p, 25);
-                    if(target != null) {
-                        target.damage(16, p);
-                        target.getWorld().strikeLightningEffect(target.getLocation());
-                        target.setFireTicks(60);
-                        p.sendMessage("§b✨ LIGHT BEAM on §e" + target.getName() + "§b! §7(16 damage)");
+                new Ability("§cVolcano", 45, p -> {
+                    for(int i = 0; i < 8; i++) {
+                        Location loc = p.getLocation().add(Math.random()*8-4, 0, Math.random()*8-4);
+                        p.getWorld().createExplosion(loc, 2, true, false);
+                        p.getWorld().spawnParticle(Particle.LAVA, loc, 50, 1, 1, 1);
                     }
                 })
             )));
 
-        // 8. PRIMORDIAL ESSENCE - GOD FRUIT (STRONGER ONE SHOT)
+        // ==================== 9. THUNDER FRUIT ====================
+        fruits.put("thunder_fruit", new Fruit("thunder_fruit", "§e§l⚡ Thunder Fruit", Material.LIGHTNING_ROD, 1009,
+            Arrays.asList(
+                new Ability("§eLightning Strike", 25, p -> {
+                    Location target = p.getTargetBlock(null, 30).getLocation();
+                    p.getWorld().strikeLightning(target);
+                    p.getWorld().createExplosion(target, 2, false, false);
+                }),
+                new Ability("§eThunder Storm", 50, p -> {
+                    for(int i = 0; i < 15; i++) {
+                        Location loc = p.getLocation().add(Math.random()*15-7.5, 0, Math.random()*15-7.5);
+                        p.getWorld().strikeLightning(loc);
+                    }
+                })
+            )));
+
+        // ==================== 10. PRIMORDIAL ESSENCE (GOD FRUIT) ====================
         fruits.put("primordial_essence", new Fruit("primordial_essence", "§5§l✨ Primordial Essence", 
             Material.ENCHANTED_GOLDEN_APPLE, 1010,
             Arrays.asList(
                 new Ability("§c§l💀 ONE SHOT", 110, p -> {
                     if(p.getLevel() < 30) {
-                        p.sendMessage("§c❌ Need 30 XP levels!");
-                        return;
-                    }
-                    Player target = getTarget(p, 18);
-                    if(target != null) {
-                        target.setHealth(0);
-                        p.setLevel(p.getLevel() - 30);
-                        p.getWorld().strikeLightningEffect(target.getLocation());
-                        p.getWorld().createExplosion(target.getLocation(), 3, false, false);
-                        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.5f, 0.5f);
-                        p.sendMessage("§c§l💀 ONE SHOT! Killed " + target.getName() + "!");
-                        Bukkit.broadcastMessage("§5✨ " + p.getName() + " §dused ONE SHOT on §5" + target.getName());
-                    }
-                }),
-                new Ability("§5Apocalypse", 55, p -> {
-                    for(int i=0; i<15; i++) {
-                        Location loc = p.getLocation().add(Math.random()*18-9, 0, Math.random()*18-9);
-                        p.getWorld().strikeLightning(loc);
-                        p.getWorld().createExplosion(loc, 2, false, false);
-                    }
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 2.0f, 0.6f);
-                    p.sendMessage("§5🌋 APOCALYPSE! §7(15 lightning strikes)");
-                }),
-                new Ability("§5Divine Judgment", 85, p -> {
-                    p.getNearbyEntities(20, 12, 20).forEach(e -> {
-                        e.setVelocity(e.getLocation().toVector().subtract(p.getLocation().toVector()).normalize().multiply(4));
-                        if(e instanceof Player) {
-                            ((Player) e).damage(25, p);
-                        }
-                    });
-                    p.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, p.getLocation(), 200, 4, 5, 4);
-                    p.sendMessage("§5⚖️ DIVINE JUDGMENT! §7(25 damage + knockback)");
-                })
-            )));
-    }
-
-    private Player getTarget(Player p, int range) {
-        return p.getWorld().getNearbyPlayers(p.getLocation(), range).stream()
-            .filter(e -> !e.equals(p)).findFirst().orElse(null);
-    }
-
-    public Fruit getFruit(String id) { return fruits.get(id); }
-    public Collection<Fruit> getAllFruits() { return fruits.values(); }
-                                                           }
+                        p.se
