@@ -53,21 +53,22 @@ public class Fruit {
         if (!meta.hasCustomModelData()) return null;
         
         int cmd = meta.getCustomModelData();
-        // In getFruitId() method, add these cases:
-
-switch (cmd) {
-    case 1001: return "vine_weaver";
-    case 1002: return "dragonfruit";
-    case 1003: return "starfruit";
-    case 1004: return "moonberry";
-    case 1005: return "voidberry";
-    case 1006: return "stormberry";
-    case 1007: return "frostberry";
-    case 1008: return "flameberry";
-    case 1009: return "shadowberry";
-    case 1010: return "soulberry";
-    case 1011: return "mysticberry";
-    case 1012: return "shadowweaver";  // ✅ ADD THIS
-    case 1013: return "golden_aegis";  // ✅ ADD THIS
-    default: return null;
+        switch (cmd) {
+            case 1001: return "vine_weaver";
+            case 1002: return "dragonfruit";
+            case 1003: return "starfruit";
+            case 1004: return "moonberry";
+            case 1005: return "voidberry";
+            case 1006: return "stormberry";
+            case 1007: return "frostberry";
+            case 1008: return "flameberry";
+            case 1009: return "shadowberry";
+            case 1010: return "soulberry";
+            case 1011: return "mysticberry";
+            case 1012: return "shadowweaver";
+            case 1013: return "golden_aegis";
+            case 1014: return "voidweaver";
+            default: return null;
+        }
+    }
 }
