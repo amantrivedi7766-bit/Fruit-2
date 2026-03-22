@@ -51,7 +51,6 @@ public class ConfigManager {
         }
         config = YamlConfiguration.loadConfiguration(configFile);
         
-        // Load values
         autoGiveEnabled = config.getBoolean("auto-give.enabled", false);
         autoGiveFruitId = config.getString("auto-give.fruit-id", "nature_fruit");
         autoGiveAmount = config.getInt("auto-give.amount", 1);
@@ -71,7 +70,6 @@ public class ConfigManager {
         if (!messagesFile.exists()) {
             try {
                 messagesFile.createNewFile();
-                // Add default messages
                 FileConfiguration messages = YamlConfiguration.loadConfiguration(messagesFile);
                 messages.set("prefix", "§6[Fruits] §7");
                 messages.set("no-permission", "§cYou don't have permission!");
@@ -96,7 +94,6 @@ public class ConfigManager {
         }
         dataConfig = YamlConfiguration.loadConfiguration(dataFile);
         
-        // Load reward enabled
         rewardEnabled = dataConfig.getBoolean("reward-enabled", true);
     }
     
@@ -131,6 +128,13 @@ public class ConfigManager {
     public void reload() {
         loadAllConfigs();
         plugin.getLogger().info("Configurations reloaded!");
+    }
+    
+    public void clearAllPlayerData() {
+        dataConfig.set("players", null);
+        dataConfig.set("spins", null);
+        dataConfig.set("first-join-players", null);
+        saveDataConfig();
     }
     
     // ==================== GETTERS ====================
@@ -219,7 +223,11 @@ public class ConfigManager {
     }
     
     public void setPlayerData(String playerName, String key, Object value) {
-        dataConfig.set("players." + playerName + "." + key, value);
+        if (value == null) {
+            dataConfig.set("players." + playerName + "." + key, null);
+        } else {
+            dataConfig.set("players." + playerName + "." + key, value);
+        }
         saveDataConfig();
     }
     
