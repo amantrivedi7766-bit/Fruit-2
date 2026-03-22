@@ -3,143 +3,109 @@ package com.example.fruits.listeners;
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.models.Ability;
-import com.example.fruits.abilities.NatureAbilities;
-import com.example.fruits.abilities.ThiefAbilities;
-import com.example.fruits.abilities.VampireAbilities;
-import com.example.fruits.abilities.CycloneAbilities;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.block.Action;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 public class PlayerInteractListener implements Listener {
     
-    @EventHandler
-    public void onInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        
-        if(event.getItem() == null) return;
-        String fruitId = Fruit.getFruitId(event.getItem());
-        if(fruitId == null) return;
-        
-        Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
-        if(fruit == null) return;
-        
-        Action action = event.getAction();
-        
-        // LEFT CLICK - Handle special left-click abilities
-        if((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
-            // Vine Weaver - Launch attached player
-            if(fruitId.equals("vine_weaver")) {
-                NatureAbilities.handleLaunch(player);
-                return;
-            }
-            
-            // Dracula Bites - Blood Bite while riding bat
-            if(fruitId.equals("dracula_bites") && VampireAbilities.isRidingBat(player)) {
-                VampireAbilities.bloodBite(player);
-                return;
-            }
-            
-            // Cyclone Fury - Launch blocks from block tornado
-            if(fruitId.equals("cyclone_fury") && CycloneAbilities.hasActiveBlockTornado(player)) {
-                CycloneAbilities.launchBlocks(player);
-                return;
-            }
-            return;
-        }
-        
-        // RIGHT CLICK for abilities
-        if((action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
-            event.setCancelled(true);
-            
-            // Check for stolen ability first (Shadowweaver)
-            if(ThiefAbilities.hasStolenAbility(player)) {
-                Entity target = getTargetEntity(player, 15);
-                if(ThiefAbilities.useStolenAbility(player, target)) {
-                    return;
-                }
-            }
-            
-            // FIRST ABILITY - Normal Right Click
-            if(!player.isSneaking()) {
-                if(fruit.getAbilities().size() > 0) {
-                    Entity target = getTargetEntity(player, 15);
-                    Ability ability = fruit.getAbilities().get(0);
-                    String cooldownKey = fruitId + "_0";
-                    if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
-                        ability.getExecutor().execute(player, target);
-                        FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
-                    }
-                } else {
-                    player.sendMessage("§e🍎 " + fruit.getName() + " §7- Right-click ability coming soon!");
-                }
-            } 
-            // SECOND ABILITY - Crouch + Right Click
-            else {
-                if(fruit.getAbilities().size() > 1) {
-                    Entity target = getTargetEntity(player, 20);
-                    Ability ability = fruit.getAbilities().get(1);
-                    String cooldownKey = fruitId + "_1";
-                    if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
-                        ability.getExecutor().execute(player, target);
-                        FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
-                    }
-                } else {
-                    player.sendMessage("§e🍎 " + fruit.getName() + " §7- Crouch + Right-click ability coming soon!");
-                }
-            }
-        }
+    private final FruitsPlugin plugin;
+    
+    public PlayerInteractListener(FruitsPlugin plugin) {
+        this.plugin = plugin;
     }
     
     @EventHandler
-    public void onInteractEntity(PlayerInteractEntityEvent event) {
+    public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+        ItemStack item = event.getItem();
         
-        if(event.getHand() != EquipmentSlot.HAND) return;
-        
-        ItemStack item = player.getInventory().getItemInMainHand();
         if(item == null) return;
         
         String fruitId = Fruit.getFruitId(item);
         if(fruitId == null) return;
         
-        Fruit fruit = FruitsPlugin.getInstance().getFruitRegistry().getFruit(fruitId);
+        Fruit fruit = plugin.getFruitRegistry().getFruit(fruitId);
+        if(fruit == null) return;
+        
+        Action action = event.getAction();
+        boolean isRightClick = action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK;
+        
+        if(!isRightClick) return;
+        
+        event.setCancelled(true);
+        
+        // Get target entity
+        Entity target = getTargetEntity(player, 5);
+        
+        // Use ability based on sneak
+        if(!player.isSneaking()) {
+            useAbility(player, fruit, 0, target);
+        } else {
+            useAbility(player, fruit, 1, target);
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = player.getInventory().getItemInMainHand();
+        
+        if(item == null) return;
+        
+        String fruitId = Fruit.getFruitId(item);
+        if(fruitId == null) return;
+        
+        Fruit fruit = plugin.getFruitRegistry().getFruit(fruitId);
         if(fruit == null) return;
         
         event.setCancelled(true);
         
-        // Check for stolen ability first
-        if(ThiefAbilities.hasStolenAbility(player)) {
-            if(ThiefAbilities.useStolenAbility(player, event.getRightClicked())) {
-                return;
-            }
+        // Use ability based on sneak
+        if(!player.isSneaking()) {
+            useAbility(player, fruit, 0, event.getRightClicked());
+        } else {
+            useAbility(player, fruit, 1, event.getRightClicked());
+        }
+    }
+    
+    private void useAbility(Player player, Fruit fruit, int index, Entity target) {
+        if(index < 0 || index >= fruit.getAbilities().size()) {
+            player.sendMessage("§cInvalid ability!");
+            return;
         }
         
-        // Normal fruit ability on entity click
-        if(!player.isSneaking()) {
-            if(fruit.getAbilities().size() > 0) {
-                Ability ability = fruit.getAbilities().get(0);
-                String cooldownKey = fruitId + "_0";
-                if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
-                    ability.getExecutor().execute(player, event.getRightClicked());
-                    FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
-                }
-            }
+        Ability ability = fruit.getAbilities().get(index);
+        String cooldownKey = fruit.getId() + "_" + index;
+        
+        // Check cooldown
+        if(plugin.getCooldownManager().hasCooldown(player, cooldownKey)) {
+            long remaining = plugin.getCooldownManager().getRemaining(player, cooldownKey);
+            player.sendMessage("§cAbility on cooldown! §7" + remaining + " seconds remaining");
+            return;
+        }
+        
+        // Execute ability
+        ability.getExecutor().execute(player, target);
+        
+        // Set cooldown
+        plugin.getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
+        
+        // Play effect
+        player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
+        
+        // Send message
+        if(target != null) {
+            String targetName = target instanceof Player ? ((Player) target).getName() : target.getType().name().toLowerCase();
+            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a!");
         } else {
-            if(fruit.getAbilities().size() > 1) {
-                Ability ability = fruit.getAbilities().get(1);
-                String cooldownKey = fruitId + "_1";
-                if(FruitsPlugin.getInstance().getCooldownManager().checkCooldown(player, cooldownKey)) {
-                    ability.getExecutor().execute(player, event.getRightClicked());
-                    FruitsPlugin.getInstance().getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
-                }
-            }
+            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a!");
         }
     }
     
@@ -147,11 +113,10 @@ public class PlayerInteractListener implements Listener {
         return player.getWorld().getNearbyEntities(player.getEyeLocation(), range, range, range)
             .stream()
             .filter(e -> e != player && e.getLocation().distance(player.getEyeLocation()) <= range)
-            .min((e1, e2) -> {
-                double d1 = e1.getLocation().distance(player.getEyeLocation());
-                double d2 = e2.getLocation().distance(player.getEyeLocation());
-                return Double.compare(d1, d2);
-            })
+            .min((e1, e2) -> Double.compare(
+                e1.getLocation().distance(player.getEyeLocation()),
+                e2.getLocation().distance(player.getEyeLocation())
+            ))
             .orElse(null);
     }
 }
