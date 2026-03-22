@@ -1,57 +1,61 @@
-package com.example.fruits.manager;
+package com.example.fruits.utils;
 
 import org.bukkit.entity.Player;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+
+import java.util.*;
 
 public class CooldownManager {
+    
     private final Map<UUID, Map<String, Long>> cooldowns = new HashMap<>();
     
-    public boolean checkCooldown(Player player, String abilityId) {
-        if(!cooldowns.containsKey(player.getUniqueId())) {
-            return true;
-        }
-        
+    public boolean hasCooldown(Player player, String key) {
         Map<String, Long> playerCooldowns = cooldowns.get(player.getUniqueId());
-        if(!playerCooldowns.containsKey(abilityId)) {
-            return true;
-        }
+        if(playerCooldowns == null) return false;
         
-        long remaining = playerCooldowns.get(abilityId) - System.currentTimeMillis();
-        if(remaining <= 0) {
-            playerCooldowns.remove(abilityId);
-            return true;
-        }
+        Long expiry = playerCooldowns.get(key);
+        if(expiry == null) return false;
         
-        player.sendMessage("§c⏰ This ability is on cooldown for " + (remaining / 1000) + " seconds!");
-        return false;
+        return System.currentTimeMillis() < expiry;
     }
     
-    public void setCooldown(Player player, String abilityId, int cooldownSeconds, String abilityName) {
-        long expiry = System.currentTimeMillis() + (cooldownSeconds * 1000L);
-        
-        cooldowns.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
-                 .put(abilityId, expiry);
-        
-        player.sendMessage("§e⏰ " + abilityName + " §7is now on cooldown for §e" + cooldownSeconds + " §7seconds!");
-    }
-    
-    public long getRemainingCooldown(Player player, String abilityId) {
-        if(!cooldowns.containsKey(player.getUniqueId())) {
-            return 0;
-        }
-        
+    public long getRemaining(Player player, String key) {
         Map<String, Long> playerCooldowns = cooldowns.get(player.getUniqueId());
-        if(!playerCooldowns.containsKey(abilityId)) {
-            return 0;
-        }
+        if(playerCooldowns == null) return 0;
         
-        long remaining = playerCooldowns.get(abilityId) - System.currentTimeMillis();
+        Long expiry = playerCooldowns.get(key);
+        if(expiry == null) return 0;
+        
+        long remaining = (expiry - System.currentTimeMillis()) / 1000;
         return Math.max(0, remaining);
     }
     
-    public void clearCooldowns(Player player) {
+    public void setCooldown(Player player, String key, int seconds, String abilityName) {
+        cooldowns.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>())
+                .put(key, System.currentTimeMillis() + (seconds * 1000L));
+    }
+    
+    public Map<String, Long> getPlayerCooldowns(Player player) {
+        Map<String, Long> playerCooldowns = cooldowns.get(player.getUniqueId());
+        if(playerCooldowns == null) return new HashMap<>();
+        
+        Map<String, Long> active = new HashMap<>();
+        long now = System.currentTimeMillis();
+        for(Map.Entry<String, Long> entry : playerCooldowns.entrySet()) {
+            if(entry.getValue() > now) {
+                active.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return active;
+    }
+    
+    public void clearCooldown(Player player, String key) {
+        Map<String, Long> playerCooldowns = cooldowns.get(player.getUniqueId());
+        if(playerCooldowns != null) {
+            playerCooldowns.remove(key);
+        }
+    }
+    
+    public void clearAllCooldowns(Player player) {
         cooldowns.remove(player.getUniqueId());
     }
 }
