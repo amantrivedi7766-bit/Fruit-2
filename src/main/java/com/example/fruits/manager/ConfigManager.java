@@ -31,6 +31,7 @@ public class ConfigManager {
     private int stealCooldown;
     private int maxSpinsPerDay;
     private boolean debugMode;
+    private boolean rewardEnabled;
     
     public ConfigManager(FruitsPlugin plugin) {
         this.plugin = plugin;
@@ -52,11 +53,11 @@ public class ConfigManager {
         
         // Load values
         autoGiveEnabled = config.getBoolean("auto-give.enabled", false);
-        autoGiveFruitId = config.getString("auto-give.fruit-id", "nature_dye");
+        autoGiveFruitId = config.getString("auto-give.fruit-id", "nature_fruit");
         autoGiveAmount = config.getInt("auto-give.amount", 1);
         
         joinFruitEnabled = config.getBoolean("join-fruit.enabled", true);
-        joinFruitId = config.getString("join-fruit.id", "nature_dye");
+        joinFruitId = config.getString("join-fruit.id", "nature_fruit");
         joinFruitAmount = config.getInt("join-fruit.amount", 1);
         
         spinCooldown = config.getInt("spin-wheel.cooldown", 60);
@@ -68,7 +69,11 @@ public class ConfigManager {
     private void loadMessagesConfig() {
         messagesFile = new File(plugin.getDataFolder(), "messages.yml");
         if (!messagesFile.exists()) {
-            plugin.saveResource("messages.yml", false);
+            try {
+                messagesFile.createNewFile();
+            } catch (IOException e) {
+                plugin.getLogger().warning("Could not create messages.yml: " + e.getMessage());
+            }
         }
         messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
     }
@@ -83,6 +88,9 @@ public class ConfigManager {
             }
         }
         dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+        
+        // Load reward enabled
+        rewardEnabled = dataConfig.getBoolean("reward-enabled", true);
     }
     
     public void saveMainConfig() {
@@ -105,6 +113,7 @@ public class ConfigManager {
     }
     
     public void saveDataConfig() {
+        dataConfig.set("reward-enabled", rewardEnabled);
         try {
             dataConfig.save(dataFile);
         } catch (IOException e) {
@@ -131,6 +140,8 @@ public class ConfigManager {
     public int getStealCooldown() { return stealCooldown; }
     public int getMaxSpinsPerDay() { return maxSpinsPerDay; }
     public boolean isDebugMode() { return debugMode; }
+    
+    public boolean isRewardEnabled() { return rewardEnabled; }
     
     public FileConfiguration getMessages() { return messagesConfig; }
     public FileConfiguration getData() { return dataConfig; }
@@ -165,6 +176,11 @@ public class ConfigManager {
     public void setJoinFruitAmount(int amount) {
         this.joinFruitAmount = amount;
         saveMainConfig();
+    }
+    
+    public void setRewardEnabled(boolean enabled) {
+        this.rewardEnabled = enabled;
+        saveDataConfig();
     }
     
     // ==================== DATA MANAGEMENT ====================
