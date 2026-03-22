@@ -143,6 +143,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         Player player = event.getPlayer();
         playerManager.savePlayerStats(player);
         playerManager.removeActivePlayer(player);
+        playerManager.clearPlayerFruitCache(player);
     }
     
     // ==================== RESET METHODS ====================
@@ -185,6 +186,10 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     public SpinManager getSpinManager() { return spinManager; }
     public PlayerManager getPlayerManager() { return playerManager; }
     public GracePeriodManager getGracePeriodManager() { return gracePeriodManager; }
+    
+    public Set<Player> getActivePlayers() {
+        return new HashSet<>(Bukkit.getOnlinePlayers());
+    }
     
     public boolean isAutoGiveEnabled() { return configManager.isAutoGiveEnabled(); }
     public String getAutoGiveFruit() { return configManager.getAutoGiveFruitId(); }
