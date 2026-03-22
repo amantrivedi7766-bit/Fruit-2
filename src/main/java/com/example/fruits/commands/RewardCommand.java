@@ -1,7 +1,7 @@
 package com.example.fruits.commands;
 
 import com.example.fruits.FruitsPlugin;
-import org.bukkit.ChatColor;
+import com.example.fruits.managers.ConfigManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -9,56 +9,69 @@ import org.bukkit.entity.Player;
 
 public class RewardCommand implements CommandExecutor {
     
+    private final FruitsPlugin plugin;
+    
+    public RewardCommand(FruitsPlugin plugin) {
+        this.plugin = plugin;
+    }
+    
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(!sender.hasPermission("fruits.admin")) {
-            sender.sendMessage(ChatColor.RED + "❌ You don't have permission!");
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        
+        if (!sender.hasPermission("fruit.admin") && !sender.isOp()) {
+            sender.sendMessage("§cYou don't have permission!");
             return true;
         }
         
-        if(args.length == 0) {
+        ConfigManager configManager = plugin.getConfigManager();
+        
+        if (args.length == 0) {
             sendHelp(sender);
             return true;
         }
         
-        if(args[0].equalsIgnoreCase("toggle")) {
-            boolean current = FruitsPlugin.getInstance().getConfigManager().isRewardEnabled();
-            FruitsPlugin.getInstance().getConfigManager().setRewardEnabled(!current);
-            
-            String status = !current ? "§aENABLED" : "§cDISABLED";
-            sender.sendMessage("§e=================================");
-            sender.sendMessage("§6⚙️ Join Reward System: " + status);
-            sender.sendMessage("§7New players will " + (!current ? "now" : "no longer") + " receive a fruit on join!");
-            sender.sendMessage("§e=================================");
-        } 
-        else if(args[0].equalsIgnoreCase("status")) {
-            boolean enabled = FruitsPlugin.getInstance().getConfigManager().isRewardEnabled();
-            sender.sendMessage("§e=================================");
-            sender.sendMessage("§6⚙️ Join Reward Status: " + (enabled ? "§aENABLED" : "§cDISABLED"));
-            sender.sendMessage("§e=================================");
-        }
-        else if(args[0].equalsIgnoreCase("reload")) {
-            FruitsPlugin.getInstance().getConfigManager().reloadConfig();
-            sender.sendMessage("§a✅ Config reloaded!");
-        }
-        else if(args[0].equalsIgnoreCase("test") && sender instanceof Player) {
-            Player player = (Player) sender;
-            FruitsPlugin.getInstance().getSpinManager().startSpin(player);
-            sender.sendMessage("§a🎲 Test spin started!");
-        }
-        else {
-            sendHelp(sender);
+        String subCmd = args[0].toLowerCase();
+        
+        switch (subCmd) {
+            case "toggle":
+                boolean enabled = !configManager.isRewardEnabled();
+                configManager.setRewardEnabled(enabled);
+                sender.sendMessage((enabled ? "§a✓" : "§c✗") + " Rewards " + (enabled ? "enabled" : "disabled"));
+                break;
+                
+            case "status":
+                sender.sendMessage("§6=== Reward Status ===");
+                sender.sendMessage("§7Enabled: " + (configManager.isRewardEnabled() ? "§aYes" : "§cNo"));
+                sender.sendMessage("§7Spin Cooldown: §e" + configManager.getSpinCooldown() + "s");
+                sender.sendMessage("§7Max Spins/Day: §e" + configManager.getMaxSpinsPerDay());
+                break;
+                
+            case "reload":
+                configManager.reload();
+                sender.sendMessage("§a✓ Reward config reloaded!");
+                break;
+                
+            case "test":
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    plugin.getSpinManager().startSpin(player, 1);
+                    sender.sendMessage("§a✓ Test spin started!");
+                }
+                break;
+                
+            default:
+                sendHelp(sender);
+                break;
         }
         
         return true;
     }
     
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage("§6§l========== [FRUIT REWARD HELP] ==========");
-        sender.sendMessage("§e/freward toggle §7- Toggle join reward on/off");
-        sender.sendMessage("§e/freward status §7- Check reward status");
-        sender.sendMessage("§e/freward reload §7- Reload config");
-        sender.sendMessage("§e/freward test §7- Test spin animation");
-        sender.sendMessage("§6§l========================================");
+        sender.sendMessage("§6=== Reward Commands ===");
+        sender.sendMessage("§e/reward toggle §7- Toggle rewards on/off");
+        sender.sendMessage("§e/reward status §7- View reward status");
+        sender.sendMessage("§e/reward reload §7- Reload reward config");
+        sender.sendMessage("§e/reward test §7- Test reward system");
     }
 }
