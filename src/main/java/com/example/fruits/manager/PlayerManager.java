@@ -32,7 +32,6 @@ public class PlayerManager {
             playerStats.put(uuid, new PlayerStats(player.getName()));
         }
         
-        // Load player's held fruit
         updatePlayerFruit(player);
     }
     
@@ -93,19 +92,26 @@ public class PlayerManager {
     }
     
     /**
+     * Clear all stats for a player
+     */
+    public void clearPlayerStats(Player player) {
+        UUID uuid = player.getUniqueId();
+        playerStats.remove(uuid);
+        playerFruits.remove(uuid);
+        plugin.getConfigManager().setPlayerData(player.getName(), "stats", null);
+    }
+    
+    /**
      * Get the fruit ID of the fruit the player is holding
      */
     public String getPlayerFruit(Player player) {
         UUID uuid = player.getUniqueId();
         
-        // Check cached value first
         if (playerFruits.containsKey(uuid)) {
             return playerFruits.get(uuid);
         }
         
-        // Otherwise get from inventory
-        String fruitId = updatePlayerFruit(player);
-        return fruitId;
+        return updatePlayerFruit(player);
     }
     
     /**
@@ -121,7 +127,6 @@ public class PlayerManager {
             }
         }
         
-        // Check off-hand
         item = player.getInventory().getItemInOffHand();
         if (item != null && !item.getType().isAir()) {
             String fruitId = Fruit.getFruitId(item);
@@ -181,7 +186,7 @@ public class PlayerManager {
             @Override
             public void run() {
                 long now = System.currentTimeMillis();
-                long inactiveThreshold = 300000; // 5 minutes
+                long inactiveThreshold = 300000;
                 
                 for (UUID uuid : new ArrayList<>(activePlayers)) {
                     Long lastActive = lastActiveTime.get(uuid);
