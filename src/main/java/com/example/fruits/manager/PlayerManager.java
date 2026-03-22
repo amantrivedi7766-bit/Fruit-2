@@ -116,7 +116,7 @@ public class PlayerManager {
             @Override
             public void run() {
                 long now = System.currentTimeMillis();
-                long inactiveThreshold = 300000; // 5 minutes
+                long inactiveThreshold = 300000;
                 
                 for (UUID uuid : new ArrayList<>(activePlayers)) {
                     Long lastActive = lastActiveTime.get(uuid);
@@ -129,7 +129,7 @@ public class PlayerManager {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 6000L, 6000L); // Every 5 minutes
+        }.runTaskTimer(plugin, 6000L, 6000L);
     }
     
     public static class PlayerStats {
