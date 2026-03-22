@@ -70,7 +70,9 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     public void onDisable() {
         // Save all player data
         for (Player player : Bukkit.getOnlinePlayers()) {
-            playerManager.savePlayerStats(player);
+            if (playerManager != null) {
+                playerManager.savePlayerStats(player);
+            }
         }
         saveFirstJoinData();
         saveSettings();
@@ -79,7 +81,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     }
     
     private void loadFirstJoinData() {
-        if (configManager.getData().contains("first-join-players")) {
+        if (configManager != null && configManager.getData().contains("first-join-players")) {
             List<String> uuids = configManager.getData().getStringList("first-join-players");
             for (String uuid : uuids) {
                 try {
@@ -93,6 +95,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     }
     
     private void saveFirstJoinData() {
+        if (configManager == null) return;
         List<String> uuids = new ArrayList<>();
         for (UUID uuid : firstJoinPlayers) {
             uuids.add(uuid.toString());
@@ -102,11 +105,13 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     }
     
     private void loadSettings() {
+        if (configManager == null) return;
         firstJoinSpinEnabled = configManager.getData().getBoolean("first-join-spin.enabled", true);
         firstJoinSpinCount = configManager.getData().getInt("first-join-spin.count", 1);
     }
     
     private void saveSettings() {
+        if (configManager == null) return;
         configManager.getData().set("first-join-spin.enabled", firstJoinSpinEnabled);
         configManager.getData().set("first-join-spin.count", firstJoinSpinCount);
         configManager.saveDataConfig();
@@ -118,8 +123,10 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         UUID uuid = player.getUniqueId();
         
         // Add to active players
-        playerManager.addActivePlayer(player);
-        playerManager.loadPlayerStats(player);
+        if (playerManager != null) {
+            playerManager.addActivePlayer(player);
+            playerManager.loadPlayerStats(player);
+        }
         
         // Check first join
         boolean isFirstJoin = !firstJoinPlayers.contains(uuid);
@@ -129,7 +136,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
             saveFirstJoinData();
             
             // Give join fruit if enabled
-            if (configManager.isJoinFruitEnabled()) {
+            if (configManager != null && configManager.isJoinFruitEnabled()) {
                 Fruit fruit = fruitRegistry.getFruit(configManager.getJoinFruitId());
                 if (fruit != null) {
                     player.getInventory().addItem(fruit.createItemStack(configManager.getJoinFruitAmount()));
@@ -157,7 +164,9 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
                             spinWheel.startSpin();
                             
                             // Add to spin stats
-                            spinManager.incrementTotalSpins(player);
+                            if (spinManager != null) {
+                                spinManager.incrementTotalSpins(player);
+                            }
                         }
                     }
                 }, 40L); // 2 seconds delay
@@ -165,7 +174,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         }
         
         // Auto give for all joins
-        if (configManager.isAutoGiveEnabled()) {
+        if (configManager != null && configManager.isAutoGiveEnabled()) {
             Fruit fruit = fruitRegistry.getFruit(configManager.getAutoGiveFruitId());
             if (fruit != null) {
                 player.getInventory().addItem(fruit.createItemStack(configManager.getAutoGiveAmount()));
@@ -175,9 +184,11 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         }
         
         // Start join protection
-        gracePeriodManager.startProtectionOnJoin(player);
+        if (gracePeriodManager != null) {
+            gracePeriodManager.startProtectionOnJoin(player);
+        }
         
-        if (configManager.isDebugMode()) {
+        if (configManager != null && configManager.isDebugMode()) {
             getLogger().info(player.getName() + " joined. First join: " + isFirstJoin);
         }
     }
@@ -185,15 +196,17 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        playerManager.savePlayerStats(player);
-        playerManager.removeActivePlayer(player);
-        playerManager.clearPlayerFruitCache(player);
+        if (playerManager != null) {
+            playerManager.savePlayerStats(player);
+            playerManager.removeActivePlayer(player);
+            playerManager.clearPlayerFruitCache(player);
+        }
     }
     
     // ==================== RESET METHODS ====================
     
     /**
-     * Reset player's first join data (they will get join fruit and spin again)
+     * Reset player's first join data (they will get join fruit again)
      */
     public boolean resetPlayerFirstJoin(String playerName) {
         Player player = Bukkit.getPlayer(playerName);
@@ -218,6 +231,17 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     }
     
     /**
+     * Reset ALL players' first join data
+     */
+    public int resetAllFirstJoin() {
+        int count = firstJoinPlayers.size();
+        firstJoinPlayers.clear();
+        saveFirstJoinData();
+        getLogger().info("Reset first join data for " + count + " players");
+        return count;
+    }
+    
+    /**
      * Reset ALL player data (first join, stats, cooldowns, etc.)
      */
     public int resetAllPlayerData() {
@@ -229,15 +253,21 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         
         // Clear all player stats
         for (Player player : Bukkit.getOnlinePlayers()) {
-            playerManager.clearPlayerStats(player);
-            spinManager.clearPlayerSpinData(player);
-            cooldownManager.clearAllCooldowns(player);
+            if (playerManager != null) {
+                playerManager.clearPlayerStats(player);
+            }
+            if (spinManager != null) {
+                spinManager.clearPlayerSpinData(player);
+            }
+            if (cooldownManager != null) {
+                cooldownManager.clearAllCooldowns(player);
+            }
         }
         
         // Clear all stored data in config
-        configManager.getData().set("players", null);
-        configManager.getData().set("spins", null);
-        configManager.saveDataConfig();
+        if (configManager != null) {
+            configManager.clearAllPlayerData();
+        }
         
         getLogger().info("Reset all player data for " + count + " players");
         return count;
@@ -266,15 +296,22 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
             
             // Reset stats
             if (player != null) {
-                playerManager.clearPlayerStats(player);
-                spinManager.clearPlayerSpinData(player);
-                cooldownManager.clearAllCooldowns(player);
+                if (playerManager != null) {
+                    playerManager.clearPlayerStats(player);
+                }
+                if (spinManager != null) {
+                    spinManager.clearPlayerSpinData(player);
+                }
+                if (cooldownManager != null) {
+                    cooldownManager.clearAllCooldowns(player);
+                }
             }
             
             // Clear stored data in config
-            configManager.getData().set("players." + playerName, null);
-            configManager.getData().set("spins." + playerName, null);
-            configManager.saveDataConfig();
+            if (configManager != null) {
+                configManager.setPlayerData(playerName, "stats", null);
+                configManager.setPlayerSpinCount(playerName, 0);
+            }
             
             return true;
         }
@@ -322,13 +359,32 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         return new HashSet<>(Bukkit.getOnlinePlayers());
     }
     
-    public boolean isAutoGiveEnabled() { return configManager.isAutoGiveEnabled(); }
-    public String getAutoGiveFruit() { return configManager.getAutoGiveFruitId(); }
-    public int getAutoGiveAmount() { return configManager.getAutoGiveAmount(); }
-    public boolean isJoinFruitEnabled() { return configManager.isJoinFruitEnabled(); }
-    public String getJoinFruit() { return configManager.getJoinFruitId(); }
-    public int getJoinFruitAmount() { return configManager.getJoinFruitAmount(); }
+    public boolean isAutoGiveEnabled() { 
+        return configManager != null && configManager.isAutoGiveEnabled(); 
+    }
+    
+    public String getAutoGiveFruit() { 
+        return configManager != null ? configManager.getAutoGiveFruitId() : "nature_fruit"; 
+    }
+    
+    public int getAutoGiveAmount() { 
+        return configManager != null ? configManager.getAutoGiveAmount() : 1; 
+    }
+    
+    public boolean isJoinFruitEnabled() { 
+        return configManager != null && configManager.isJoinFruitEnabled(); 
+    }
+    
+    public String getJoinFruit() { 
+        return configManager != null ? configManager.getJoinFruitId() : "nature_fruit"; 
+    }
+    
+    public int getJoinFruitAmount() { 
+        return configManager != null ? configManager.getJoinFruitAmount() : 1; 
+    }
+    
     public String getJoinFruitName() {
+        if (configManager == null) return "Nature Fruit";
         Fruit fruit = fruitRegistry.getFruit(configManager.getJoinFruitId());
         return fruit != null ? fruit.getName() : configManager.getJoinFruitId();
     }
@@ -336,6 +392,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     // ==================== SETTER METHODS ====================
     
     public void setAutoGive(boolean enabled, String fruitId, int amount) {
+        if (configManager == null) return;
         configManager.setAutoGiveEnabled(enabled);
         if (fruitId != null) {
             configManager.setAutoGiveFruitId(fruitId);
@@ -344,16 +401,19 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     }
     
     public boolean toggleAutoGive() {
+        if (configManager == null) return false;
         configManager.setAutoGiveEnabled(!configManager.isAutoGiveEnabled());
         return configManager.isAutoGiveEnabled();
     }
     
     public void setJoinFruit(String fruitId, int amount) {
+        if (configManager == null) return;
         configManager.setJoinFruitId(fruitId);
         configManager.setJoinFruitAmount(amount);
     }
     
     public boolean toggleJoinFruit() {
+        if (configManager == null) return false;
         configManager.setJoinFruitEnabled(!configManager.isJoinFruitEnabled());
         return configManager.isJoinFruitEnabled();
     }
@@ -361,7 +421,9 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     @Override
     public void reloadConfig() {
         super.reloadConfig();
-        configManager.reload();
+        if (configManager != null) {
+            configManager.reload();
+        }
         loadSettings();
     }
 }
