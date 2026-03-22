@@ -4,9 +4,8 @@ import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.models.Ability;
 import com.example.fruits.gui.FruitGUI;
-import com.example.fruits.gui.AdminMenu;
+import com.example.fruits.gui.AdminGUI;
 import com.example.fruits.utils.CinematicSpinWheel;
-import com.example.fruits.utils.SpinWheel;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -111,6 +110,10 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         else if(subCmd.equals("reload")) {
             return handleReload(sender);
         }
+        else if(subCmd.equals("help")) {
+            sendHelp(sender);
+            return true;
+        }
         
         else {
             sender.sendMessage("§cUnknown subcommand! Use /fruit help");
@@ -140,17 +143,20 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         Player player = (Player) sender;
         
+        // Check permission
         if(!player.hasPermission("fruit.spin") && !player.isOp()) {
             player.sendMessage("§cYou don't have permission to spin!");
             return true;
         }
         
+        // Check cooldown
         if(plugin.getCooldownManager().hasCooldown(player, "spin")) {
             long remaining = plugin.getCooldownManager().getRemaining(player, "spin");
             player.sendMessage("§cSpin on cooldown! §7" + remaining + " seconds remaining");
             return true;
         }
         
+        // Get spin count (max 5)
         int spins = 1;
         if(args.length >= 2) {
             try {
@@ -162,10 +168,12 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             }
         }
         
+        // Start cinematic spin
         player.sendMessage("§a✨ Starting cinematic spin! Get ready! ✨");
         CinematicSpinWheel spinWheel = new CinematicSpinWheel(plugin, player);
         spinWheel.startSpin();
         
+        // Set cooldown (60 seconds)
         plugin.getCooldownManager().setCooldown(player, "spin", 60, "Spin");
         
         return true;
@@ -197,9 +205,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         player.sendMessage("§aOpening trade with §e" + target.getName() + "§a...");
         target.sendMessage("§e" + player.getName() + " §awants to trade with you!");
-        
-        // TODO: Implement trade GUI
-        player.sendMessage("§cTrade system coming soon!");
+        player.sendMessage("§cTrade system coming soon! Use /fruit steal for now.");
         
         return true;
     }
@@ -228,12 +234,14 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
+        // Check cooldown
         if(plugin.getCooldownManager().hasCooldown(thief, "steal")) {
             long remaining = plugin.getCooldownManager().getRemaining(thief, "steal");
             thief.sendMessage("§cSteal on cooldown! §7" + remaining + "s remaining");
             return true;
         }
         
+        // Find fruits to steal
         List<ItemStack> fruits = new ArrayList<>();
         for(ItemStack item : victim.getInventory().getContents()) {
             if(item != null && Fruit.getFruitId(item) != null) {
@@ -246,6 +254,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
+        // Steal random fruit
         Random random = new Random();
         ItemStack stolen = fruits.get(random.nextInt(fruits.size()));
         int amount = Math.min(stolen.getAmount(), random.nextInt(3) + 1);
@@ -256,8 +265,10 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         thief.getInventory().addItem(stolenStack);
         
+        // Set cooldown
         plugin.getCooldownManager().setCooldown(thief, "steal", 60, "Steal");
         
+        // Effects
         thief.getWorld().playSound(thief.getLocation(), org.bukkit.Sound.ENTITY_ILLUSIONER_MIRROR_MOVE, 1.0f, 1.5f);
         victim.getWorld().playSound(victim.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_HURT, 1.0f, 0.5f);
         
@@ -288,6 +299,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
     private boolean handleInfo(CommandSender sender, String[] args) {
         if(args.length < 2) {
             sender.sendMessage("§cUsage: /fruit info <fruit_id>");
+            sender.sendMessage("§7Use /fruit list to see all fruit IDs");
             return true;
         }
         
@@ -304,7 +316,6 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§6║ §e" + fruit.getName() + " §6║");
         sender.sendMessage("§6╚══════════════════════════════════╝");
         sender.sendMessage(" §7ID: §f" + fruit.getId());
-        sender.sendMessage(" §7Material: §f" + fruit.getMaterial().name());
         sender.sendMessage(" §7Abilities:");
         
         List<Ability> abilities = fruit.getAbilities();
@@ -451,7 +462,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         }
         
         Player admin = (Player) sender;
-        new AdminMenu(plugin).open(admin);
+        new AdminGUI(plugin).openMainMenu(admin);
         return true;
     }
     
@@ -460,6 +471,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         if(args.length < 3) {
             sender.sendMessage("§cUsage: /fruit give <player> <fruit_id> [amount]");
+            sender.sendMessage("§7Use /fruit list to see all fruit IDs");
             return true;
         }
         
@@ -523,6 +535,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         if(args.length >= 4) {
             try {
                 amount = Integer.parseInt(args[3]);
+                if(amount < 1) amount = 1;
             } catch(NumberFormatException e) {
                 sender.sendMessage("§cInvalid amount! Removing 1.");
             }
@@ -573,6 +586,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         if(args.length >= 3) {
             try {
                 amount = Integer.parseInt(args[2]);
+                if(amount < 1) amount = 1;
             } catch(NumberFormatException e) {
                 sender.sendMessage("§cInvalid amount! Using 1.");
             }
@@ -658,10 +672,10 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage("§cPlayer not found!");
                 return true;
             }
-            SpinWheel.stopSpin(target);
+            plugin.getSpinManager().stopSpin(target);
             sender.sendMessage("§a✓ Stopped spin for §e" + target.getName());
         } else {
-            SpinWheel.stopAllSpins();
+            plugin.getSpinManager().stopAllSpins();
             sender.sendMessage("§a✓ Stopped all active spins!");
         }
         
@@ -681,12 +695,12 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         }
         
         if(args[1].equalsIgnoreCase("on")) {
-            String fruitId = args.length >= 3 ? args[2] : "nature_dye";
+            String fruitId = args.length >= 3 ? args[2] : "nature_fruit";
             int amount = args.length >= 4 ? Integer.parseInt(args[3]) : 1;
             
             Fruit fruit = plugin.getFruitRegistry().getFruit(fruitId);
             if(fruit == null) {
-                sender.sendMessage("§cInvalid fruit!");
+                sender.sendMessage("§cInvalid fruit! Use /fruit list");
                 return true;
             }
             
@@ -734,15 +748,12 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         return true;
     }
     
-    // ==================== RESET COMMAND HANDLERS ====================
-    
     private boolean handleReset(CommandSender sender, String[] args) {
         if(!hasPermission(sender, "fruit.reset", true)) return true;
         
         if(args.length < 2) {
             sender.sendMessage("§cUsage: /fruit reset <player>");
             sender.sendMessage("§7Resets first join data for a player");
-            sender.sendMessage("§7They will receive join fruit again on next login");
             return true;
         }
         
@@ -770,7 +781,6 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         if(args.length >= 2 && args[1].equalsIgnoreCase("confirm")) {
             int count = plugin.resetAllFirstJoin();
-            
             sender.sendMessage("§a✓ Reset first join data for §e" + count + "§a players!");
             sender.sendMessage("§7All players will receive join fruit on next login!");
             
@@ -791,6 +801,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         if(!hasPermission(sender, "fruit.reload", true)) return true;
         
         plugin.reloadConfig();
+        plugin.getConfigManager().reload();
         sender.sendMessage("§a✓ Plugin reloaded successfully!");
         
         return true;
@@ -856,7 +867,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         if(args.length == 1) {
             List<String> cmds = new ArrayList<>(Arrays.asList(
-                "gui", "spin", "trade", "steal", "list", "info", "cooldown", "stats", "top"
+                "gui", "spin", "trade", "steal", "list", "info", "cooldown", "stats", "top", "help"
             ));
             
             if(sender.hasPermission("fruit.admin") || sender.isOp()) {
