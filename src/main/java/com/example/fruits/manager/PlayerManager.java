@@ -16,6 +16,7 @@ public class PlayerManager {
     private final Set<UUID> activePlayers = ConcurrentHashMap.newKeySet();
     private final Map<UUID, PlayerStats> playerStats = new HashMap<>();
     private final Map<UUID, Long> lastActiveTime = new HashMap<>();
+    private final Map<UUID, String> playerFruits = new HashMap<>();
     
     public PlayerManager(FruitsPlugin plugin) {
         this.plugin = plugin;
@@ -30,6 +31,9 @@ public class PlayerManager {
         if (!playerStats.containsKey(uuid)) {
             playerStats.put(uuid, new PlayerStats(player.getName()));
         }
+        
+        // Load player's held fruit
+        updatePlayerFruit(player);
     }
     
     public void removeActivePlayer(Player player) {
@@ -88,6 +92,67 @@ public class PlayerManager {
         }
     }
     
+    /**
+     * Get the fruit ID of the fruit the player is holding
+     */
+    public String getPlayerFruit(Player player) {
+        UUID uuid = player.getUniqueId();
+        
+        // Check cached value first
+        if (playerFruits.containsKey(uuid)) {
+            return playerFruits.get(uuid);
+        }
+        
+        // Otherwise get from inventory
+        String fruitId = updatePlayerFruit(player);
+        return fruitId;
+    }
+    
+    /**
+     * Update the player's held fruit in cache
+     */
+    public String updatePlayerFruit(Player player) {
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item != null && !item.getType().isAir()) {
+            String fruitId = Fruit.getFruitId(item);
+            if (fruitId != null) {
+                playerFruits.put(player.getUniqueId(), fruitId);
+                return fruitId;
+            }
+        }
+        
+        // Check off-hand
+        item = player.getInventory().getItemInOffHand();
+        if (item != null && !item.getType().isAir()) {
+            String fruitId = Fruit.getFruitId(item);
+            if (fruitId != null) {
+                playerFruits.put(player.getUniqueId(), fruitId);
+                return fruitId;
+            }
+        }
+        
+        playerFruits.remove(player.getUniqueId());
+        return null;
+    }
+    
+    /**
+     * Set a fruit for the player (puts in main hand)
+     */
+    public void setPlayerFruit(Player player, String fruitId) {
+        Fruit fruit = plugin.getFruitRegistry().getFruit(fruitId);
+        if (fruit != null) {
+            player.getInventory().setItemInMainHand(fruit.createItemStack(1));
+            playerFruits.put(player.getUniqueId(), fruitId);
+        }
+    }
+    
+    /**
+     * Clear player's held fruit cache
+     */
+    public void clearPlayerFruitCache(Player player) {
+        playerFruits.remove(player.getUniqueId());
+    }
+    
     public int getTotalFruits(Player player) {
         int total = 0;
         for (ItemStack item : player.getInventory().getContents()) {
@@ -116,7 +181,7 @@ public class PlayerManager {
             @Override
             public void run() {
                 long now = System.currentTimeMillis();
-                long inactiveThreshold = 300000;
+                long inactiveThreshold = 300000; // 5 minutes
                 
                 for (UUID uuid : new ArrayList<>(activePlayers)) {
                     Long lastActive = lastActiveTime.get(uuid);
@@ -126,11 +191,14 @@ public class PlayerManager {
                             savePlayerStats(player);
                         }
                         activePlayers.remove(uuid);
+                        playerFruits.remove(uuid);
                     }
                 }
             }
         }.runTaskTimer(plugin, 6000L, 6000L);
     }
+    
+    // ==================== INNER CLASS ====================
     
     public static class PlayerStats {
         private String playerName;
@@ -176,12 +244,12 @@ public class PlayerManager {
         @SuppressWarnings("unchecked")
         public static PlayerStats deserialize(Map<String, Object> data) {
             PlayerStats stats = new PlayerStats((String) data.get("playerName"));
-            stats.totalSpins = (int) data.getOrDefault("totalSpins", 0);
-            stats.totalSteals = (int) data.getOrDefault("totalSteals", 0);
-            stats.totalFruitsCollected = (int) data.getOrDefault("totalFruitsCollected", 0);
-            stats.totalAbilitiesUsed = (int) data.getOrDefault("totalAbilitiesUsed", 0);
-            stats.firstJoinTime = (long) data.getOrDefault("firstJoinTime", System.currentTimeMillis());
-            stats.lastPlayTime = (long) data.getOrDefault("lastPlayTime", System.currentTimeMillis());
+            stats.totalSpins = ((Number) data.getOrDefault("totalSpins", 0)).intValue();
+            stats.totalSteals = ((Number) data.getOrDefault("totalSteals", 0)).intValue();
+            stats.totalFruitsCollected = ((Number) data.getOrDefault("totalFruitsCollected", 0)).intValue();
+            stats.totalAbilitiesUsed = ((Number) data.getOrDefault("totalAbilitiesUsed", 0)).intValue();
+            stats.firstJoinTime = ((Number) data.getOrDefault("firstJoinTime", System.currentTimeMillis())).longValue();
+            stats.lastPlayTime = ((Number) data.getOrDefault("lastPlayTime", System.currentTimeMillis())).longValue();
             return stats;
         }
         
