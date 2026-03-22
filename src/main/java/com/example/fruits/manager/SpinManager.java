@@ -15,6 +15,7 @@ public class SpinManager {
     private final Map<UUID, Integer> dailySpins = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastSpinTime = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitRunnable> activeSpins = new ConcurrentHashMap<>();
+    private int totalSpinsGiven = 0;
     
     public SpinManager(FruitsPlugin plugin) {
         this.plugin = plugin;
@@ -71,6 +72,7 @@ public class SpinManager {
         // Update stats
         dailySpins.put(uuid, spinsToday + spins);
         lastSpinTime.put(uuid, System.currentTimeMillis());
+        totalSpinsGiven++;
         
         // Auto-unmark after spin duration
         BukkitRunnable unmarkTask = new BukkitRunnable() {
@@ -163,7 +165,7 @@ public class SpinManager {
                 resetAllDailySpins();
                 plugin.getLogger().info("Daily spin limits reset!");
             }
-        }.runTaskTimer(plugin, 86400L, 86400L); // 24 hours (20 ticks * 60 * 60 * 24)
+        }.runTaskTimer(plugin, 86400L, 86400L);
     }
     
     /**
@@ -205,6 +207,30 @@ public class SpinManager {
         if (task != null) {
             task.cancel();
         }
+    }
+    
+    /**
+     * Increment total spins given (for first join spin)
+     */
+    public void incrementTotalSpins(Player player) {
+        totalSpinsGiven++;
+        if (plugin.getPlayerManager() != null) {
+            plugin.getPlayerManager().getPlayerStats(player).incrementSpins();
+        }
+    }
+    
+    /**
+     * Get total spins given
+     */
+    public int getTotalSpinsGiven() {
+        return totalSpinsGiven;
+    }
+    
+    /**
+     * Reset total spins given counter
+     */
+    public void resetTotalSpinsGiven() {
+        totalSpinsGiven = 0;
     }
     
     /**
