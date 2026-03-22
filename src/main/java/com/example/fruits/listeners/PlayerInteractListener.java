@@ -3,6 +3,8 @@ package com.example.fruits.listeners;
 import com.example.fruits.FruitsPlugin;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.models.Ability;
+import org.bukkit.GameMode;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,8 +12,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class PlayerInteractListener implements Listener {
     
@@ -49,14 +51,14 @@ public class PlayerInteractListener implements Listener {
         
         if(!isSneaking) {
             // First ability (normal right click)
-            useAbility(player, fruit, 0, target);
+            useAbilityAndConsume(player, fruit, 0, target, item);
         } else {
             // Second ability (sneak + right click)
             if(fruit.getAbilities().size() > 1) {
-                useAbility(player, fruit, 1, target);
+                useAbilityAndConsume(player, fruit, 1, target, item);
             } else {
                 player.sendMessage("§cThis fruit has only one ability!");
-                useAbility(player, fruit, 0, target);
+                useAbilityAndConsume(player, fruit, 0, target, item);
             }
         }
     }
@@ -82,20 +84,18 @@ public class PlayerInteractListener implements Listener {
         boolean isSneaking = player.isSneaking();
         
         if(!isSneaking) {
-            // First ability (normal right click on entity)
-            useAbility(player, fruit, 0, target);
+            useAbilityAndConsume(player, fruit, 0, target, item);
         } else {
-            // Second ability (sneak + right click on entity)
             if(fruit.getAbilities().size() > 1) {
-                useAbility(player, fruit, 1, target);
+                useAbilityAndConsume(player, fruit, 1, target, item);
             } else {
                 player.sendMessage("§cThis fruit has only one ability!");
-                useAbility(player, fruit, 0, target);
+                useAbilityAndConsume(player, fruit, 0, target, item);
             }
         }
     }
     
-    private void useAbility(Player player, Fruit fruit, int index, Entity target) {
+    private void useAbilityAndConsume(Player player, Fruit fruit, int index, Entity target, ItemStack item) {
         if(index < 0 || index >= fruit.getAbilities().size()) {
             player.sendMessage("§cInvalid ability!");
             return;
@@ -111,33 +111,49 @@ public class PlayerInteractListener implements Listener {
             return;
         }
         
-        // Execute ability
-        try {
-            ability.getExecutor().execute(player, target);
-        } catch(Exception e) {
-            player.sendMessage("§cError executing ability!");
-            plugin.getLogger().warning("Ability error: " + e.getMessage());
+        // Play eat animation and sound first
+        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EAT, 1.0f, 1.0f);
+        
+        // Consume the fruit (remove 1 from stack)
+        if(player.getGameMode() != GameMode.CREATIVE) {
+            if(item.getAmount() > 1) {
+                item.setAmount(item.getAmount() - 1);
+            } else {
+                player.getInventory().setItemInMainHand(null);
+            }
         }
         
-        // Set cooldown
-        plugin.getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
-        
-        // Play effect
-        player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
-        
-        // Send message
-        if(target != null) {
-            String targetName = target instanceof Player ? ((Player) target).getName() : 
-                               target.getType().name().toLowerCase().replace("_", " ");
-            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a!");
-        } else {
-            player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a!");
-        }
-        
-        // Debug
-        if(plugin.getConfigManager().isDebugMode()) {
-            plugin.getLogger().info(player.getName() + " used " + ability.getName() + " from " + fruit.getName());
-        }
+        // Small delay before executing ability (for eat animation)
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Execute ability
+                try {
+                    ability.getExecutor().execute(player, target);
+                } catch(Exception e) {
+                    player.sendMessage("§cError executing ability!");
+                    plugin.getLogger().warning("Ability error: " + e.getMessage());
+                }
+                
+                // Set cooldown
+                plugin.getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
+                
+                // Play effect
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
+                
+                // Send message
+                if(target != null) {
+                    String targetName = target instanceof Player ? ((Player) target).getName() : 
+                                       target.getType().name().toLowerCase().replace("_", " ");
+                    player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a!");
+                } else {
+                    player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a!");
+                }
+                
+                // Particle effect
+                player.getWorld().spawnParticle(org.bukkit.Particle.HEART, player.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3);
+            }
+        }.runTaskLater(plugin, 5L); // 0.25 second delay for eat animation
     }
     
     private Entity getTargetEntity(Player player, int range) {
