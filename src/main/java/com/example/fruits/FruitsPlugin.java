@@ -4,6 +4,7 @@ import com.example.fruits.managers.*;
 import com.example.fruits.commands.FruitCommand;
 import com.example.fruits.models.Fruit;
 import com.example.fruits.registry.FruitRegistry;
+import com.example.fruits.utils.CinematicSpinWheel;
 import com.example.fruits.utils.CooldownManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -30,6 +31,10 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     // First join tracking
     private Set<UUID> firstJoinPlayers = new HashSet<>();
     
+    // First join spin settings
+    private boolean firstJoinSpinEnabled = true;
+    private int firstJoinSpinCount = 1;
+    
     @Override
     public void onEnable() {
         instance = this;
@@ -44,6 +49,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         
         // Load first join data
         loadFirstJoinData();
+        loadSettings();
         
         // Register events
         getServer().getPluginManager().registerEvents(this, this);
@@ -56,6 +62,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         getLogger().info("=========================================");
         getLogger().info("FruitsPlugin v3.0 enabled!");
         getLogger().info("Loaded " + fruitRegistry.getAllFruits().size() + " fruits");
+        getLogger().info("First Join Spin: " + (firstJoinSpinEnabled ? "ENABLED" : "DISABLED"));
         getLogger().info("=========================================");
     }
     
@@ -66,6 +73,7 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
             playerManager.savePlayerStats(player);
         }
         saveFirstJoinData();
+        saveSettings();
         
         getLogger().info("FruitsPlugin disabled!");
     }
@@ -93,6 +101,17 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         configManager.saveDataConfig();
     }
     
+    private void loadSettings() {
+        firstJoinSpinEnabled = configManager.getData().getBoolean("first-join-spin.enabled", true);
+        firstJoinSpinCount = configManager.getData().getInt("first-join-spin.count", 1);
+    }
+    
+    private void saveSettings() {
+        configManager.getData().set("first-join-spin.enabled", firstJoinSpinEnabled);
+        configManager.getData().set("first-join-spin.count", firstJoinSpinCount);
+        configManager.saveDataConfig();
+    }
+    
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -117,6 +136,31 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
                     player.sendMessage("§a🎁 Welcome! You received §6" + 
                         configManager.getJoinFruitAmount() + "x " + fruit.getName() + "§a as a first-join gift!");
                 }
+            }
+            
+            // ========== FIRST JOIN AUTO SPIN ==========
+            if (firstJoinSpinEnabled) {
+                player.sendMessage("");
+                player.sendMessage("§6§l═══════════════════════════════════");
+                player.sendMessage("§a§l✨ WELCOME TO THE SERVER! ✨");
+                player.sendMessage("§eYou get a FREE SPIN as a welcome gift!");
+                player.sendMessage("§7Watch the magic happen...");
+                player.sendMessage("§6§l═══════════════════════════════════");
+                
+                // Schedule spin after 2 seconds (so player can see the message)
+                Bukkit.getScheduler().runTaskLater(this, new Runnable() {
+                    @Override
+                    public void run() {
+                        if (player.isOnline()) {
+                            player.sendMessage("§a✨ Starting your welcome spin! ✨");
+                            CinematicSpinWheel spinWheel = new CinematicSpinWheel(FruitsPlugin.this, player);
+                            spinWheel.startSpin();
+                            
+                            // Add to spin stats
+                            spinManager.incrementTotalSpins(player);
+                        }
+                    }
+                }, 40L); // 2 seconds delay
             }
         }
         
@@ -148,6 +192,9 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     
     // ==================== RESET METHODS ====================
     
+    /**
+     * Reset player's first join data (they will get join fruit and spin again)
+     */
     public boolean resetPlayerFirstJoin(String playerName) {
         Player player = Bukkit.getPlayer(playerName);
         if (player != null) {
@@ -170,11 +217,95 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
         return false;
     }
     
-    public int resetAllFirstJoin() {
+    /**
+     * Reset ALL player data (first join, stats, cooldowns, etc.)
+     */
+    public int resetAllPlayerData() {
         int count = firstJoinPlayers.size();
+        
+        // Clear first join data
         firstJoinPlayers.clear();
         saveFirstJoinData();
+        
+        // Clear all player stats
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            playerManager.clearPlayerStats(player);
+            spinManager.clearPlayerSpinData(player);
+            cooldownManager.clearAllCooldowns(player);
+        }
+        
+        // Clear all stored data in config
+        configManager.getData().set("players", null);
+        configManager.getData().set("spins", null);
+        configManager.saveDataConfig();
+        
+        getLogger().info("Reset all player data for " + count + " players");
         return count;
+    }
+    
+    /**
+     * Reset player's complete data (first join, stats, cooldowns)
+     */
+    public boolean resetPlayerCompleteData(String playerName) {
+        Player player = Bukkit.getPlayer(playerName);
+        UUID uuid = null;
+        
+        if (player != null) {
+            uuid = player.getUniqueId();
+        } else {
+            @SuppressWarnings("deprecation")
+            org.bukkit.OfflinePlayer offline = Bukkit.getOfflinePlayer(playerName);
+            if (offline != null && offline.hasPlayedBefore()) {
+                uuid = offline.getUniqueId();
+            }
+        }
+        
+        if (uuid != null) {
+            // Reset first join
+            boolean firstJoinReset = resetPlayerFirstJoin(uuid);
+            
+            // Reset stats
+            if (player != null) {
+                playerManager.clearPlayerStats(player);
+                spinManager.clearPlayerSpinData(player);
+                cooldownManager.clearAllCooldowns(player);
+            }
+            
+            // Clear stored data in config
+            configManager.getData().set("players." + playerName, null);
+            configManager.getData().set("spins." + playerName, null);
+            configManager.saveDataConfig();
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // ==================== FIRST JOIN SPIN SETTINGS ====================
+    
+    public boolean isFirstJoinSpinEnabled() {
+        return firstJoinSpinEnabled;
+    }
+    
+    public void setFirstJoinSpinEnabled(boolean enabled) {
+        this.firstJoinSpinEnabled = enabled;
+        saveSettings();
+    }
+    
+    public int getFirstJoinSpinCount() {
+        return firstJoinSpinCount;
+    }
+    
+    public void setFirstJoinSpinCount(int count) {
+        this.firstJoinSpinCount = count;
+        saveSettings();
+    }
+    
+    public boolean toggleFirstJoinSpin() {
+        firstJoinSpinEnabled = !firstJoinSpinEnabled;
+        saveSettings();
+        return firstJoinSpinEnabled;
     }
     
     // ==================== GETTERS ====================
@@ -231,5 +362,6 @@ public class FruitsPlugin extends JavaPlugin implements Listener {
     public void reloadConfig() {
         super.reloadConfig();
         configManager.reload();
+        loadSettings();
     }
 }
