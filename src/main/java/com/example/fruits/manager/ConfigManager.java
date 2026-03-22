@@ -71,6 +71,13 @@ public class ConfigManager {
         if (!messagesFile.exists()) {
             try {
                 messagesFile.createNewFile();
+                // Add default messages
+                FileConfiguration messages = YamlConfiguration.loadConfiguration(messagesFile);
+                messages.set("prefix", "§6[Fruits] §7");
+                messages.set("no-permission", "§cYou don't have permission!");
+                messages.set("player-not-found", "§cPlayer not found!");
+                messages.set("fruit-not-found", "§cFruit not found!");
+                messages.save(messagesFile);
             } catch (IOException e) {
                 plugin.getLogger().warning("Could not create messages.yml: " + e.getMessage());
             }
