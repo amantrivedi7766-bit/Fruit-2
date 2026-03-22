@@ -87,6 +87,10 @@ permissions:
     description: Configure join fruit settings
     default: op
   
+  fruit.firstjoinspin:
+    description: Configure first join spin settings
+    default: op
+  
   fruit.cooldown.others:
     description: View other players' cooldowns
     default: op
@@ -97,6 +101,14 @@ permissions:
   
   fruit.reset.all:
     description: Reset first join data for all players
+    default: op
+  
+  fruit.reset.data:
+    description: Reset complete data for a player
+    default: op
+  
+  fruit.reset.alldata:
+    description: Reset complete data for all players
     default: op
   
   fruit.reload:
@@ -116,7 +128,10 @@ permissions:
       fruit.spin.stop: true
       fruit.autogive: true
       fruit.joingive: true
+      fruit.firstjoinspin: true
       fruit.cooldown.others: true
       fruit.reset: true
       fruit.reset.all: true
+      fruit.reset.data: true
+      fruit.reset.alldata: true
       fruit.reload: true
