@@ -8,24 +8,29 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 public class JoinListener implements Listener {
     
+    private final FruitsPlugin plugin;
+    
+    public JoinListener(FruitsPlugin plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+    
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         
         // Add to active players
-        FruitsPlugin.getInstance().addActivePlayer(player);
+        plugin.getPlayerManager().addActivePlayer(player);
+        plugin.getPlayerManager().loadPlayerStats(player);
         
-        // Check if reward system is enabled
-        if(!FruitsPlugin.getInstance().getConfigManager().isRewardEnabled()) {
-            return;
+        // Start join protection
+        plugin.getGracePeriodManager().startProtectionOnJoin(player);
+        
+        // Check if player has a fruit in hand
+        plugin.getPlayerManager().updatePlayerFruit(player);
+        
+        if (plugin.getConfigManager().isDebugMode()) {
+            plugin.getLogger().info(player.getName() + " joined the game!");
         }
-        
-        // Check if player already got reward
-        if(player.hasPlayedBefore()) {
-            return;
-        }
-        
-        // Start spin animation for new player
-        FruitsPlugin.getInstance().getSpinManager().startSpin(player);
     }
 }
