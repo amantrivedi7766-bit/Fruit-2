@@ -41,14 +41,23 @@ public class PlayerInteractListener implements Listener {
         
         event.setCancelled(true);
         
-        // Get target entity
-        Entity target = getTargetEntity(player, 5);
+        // Get target entity (what player is looking at)
+        Entity target = getTargetEntity(player, 6);
         
-        // Use ability based on sneak
-        if(!player.isSneaking()) {
+        // Check if sneaking for second ability
+        boolean isSneaking = player.isSneaking();
+        
+        if(!isSneaking) {
+            // First ability (normal right click)
             useAbility(player, fruit, 0, target);
         } else {
-            useAbility(player, fruit, 1, target);
+            // Second ability (sneak + right click)
+            if(fruit.getAbilities().size() > 1) {
+                useAbility(player, fruit, 1, target);
+            } else {
+                player.sendMessage("§cThis fruit has only one ability!");
+                useAbility(player, fruit, 0, target);
+            }
         }
     }
     
@@ -67,11 +76,22 @@ public class PlayerInteractListener implements Listener {
         
         event.setCancelled(true);
         
-        // Use ability based on sneak
-        if(!player.isSneaking()) {
-            useAbility(player, fruit, 0, event.getRightClicked());
+        Entity target = event.getRightClicked();
+        
+        // Check if sneaking for second ability
+        boolean isSneaking = player.isSneaking();
+        
+        if(!isSneaking) {
+            // First ability (normal right click on entity)
+            useAbility(player, fruit, 0, target);
         } else {
-            useAbility(player, fruit, 1, event.getRightClicked());
+            // Second ability (sneak + right click on entity)
+            if(fruit.getAbilities().size() > 1) {
+                useAbility(player, fruit, 1, target);
+            } else {
+                player.sendMessage("§cThis fruit has only one ability!");
+                useAbility(player, fruit, 0, target);
+            }
         }
     }
     
@@ -87,12 +107,17 @@ public class PlayerInteractListener implements Listener {
         // Check cooldown
         if(plugin.getCooldownManager().hasCooldown(player, cooldownKey)) {
             long remaining = plugin.getCooldownManager().getRemaining(player, cooldownKey);
-            player.sendMessage("§cAbility on cooldown! §7" + remaining + " seconds remaining");
+            player.sendMessage("§c" + ability.getName() + " on cooldown! §7" + remaining + " seconds remaining");
             return;
         }
         
         // Execute ability
-        ability.getExecutor().execute(player, target);
+        try {
+            ability.getExecutor().execute(player, target);
+        } catch(Exception e) {
+            player.sendMessage("§cError executing ability!");
+            plugin.getLogger().warning("Ability error: " + e.getMessage());
+        }
         
         // Set cooldown
         plugin.getCooldownManager().setCooldown(player, cooldownKey, ability.getCooldown(), ability.getName());
@@ -102,10 +127,16 @@ public class PlayerInteractListener implements Listener {
         
         // Send message
         if(target != null) {
-            String targetName = target instanceof Player ? ((Player) target).getName() : target.getType().name().toLowerCase();
+            String targetName = target instanceof Player ? ((Player) target).getName() : 
+                               target.getType().name().toLowerCase().replace("_", " ");
             player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a on §e" + targetName + "§a!");
         } else {
             player.sendMessage("§a⚡ Used §6" + ability.getName() + "§a!");
+        }
+        
+        // Debug
+        if(plugin.getConfigManager().isDebugMode()) {
+            plugin.getLogger().info(player.getName() + " used " + ability.getName() + " from " + fruit.getName());
         }
     }
     
