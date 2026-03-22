@@ -101,6 +101,15 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         else if(subCmd.equals("togglejoinfruit")) {
             return handleToggleJoinFruit(sender);
         }
+        else if(subCmd.equals("firstjoinspin")) {
+            return handleFirstJoinSpin(sender, args);
+        }
+        else if(subCmd.equals("resetdata")) {
+            return handleResetData(sender, args);
+        }
+        else if(subCmd.equals("resetalldata")) {
+            return handleResetAllData(sender, args);
+        }
         else if(subCmd.equals("reset")) {
             return handleReset(sender, args);
         }
@@ -143,20 +152,17 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         Player player = (Player) sender;
         
-        // Check permission
         if(!player.hasPermission("fruit.spin") && !player.isOp()) {
             player.sendMessage("§cYou don't have permission to spin!");
             return true;
         }
         
-        // Check cooldown
         if(plugin.getCooldownManager().hasCooldown(player, "spin")) {
             long remaining = plugin.getCooldownManager().getRemaining(player, "spin");
             player.sendMessage("§cSpin on cooldown! §7" + remaining + " seconds remaining");
             return true;
         }
         
-        // Get spin count (max 5)
         int spins = 1;
         if(args.length >= 2) {
             try {
@@ -168,12 +174,10 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             }
         }
         
-        // Start cinematic spin
         player.sendMessage("§a✨ Starting cinematic spin! Get ready! ✨");
         CinematicSpinWheel spinWheel = new CinematicSpinWheel(plugin, player);
         spinWheel.startSpin();
         
-        // Set cooldown (60 seconds)
         plugin.getCooldownManager().setCooldown(player, "spin", 60, "Spin");
         
         return true;
@@ -234,14 +238,12 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
-        // Check cooldown
         if(plugin.getCooldownManager().hasCooldown(thief, "steal")) {
             long remaining = plugin.getCooldownManager().getRemaining(thief, "steal");
             thief.sendMessage("§cSteal on cooldown! §7" + remaining + "s remaining");
             return true;
         }
         
-        // Find fruits to steal
         List<ItemStack> fruits = new ArrayList<>();
         for(ItemStack item : victim.getInventory().getContents()) {
             if(item != null && Fruit.getFruitId(item) != null) {
@@ -254,7 +256,6 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
-        // Steal random fruit
         Random random = new Random();
         ItemStack stolen = fruits.get(random.nextInt(fruits.size()));
         int amount = Math.min(stolen.getAmount(), random.nextInt(3) + 1);
@@ -265,10 +266,8 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         thief.getInventory().addItem(stolenStack);
         
-        // Set cooldown
         plugin.getCooldownManager().setCooldown(thief, "steal", 60, "Steal");
         
-        // Effects
         thief.getWorld().playSound(thief.getLocation(), org.bukkit.Sound.ENTITY_ILLUSIONER_MIRROR_MOVE, 1.0f, 1.5f);
         victim.getWorld().playSound(victim.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_HURT, 1.0f, 0.5f);
         
@@ -299,7 +298,6 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
     private boolean handleInfo(CommandSender sender, String[] args) {
         if(args.length < 2) {
             sender.sendMessage("§cUsage: /fruit info <fruit_id>");
-            sender.sendMessage("§7Use /fruit list to see all fruit IDs");
             return true;
         }
         
@@ -471,7 +469,6 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         
         if(args.length < 3) {
             sender.sendMessage("§cUsage: /fruit give <player> <fruit_id> [amount]");
-            sender.sendMessage("§7Use /fruit list to see all fruit IDs");
             return true;
         }
         
@@ -748,6 +745,33 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         return true;
     }
     
+    private boolean handleFirstJoinSpin(CommandSender sender, String[] args) {
+        if(!hasPermission(sender, "fruit.firstjoinspin", true)) return true;
+        
+        if(args.length < 2) {
+            sender.sendMessage("§cUsage: /fruit firstjoinspin <on/off> [count]");
+            sender.sendMessage("§7Current: " + (plugin.isFirstJoinSpinEnabled() ? "§aON" : "§cOFF"));
+            if(plugin.isFirstJoinSpinEnabled()) {
+                sender.sendMessage("§7Spin Count: §f" + plugin.getFirstJoinSpinCount());
+            }
+            return true;
+        }
+        
+        if(args[1].equalsIgnoreCase("on")) {
+            int count = args.length >= 3 ? Integer.parseInt(args[2]) : 1;
+            plugin.setFirstJoinSpinEnabled(true);
+            plugin.setFirstJoinSpinCount(count);
+            sender.sendMessage("§a✓ First join spin ENABLED!");
+            sender.sendMessage("§7New players will get §6" + count + "§7 free spin(s)!");
+        } 
+        else if(args[1].equalsIgnoreCase("off")) {
+            plugin.setFirstJoinSpinEnabled(false);
+            sender.sendMessage("§c✗ First join spin DISABLED!");
+        }
+        
+        return true;
+    }
+    
     private boolean handleReset(CommandSender sender, String[] args) {
         if(!hasPermission(sender, "fruit.reset", true)) return true;
         
@@ -797,6 +821,68 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
         return true;
     }
     
+    private boolean handleResetData(CommandSender sender, String[] args) {
+        if(!hasPermission(sender, "fruit.reset.data", true)) return true;
+        
+        if(args.length < 2) {
+            sender.sendMessage("§cUsage: /fruit resetdata <player>");
+            sender.sendMessage("§7Resets COMPLETE data for a player:");
+            sender.sendMessage("§7- First join status (will get join fruit again)");
+            sender.sendMessage("§7- All stats (spins, steals, etc.)");
+            sender.sendMessage("§7- All cooldowns");
+            return true;
+        }
+        
+        String playerName = args[1];
+        boolean success = plugin.resetPlayerCompleteData(playerName);
+        
+        if(success) {
+            sender.sendMessage("§a✓ Reset COMPLETE data for §e" + playerName);
+            sender.sendMessage("§7They will:");
+            sender.sendMessage("§7  • Receive join fruit on next login");
+            sender.sendMessage("§7  • Get auto spin on next login");
+            sender.sendMessage("§7  • Have all stats reset");
+            
+            Player target = Bukkit.getPlayer(playerName);
+            if(target != null && target.isOnline()) {
+                target.sendMessage("§e⚠ Admin reset ALL your data!");
+                target.sendMessage("§aYou will get join fruit and spin on next login!");
+            }
+        } else {
+            sender.sendMessage("§cPlayer not found!");
+        }
+        
+        return true;
+    }
+    
+    private boolean handleResetAllData(CommandSender sender, String[] args) {
+        if(!hasPermission(sender, "fruit.reset.alldata", true)) return true;
+        
+        if(args.length >= 2 && args[1].equalsIgnoreCase("confirm")) {
+            int count = plugin.resetAllPlayerData();
+            sender.sendMessage("§a✓ Reset COMPLETE data for §e" + count + "§a players!");
+            sender.sendMessage("§7All players will:");
+            sender.sendMessage("§7  • Receive join fruit on next login");
+            sender.sendMessage("§7  • Get auto spin on next login");
+            sender.sendMessage("§7  • Have all stats reset");
+            
+            for(Player player : Bukkit.getOnlinePlayers()) {
+                player.sendMessage("§e⚠ Admin reset ALL player data!");
+                player.sendMessage("§aYou will get join fruit and spin on next login!");
+            }
+        } else {
+            sender.sendMessage("§c⚠ WARNING: This will reset ALL player data!");
+            sender.sendMessage("§cAll players will:");
+            sender.sendMessage("§c  • Lose all first join status");
+            sender.sendMessage("§c  • Lose all stats");
+            sender.sendMessage("§c  • Get join fruit again");
+            sender.sendMessage("§c  • Get auto spin again");
+            sender.sendMessage("§eType §6/fruit resetalldata confirm §eto confirm.");
+        }
+        
+        return true;
+    }
+    
     private boolean handleReload(CommandSender sender) {
         if(!hasPermission(sender, "fruit.reload", true)) return true;
         
@@ -839,13 +925,16 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§6║ §c/fruit autogive <on/off> [fruit] [amount] §7- Configure auto-give on join");
             sender.sendMessage("§6║ §c/fruit setjoinfruit <fruit> [amount] §7- Set first-join gift fruit");
             sender.sendMessage("§6║ §c/fruit togglejoinfruit §7- Toggle first-join gift on/off");
+            sender.sendMessage("§6║ §c/fruit firstjoinspin <on/off> [count] §7- Configure first join auto spin");
             sender.sendMessage("§6║ §c/fruit reset <player> §7- Reset player's first join data");
             sender.sendMessage("§6║ §c/fruit resetall §7- Reset ALL players' first join data");
+            sender.sendMessage("§6║ §c/fruit resetdata <player> §7- Reset COMPLETE player data");
+            sender.sendMessage("§6║ §c/fruit resetalldata §7- Reset ALL players' COMPLETE data");
             sender.sendMessage("§6║ §c/fruit reload §7- Reload plugin configuration");
         }
         
         sender.sendMessage("§6╚══════════════════════════════════════════════════════╝");
-        sender.sendMessage("§7Tip: Use §e/fruit gui §7for the visual menu!");
+        sender.sendMessage("§7Tip: Hold fruit and §eRight-click §7for first ability, §eSneak+Right-click §7for second ability!");
     }
     
     // ==================== PERMISSION CHECKER ====================
@@ -874,7 +963,7 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
                 cmds.addAll(Arrays.asList(
                     "admin", "give", "remove", "giveall", "spinplayer", "spinall", 
                     "stopspin", "autogive", "setjoinfruit", "togglejoinfruit", 
-                    "reload", "reset", "resetall"
+                    "firstjoinspin", "reset", "resetall", "resetdata", "resetalldata", "reload"
                 ));
             }
             
@@ -890,7 +979,8 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
             
             if(subCmd.equals("give") || subCmd.equals("remove") || subCmd.equals("trade") || 
                subCmd.equals("steal") || subCmd.equals("stats") || subCmd.equals("cooldown") || 
-               subCmd.equals("spinplayer") || subCmd.equals("stopspin") || subCmd.equals("reset")) {
+               subCmd.equals("spinplayer") || subCmd.equals("stopspin") || subCmd.equals("reset") ||
+               subCmd.equals("resetdata")) {
                 for(Player p : Bukkit.getOnlinePlayers()) {
                     if(p.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
                         suggestions.add(p.getName());
@@ -908,12 +998,16 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
                 suggestions.add("on");
                 suggestions.add("off");
             }
+            else if(subCmd.equals("firstjoinspin")) {
+                suggestions.add("on");
+                suggestions.add("off");
+            }
             else if(subCmd.equals("spin") || subCmd.equals("spinall") || subCmd.equals("spinplayer")) {
                 suggestions.add("1");
                 suggestions.add("3");
                 suggestions.add("5");
             }
-            else if(subCmd.equals("resetall")) {
+            else if(subCmd.equals("resetall") || subCmd.equals("resetalldata")) {
                 suggestions.add("confirm");
             }
         }
@@ -934,6 +1028,12 @@ public class FruitCommand implements CommandExecutor, TabCompleter {
                         suggestions.add(fruit.getId());
                     }
                 }
+            }
+            else if(subCmd.equals("firstjoinspin") && args[1].equalsIgnoreCase("on")) {
+                suggestions.add("1");
+                suggestions.add("2");
+                suggestions.add("3");
+                suggestions.add("5");
             }
             else if(subCmd.equals("give") || subCmd.equals("remove") || subCmd.equals("giveall")) {
                 suggestions.add("1");
